@@ -22,6 +22,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Per-tick exponential velocity damping on normal ground (&lt; 1).</summary>
         public Fix64 RollDamping { get; }
 
+        /// <summary>Per-tick damping while the ball center is inside sand (much stronger).</summary>
+        public Fix64 SandDamping { get; }
+
         /// <summary>Wall bounce restitution (normal component scale, &lt; 1).</summary>
         public Fix64 WallRestitution { get; }
 
@@ -48,6 +51,7 @@ namespace PuttSeed.Core.Sim
             Fix64 ballRadius,
             Fix64 maxShotSpeed,
             Fix64 rollDamping,
+            Fix64 sandDamping,
             Fix64 wallRestitution,
             Fix64 maxTravelPerSubStep,
             Fix64 bumperRestitution,
@@ -59,6 +63,7 @@ namespace PuttSeed.Core.Sim
             BallRadius = ballRadius;
             MaxShotSpeed = maxShotSpeed;
             RollDamping = rollDamping;
+            SandDamping = sandDamping;
             WallRestitution = wallRestitution;
             MaxTravelPerSubStep = maxTravelPerSubStep;
             BumperRestitution = bumperRestitution;
@@ -73,6 +78,7 @@ namespace PuttSeed.Core.Sim
             ballRadius: Fix64.FromFraction(1, 10),
             maxShotSpeed: Fix64.FromInt(8),
             rollDamping: Fix64.FromFraction(988, 1000),
+            sandDamping: Fix64.FromFraction(94, 100),
             wallRestitution: Fix64.FromFraction(8, 10),
             maxTravelPerSubStep: Fix64.FromFraction(1, 20), // half the ball radius
             bumperRestitution: Fix64.FromFraction(12, 10),

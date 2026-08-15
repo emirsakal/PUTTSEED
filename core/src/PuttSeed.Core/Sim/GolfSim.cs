@@ -75,7 +75,7 @@ namespace PuttSeed.Core.Sim
                 return;
             }
 
-            _velocity *= _config.RollDamping;
+            _velocity *= IsInSand() ? _config.SandDamping : _config.RollDamping;
 
             // Split the tick so no sub-step moves farther than the anti-tunneling
             // limit (a fraction of the ball radius). Integer sub-step count keeps
@@ -153,6 +153,21 @@ namespace PuttSeed.Core.Sim
 
                 return hash;
             }
+        }
+
+        /// <summary>True when the ball center is inside any sand polygon.</summary>
+        private bool IsInSand()
+        {
+            var zones = _course.SandZones;
+            for (int i = 0; i < zones.Length; i++)
+            {
+                if (zones[i].Contains(_position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
