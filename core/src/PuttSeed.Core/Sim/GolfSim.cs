@@ -91,6 +91,7 @@ namespace PuttSeed.Core.Sim
             for (int i = 0; i < subSteps; i++)
             {
                 _position += _velocity * dtSub;
+                ResolveBumperCollisions();
                 ResolveWallCollisions();
             }
 
@@ -151,6 +152,49 @@ namespace PuttSeed.Core.Sim
                 }
 
                 return hash;
+            }
+        }
+
+        /// <summary>
+        /// Circle-vs-circle bumper bounce: push out, reflect the normal component
+        /// with restitution &gt; 1 (speed boost), then cap the exit speed.
+        /// </summary>
+        private void ResolveBumperCollisions()
+        {
+            var bumpers = _course.Bumpers;
+            for (int i = 0; i < bumpers.Length; i++)
+            {
+                var delta = _position - bumpers[i].Center;
+                var minDist = _config.BallRadius + bumpers[i].Radius;
+                var distSq = delta.LengthSq();
+                if (distSq >= minDist * minDist)
+                {
+                    continue;
+                }
+
+                var dist = Fix64.Sqrt(distSq);
+                // Center exactly on the bumper center: deterministic fallback normal.
+                var normal = dist > Fix64.Zero
+                    ? delta / dist
+                    : new Vec2Fix(Fix64.One, Fix64.Zero);
+
+                _position = bumpers[i].Center + normal * minDist;
+
+                var vn = Vec2Fix.Dot(_velocity, normal);
+                if (vn < Fix64.Zero)
+                {
+                    var bounce = Fix64.One + _config.BumperRestitution;
+                    _velocity -= normal * (bounce * vn);
+
+                    // Cap the boosted exit speed.
+                    var speedSq = _velocity.LengthSq();
+                    var cap = _config.BumperMaxExitSpeed;
+                    if (speedSq > cap * cap)
+                    {
+                        var speed = Fix64.Sqrt(speedSq);
+                        _velocity = _velocity * (cap / speed);
+                    }
+                }
             }
         }
 

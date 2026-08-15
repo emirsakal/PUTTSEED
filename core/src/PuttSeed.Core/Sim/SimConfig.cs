@@ -31,6 +31,12 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public Fix64 MaxTravelPerSubStep { get; }
 
+        /// <summary>Bumper bounce restitution (&gt; 1: bumpers add energy).</summary>
+        public Fix64 BumperRestitution { get; }
+
+        /// <summary>Speed cap applied right after a bumper bounce.</summary>
+        public Fix64 BumperMaxExitSpeed { get; }
+
         /// <summary>Squared speed below which a tick counts toward rest.</summary>
         public Fix64 RestSpeedEpsSq { get; }
 
@@ -44,6 +50,8 @@ namespace PuttSeed.Core.Sim
             Fix64 rollDamping,
             Fix64 wallRestitution,
             Fix64 maxTravelPerSubStep,
+            Fix64 bumperRestitution,
+            Fix64 bumperMaxExitSpeed,
             Fix64 restSpeedEpsSq,
             int restTicksRequired)
         {
@@ -53,6 +61,8 @@ namespace PuttSeed.Core.Sim
             RollDamping = rollDamping;
             WallRestitution = wallRestitution;
             MaxTravelPerSubStep = maxTravelPerSubStep;
+            BumperRestitution = bumperRestitution;
+            BumperMaxExitSpeed = bumperMaxExitSpeed;
             RestSpeedEpsSq = restSpeedEpsSq;
             RestTicksRequired = restTicksRequired;
         }
@@ -65,6 +75,8 @@ namespace PuttSeed.Core.Sim
             rollDamping: Fix64.FromFraction(988, 1000),
             wallRestitution: Fix64.FromFraction(8, 10),
             maxTravelPerSubStep: Fix64.FromFraction(1, 20), // half the ball radius
+            bumperRestitution: Fix64.FromFraction(12, 10),
+            bumperMaxExitSpeed: Fix64.FromInt(8),
             restSpeedEpsSq: Fix64.FromFraction(1, 2500),    // speed < 0.02 u/s
             restTicksRequired: 6);
     }

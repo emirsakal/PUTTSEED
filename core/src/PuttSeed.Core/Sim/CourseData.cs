@@ -21,13 +21,22 @@ namespace PuttSeed.Core.Sim
         /// <summary>Wall segments the ball collides with.</summary>
         public WallSegment[] Walls { get; }
 
+        /// <summary>Circular bumpers (may be empty).</summary>
+        public Bumper[] Bumpers { get; }
+
         /// <summary>Creates a course. Arrays are stored as-is (caller must not mutate).</summary>
-        public CourseData(Vec2Fix startPosition, Vec2Fix holePosition, int par, WallSegment[] walls)
+        public CourseData(
+            Vec2Fix startPosition,
+            Vec2Fix holePosition,
+            int par,
+            WallSegment[] walls,
+            Bumper[]? bumpers = null)
         {
             StartPosition = startPosition;
             HolePosition = holePosition;
             Par = par;
             Walls = walls;
+            Bumpers = bumpers ?? System.Array.Empty<Bumper>();
         }
     }
 }
