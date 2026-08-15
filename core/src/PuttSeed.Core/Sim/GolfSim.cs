@@ -35,6 +35,9 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public bool IsAtRest { get; private set; }
 
+        /// <summary>True once the ball has dropped into the hole; the sim is finished.</summary>
+        public bool IsHoled { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -52,9 +55,9 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public void Shoot(ShotInput shot)
         {
-            if (!IsAtRest)
+            if (!IsAtRest || IsHoled)
             {
-                return; // the ball must come to rest before the next stroke
+                return; // the ball must be at rest (and not holed) to accept a stroke
             }
 
             var speed = _config.MaxShotSpeed * Fix64.FromFraction(shot.PowerIndex + 1, 256);
@@ -95,9 +98,9 @@ namespace PuttSeed.Core.Sim
                 _position += _velocity * dtSub;
                 ResolveBumperCollisions();
                 ResolveWallCollisions();
-                if (CheckWaterHazard())
+                if (CheckWaterHazard() || CheckHoleCapture())
                 {
-                    break; // ball was reset; the rest of the tick is void
+                    break; // ball was reset or captured; the rest of the tick is void
                 }
             }
 
@@ -176,6 +179,7 @@ namespace PuttSeed.Core.Sim
             h = HashLong(h, Strokes);
             h = HashLong(h, _restTicks);
             h = HashLong(h, IsAtRest ? 1L : 0L);
+            h = HashLong(h, IsHoled ? 1L : 0L);
             return h;
         }
 
@@ -192,6 +196,50 @@ namespace PuttSeed.Core.Sim
 
                 return hash;
             }
+        }
+
+        /// <summary>
+        /// Hole: when the ball center is inside the cup, it is captured if slow
+        /// enough (sim finished); a fast overlap rims out — the ball is pushed
+        /// back to the cup edge and its inward velocity reflects with reduced
+        /// restitution. Checked every sub-step.
+        /// </summary>
+        private bool CheckHoleCapture()
+        {
+            var delta = _position - _course.HolePosition;
+            var distSq = delta.LengthSq();
+            var holeRadius = _config.HoleRadius;
+            if (distSq >= holeRadius * holeRadius)
+            {
+                return false;
+            }
+
+            if (_velocity.LengthSq() <= _config.HoleCaptureSpeedSq)
+            {
+                _position = _course.HolePosition;
+                _velocity = Vec2Fix.Zero;
+                _restTicks = 0;
+                IsAtRest = true;
+                IsHoled = true;
+                return true;
+            }
+
+            // Rim out: place the ball on the cup edge and reflect the inward
+            // normal component with reduced restitution.
+            var dist = Fix64.Sqrt(distSq);
+            var normal = dist > Fix64.Zero
+                ? delta / dist
+                : new Vec2Fix(Fix64.One, Fix64.Zero);
+
+            _position = _course.HolePosition + normal * holeRadius;
+            var vn = Vec2Fix.Dot(_velocity, normal);
+            if (vn < Fix64.Zero)
+            {
+                var bounce = Fix64.One + _config.RimRestitution;
+                _velocity -= normal * (bounce * vn);
+            }
+
+            return false;
         }
 
         /// <summary>True when the ball center is inside any sand polygon.</summary>

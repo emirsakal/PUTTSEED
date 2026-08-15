@@ -40,6 +40,15 @@ namespace PuttSeed.Core.Sim
         /// <summary>Speed cap applied right after a bumper bounce.</summary>
         public Fix64 BumperMaxExitSpeed { get; }
 
+        /// <summary>Hole cup radius; the ball drops when its center is inside.</summary>
+        public Fix64 HoleRadius { get; }
+
+        /// <summary>Squared speed limit for capture; faster overlap rims out.</summary>
+        public Fix64 HoleCaptureSpeedSq { get; }
+
+        /// <summary>Restitution of a rim-out bounce (&lt; 1: the rim eats energy).</summary>
+        public Fix64 RimRestitution { get; }
+
         /// <summary>Squared speed below which a tick counts toward rest.</summary>
         public Fix64 RestSpeedEpsSq { get; }
 
@@ -56,6 +65,9 @@ namespace PuttSeed.Core.Sim
             Fix64 maxTravelPerSubStep,
             Fix64 bumperRestitution,
             Fix64 bumperMaxExitSpeed,
+            Fix64 holeRadius,
+            Fix64 holeCaptureSpeedSq,
+            Fix64 rimRestitution,
             Fix64 restSpeedEpsSq,
             int restTicksRequired)
         {
@@ -68,6 +80,9 @@ namespace PuttSeed.Core.Sim
             MaxTravelPerSubStep = maxTravelPerSubStep;
             BumperRestitution = bumperRestitution;
             BumperMaxExitSpeed = bumperMaxExitSpeed;
+            HoleRadius = holeRadius;
+            HoleCaptureSpeedSq = holeCaptureSpeedSq;
+            RimRestitution = rimRestitution;
             RestSpeedEpsSq = restSpeedEpsSq;
             RestTicksRequired = restTicksRequired;
         }
@@ -83,6 +98,9 @@ namespace PuttSeed.Core.Sim
             maxTravelPerSubStep: Fix64.FromFraction(1, 20), // half the ball radius
             bumperRestitution: Fix64.FromFraction(12, 10),
             bumperMaxExitSpeed: Fix64.FromInt(8),
+            holeRadius: Fix64.FromFraction(15, 100),
+            holeCaptureSpeedSq: Fix64.FromFraction(36, 25), // capture below 1.2 u/s
+            rimRestitution: Fix64.FromFraction(4, 10),
             restSpeedEpsSq: Fix64.FromFraction(1, 2500),    // speed < 0.02 u/s
             restTicksRequired: 6);
     }
