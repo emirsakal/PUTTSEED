@@ -16,6 +16,7 @@ namespace PuttSeed.Core.Sim
 
         private Vec2Fix _position;
         private Vec2Fix _velocity;
+        private Vec2Fix _lastRestPosition;
         private int _restTicks;
 
         /// <summary>Current ball state snapshot.</summary>
@@ -41,6 +42,7 @@ namespace PuttSeed.Core.Sim
             _config = config;
             _position = course.StartPosition;
             _velocity = Vec2Fix.Zero;
+            _lastRestPosition = course.StartPosition;
             IsAtRest = true;
         }
 
@@ -93,10 +95,44 @@ namespace PuttSeed.Core.Sim
                 _position += _velocity * dtSub;
                 ResolveBumperCollisions();
                 ResolveWallCollisions();
+                if (CheckWaterHazard())
+                {
+                    break; // ball was reset; the rest of the tick is void
+                }
             }
 
-            UpdateRestDetection();
+            if (!IsAtRest)
+            {
+                UpdateRestDetection();
+            }
+
             TickCount++;
+        }
+
+        /// <summary>
+        /// Water: if the ball center is inside a water polygon it sinks — one
+        /// penalty stroke, ball returns to the last rest position, at rest.
+        /// Checked every sub-step so fast balls cannot skip across.
+        /// </summary>
+        private bool CheckWaterHazard()
+        {
+            var zones = _course.WaterZones;
+            for (int i = 0; i < zones.Length; i++)
+            {
+                if (!zones[i].Contains(_position))
+                {
+                    continue;
+                }
+
+                Strokes++;
+                _position = _lastRestPosition;
+                _velocity = Vec2Fix.Zero;
+                _restTicks = 0;
+                IsAtRest = true;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -112,6 +148,7 @@ namespace PuttSeed.Core.Sim
                 if (_restTicks >= _config.RestTicksRequired)
                 {
                     _velocity = Vec2Fix.Zero;
+                    _lastRestPosition = _position;
                     IsAtRest = true;
                 }
             }
@@ -133,6 +170,8 @@ namespace PuttSeed.Core.Sim
             h = HashLong(h, _position.Y.Raw);
             h = HashLong(h, _velocity.X.Raw);
             h = HashLong(h, _velocity.Y.Raw);
+            h = HashLong(h, _lastRestPosition.X.Raw);
+            h = HashLong(h, _lastRestPosition.Y.Raw);
             h = HashLong(h, TickCount);
             h = HashLong(h, Strokes);
             h = HashLong(h, _restTicks);

@@ -27,6 +27,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>High-friction sand polygons (may be empty).</summary>
         public ZonePolygon[] SandZones { get; }
 
+        /// <summary>Water polygons: entering costs a stroke and resets the ball (may be empty).</summary>
+        public ZonePolygon[] WaterZones { get; }
+
         /// <summary>Creates a course. Arrays are stored as-is (caller must not mutate).</summary>
         public CourseData(
             Vec2Fix startPosition,
@@ -34,7 +37,8 @@ namespace PuttSeed.Core.Sim
             int par,
             WallSegment[] walls,
             Bumper[]? bumpers = null,
-            ZonePolygon[]? sandZones = null)
+            ZonePolygon[]? sandZones = null,
+            ZonePolygon[]? waterZones = null)
         {
             StartPosition = startPosition;
             HolePosition = holePosition;
@@ -42,6 +46,7 @@ namespace PuttSeed.Core.Sim
             Walls = walls;
             Bumpers = bumpers ?? System.Array.Empty<Bumper>();
             SandZones = sandZones ?? System.Array.Empty<ZonePolygon>();
+            WaterZones = waterZones ?? System.Array.Empty<ZonePolygon>();
         }
     }
 }
