@@ -16,6 +16,7 @@ namespace PuttSeed.Core.Sim
 
         private Vec2Fix _position;
         private Vec2Fix _velocity;
+        private int _restTicks;
 
         /// <summary>Current ball state snapshot.</summary>
         public BallState Ball => new BallState(_position, _velocity);
@@ -26,6 +27,13 @@ namespace PuttSeed.Core.Sim
         /// <summary>Strokes played so far.</summary>
         public int Strokes { get; private set; }
 
+        /// <summary>
+        /// True when the ball has been slower than the rest threshold for the
+        /// required number of consecutive ticks (or has not been shot yet).
+        /// Only an at-rest ball accepts the next shot.
+        /// </summary>
+        public bool IsAtRest { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -33,6 +41,7 @@ namespace PuttSeed.Core.Sim
             _config = config;
             _position = course.StartPosition;
             _velocity = Vec2Fix.Zero;
+            IsAtRest = true;
         }
 
         /// <summary>
@@ -41,9 +50,16 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public void Shoot(ShotInput shot)
         {
+            if (!IsAtRest)
+            {
+                return; // the ball must come to rest before the next stroke
+            }
+
             var speed = _config.MaxShotSpeed * Fix64.FromFraction(shot.PowerIndex + 1, 256);
             _velocity = FixTrig.UnitVector(shot.AngleIndex) * speed;
             Strokes++;
+            IsAtRest = false;
+            _restTicks = 0;
         }
 
         /// <summary>
@@ -53,6 +69,12 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public void Tick()
         {
+            if (IsAtRest)
+            {
+                TickCount++;
+                return;
+            }
+
             _velocity *= _config.RollDamping;
 
             // Split the tick so no sub-step moves farther than the anti-tunneling
@@ -72,7 +94,64 @@ namespace PuttSeed.Core.Sim
                 ResolveWallCollisions();
             }
 
+            UpdateRestDetection();
             TickCount++;
+        }
+
+        /// <summary>
+        /// Counts consecutive below-threshold ticks; once enough accumulate the
+        /// ball is at rest and its velocity is zeroed exactly (canonical state
+        /// for hashing and for accepting the next shot).
+        /// </summary>
+        private void UpdateRestDetection()
+        {
+            if (_velocity.LengthSq() < _config.RestSpeedEpsSq)
+            {
+                _restTicks++;
+                if (_restTicks >= _config.RestTicksRequired)
+                {
+                    _velocity = Vec2Fix.Zero;
+                    IsAtRest = true;
+                }
+            }
+            else
+            {
+                _restTicks = 0;
+            }
+        }
+
+        /// <summary>
+        /// FNV-1a (64-bit) over the raw fields of the simulation state — the
+        /// backbone of all determinism tests: two runs match iff their hashes
+        /// match after every tick.
+        /// </summary>
+        public ulong StateHash()
+        {
+            ulong h = 14695981039346656037UL;
+            h = HashLong(h, _position.X.Raw);
+            h = HashLong(h, _position.Y.Raw);
+            h = HashLong(h, _velocity.X.Raw);
+            h = HashLong(h, _velocity.Y.Raw);
+            h = HashLong(h, TickCount);
+            h = HashLong(h, Strokes);
+            h = HashLong(h, _restTicks);
+            h = HashLong(h, IsAtRest ? 1L : 0L);
+            return h;
+        }
+
+        private static ulong HashLong(ulong hash, long value)
+        {
+            unchecked
+            {
+                ulong v = (ulong)value;
+                for (int i = 0; i < 8; i++)
+                {
+                    hash ^= (v >> (i * 8)) & 0xFF;
+                    hash *= 1099511628211UL;
+                }
+
+                return hash;
+            }
         }
 
         /// <summary>

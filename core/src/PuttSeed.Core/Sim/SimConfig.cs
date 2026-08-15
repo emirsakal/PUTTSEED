@@ -31,13 +31,21 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public Fix64 MaxTravelPerSubStep { get; }
 
+        /// <summary>Squared speed below which a tick counts toward rest.</summary>
+        public Fix64 RestSpeedEpsSq { get; }
+
+        /// <summary>Consecutive slow ticks required before the ball is at rest.</summary>
+        public int RestTicksRequired { get; }
+
         private SimConfig(
             Fix64 dt,
             Fix64 ballRadius,
             Fix64 maxShotSpeed,
             Fix64 rollDamping,
             Fix64 wallRestitution,
-            Fix64 maxTravelPerSubStep)
+            Fix64 maxTravelPerSubStep,
+            Fix64 restSpeedEpsSq,
+            int restTicksRequired)
         {
             Dt = dt;
             BallRadius = ballRadius;
@@ -45,6 +53,8 @@ namespace PuttSeed.Core.Sim
             RollDamping = rollDamping;
             WallRestitution = wallRestitution;
             MaxTravelPerSubStep = maxTravelPerSubStep;
+            RestSpeedEpsSq = restSpeedEpsSq;
+            RestTicksRequired = restTicksRequired;
         }
 
         /// <summary>The tuned default configuration.</summary>
@@ -54,6 +64,8 @@ namespace PuttSeed.Core.Sim
             maxShotSpeed: Fix64.FromInt(8),
             rollDamping: Fix64.FromFraction(988, 1000),
             wallRestitution: Fix64.FromFraction(8, 10),
-            maxTravelPerSubStep: Fix64.FromFraction(1, 20)); // half the ball radius
+            maxTravelPerSubStep: Fix64.FromFraction(1, 20), // half the ball radius
+            restSpeedEpsSq: Fix64.FromFraction(1, 2500),    // speed < 0.02 u/s
+            restTicksRequired: 6);
     }
 }
