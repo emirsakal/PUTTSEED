@@ -50,6 +50,24 @@ namespace PuttSeed.Core.Sim
         }
 
         /// <summary>
+        /// Resets the simulation to an arbitrary rest state: ball at rest at
+        /// <paramref name="position"/> with <paramref name="strokes"/> played,
+        /// not holed. Solver support: lets the SolvabilityChecker expand a BFS
+        /// node without replaying the whole shot sequence. Tick count is not
+        /// reset (it does not affect future dynamics).
+        /// </summary>
+        public void RestoreRest(Vec2Fix position, int strokes)
+        {
+            _position = position;
+            _velocity = Vec2Fix.Zero;
+            _lastRestPosition = position;
+            _restTicks = 0;
+            Strokes = strokes;
+            IsAtRest = true;
+            IsHoled = false;
+        }
+
+        /// <summary>
         /// Plays a stroke: sets the ball velocity from the quantized angle and
         /// power. Speed scales linearly: <c>max * (power+1)/256</c>.
         /// </summary>
