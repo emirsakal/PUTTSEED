@@ -40,6 +40,13 @@ namespace PuttSeed.Core.Tests.FixedMath
         }
 
         [Test]
+        public void ScalarDivision()
+        {
+            Assert.That(V(6, -4) / Fix64.FromInt(2), Is.EqualTo(V(3, -2)));
+            Assert.That(V(1, 0) / Fix64.Half, Is.EqualTo(V(2, 0)));
+        }
+
+        [Test]
         public void Dot_Product()
         {
             Assert.That(Vec2Fix.Dot(V(1, 2), V(3, 4)), Is.EqualTo(Fix64.FromInt(11)));

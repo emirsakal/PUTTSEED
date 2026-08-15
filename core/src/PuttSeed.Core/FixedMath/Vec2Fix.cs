@@ -39,6 +39,9 @@ namespace PuttSeed.Core.FixedMath
         /// <summary>Scales by a scalar.</summary>
         public static Vec2Fix operator *(Fix64 s, Vec2Fix v) => new Vec2Fix(v.X * s, v.Y * s);
 
+        /// <summary>Divides by a scalar.</summary>
+        public static Vec2Fix operator /(Vec2Fix v, Fix64 s) => new Vec2Fix(v.X / s, v.Y / s);
+
         /// <summary>Dot product.</summary>
         public static Fix64 Dot(Vec2Fix a, Vec2Fix b) => a.X * b.X + a.Y * b.Y;
 

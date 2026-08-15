@@ -48,13 +48,89 @@ namespace PuttSeed.Core.Sim
 
         /// <summary>
         /// Advances the simulation by one fixed 1/120 s step: exponential
-        /// rolling-friction damping, then position integration (semi-implicit).
+        /// rolling-friction damping, then sub-stepped position integration with
+        /// wall collision resolution (semi-implicit Euler).
         /// </summary>
         public void Tick()
         {
             _velocity *= _config.RollDamping;
-            _position += _velocity * _config.Dt;
+
+            // Split the tick so no sub-step moves farther than the anti-tunneling
+            // limit (a fraction of the ball radius). Integer sub-step count keeps
+            // this fully deterministic.
+            var travel = _velocity.Length() * _config.Dt;
+            int subSteps = 1;
+            if (travel > _config.MaxTravelPerSubStep)
+            {
+                subSteps = (travel / _config.MaxTravelPerSubStep).ToInt() + 1;
+            }
+
+            var dtSub = _config.Dt / Fix64.FromInt(subSteps);
+            for (int i = 0; i < subSteps; i++)
+            {
+                _position += _velocity * dtSub;
+                ResolveWallCollisions();
+            }
+
             TickCount++;
+        }
+
+        /// <summary>
+        /// Pushes the ball out of any wall it penetrates and reflects the normal
+        /// velocity component with restitution; tangential component is kept.
+        /// </summary>
+        private void ResolveWallCollisions()
+        {
+            var walls = _course.Walls;
+            for (int i = 0; i < walls.Length; i++)
+            {
+                var a = walls[i].A;
+                var ab = walls[i].B - a;
+
+                // Closest point on the segment to the ball center.
+                var abLenSq = ab.LengthSq();
+                var t = abLenSq == Fix64.Zero
+                    ? Fix64.Zero
+                    : Fix64.Clamp(Vec2Fix.Dot(_position - a, ab) / abLenSq, Fix64.Zero, Fix64.One);
+                var closest = a + ab * t;
+
+                var delta = _position - closest;
+                var distSq = delta.LengthSq();
+                var radius = _config.BallRadius;
+                if (distSq >= radius * radius)
+                {
+                    continue;
+                }
+
+                // Contact normal: from wall toward ball center. If the center sits
+                // exactly on the segment, fall back to the segment perpendicular
+                // facing against the velocity (deterministic tie-break).
+                Vec2Fix normal;
+                var dist = Fix64.Sqrt(distSq);
+                if (dist > Fix64.Zero)
+                {
+                    normal = delta / dist;
+                }
+                else
+                {
+                    normal = ab.Perp() / ab.Length();
+                    if (Vec2Fix.Dot(_velocity, normal) > Fix64.Zero)
+                    {
+                        normal = -normal;
+                    }
+                }
+
+                // Positional correction: place the ball exactly on the surface.
+                _position = closest + normal * radius;
+
+                // Velocity response: reflect the approaching normal component.
+                var vn = Vec2Fix.Dot(_velocity, normal);
+                if (vn < Fix64.Zero)
+                {
+                    var bounce = Fix64.One + _config.WallRestitution;
+                    _velocity -= normal * (bounce * vn);
+                }
+            }
         }
     }
 }
