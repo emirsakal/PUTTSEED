@@ -49,7 +49,9 @@ namespace PuttSeed.Unity
             ballView.Initialize(runner);
 
             var feedbackGo = new GameObject("Feedback");
-            feedbackGo.AddComponent<FeedbackController>().Initialize(runner, ballView);
+            var feedback = feedbackGo.AddComponent<FeedbackController>();
+            feedback.LoadDefaultClips();
+            feedback.Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");
             ghostsGo.AddComponent<GhostViewManager>().Initialize(runner);

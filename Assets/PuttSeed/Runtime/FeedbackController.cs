@@ -5,15 +5,15 @@ using UnityEngine;
 namespace PuttSeed.Unity
 {
     /// <summary>
-    /// All game feel feedback in one watcher: audio hookup points (assign the
-    /// purchased pack's clips on this component — empty slots are silently
-    /// skipped), haptics, ball squash on impacts and the hole-in celebration
-    /// ring. Observes the sim's deterministic event counters; never influences
-    /// the simulation.
+    /// All game feel feedback in one watcher: audio (synthesized default
+    /// clips from Resources/Sfx, overridable per slot — empty slots are
+    /// silently skipped), haptics, ball squash on impacts and the hole-in
+    /// celebration ring. Observes the sim's deterministic event counters;
+    /// never influences the simulation.
     /// </summary>
     public sealed class FeedbackController : MonoBehaviour
     {
-        [Header("Audio hookup points (drop the purchased pack clips here)")]
+        [Header("Audio (empty slots fall back to the synthesized Resources/Sfx clips)")]
         public AudioClip? shotClip;
         public AudioClip? wallClip;
         public AudioClip? bumperClip;
@@ -36,6 +36,20 @@ namespace PuttSeed.Unity
         private bool _lastHoled;
         private bool _lastFailed;
         private float _lastBounceSoundTime;
+
+        /// <summary>
+        /// Fills any empty clip slot with the synthesized defaults generated
+        /// by the SfxSynth editor tool (PuttSeed → Generate SFX).
+        /// </summary>
+        public void LoadDefaultClips()
+        {
+            if (shotClip == null) { shotClip = Resources.Load<AudioClip>("Sfx/shot"); }
+            if (wallClip == null) { wallClip = Resources.Load<AudioClip>("Sfx/wall"); }
+            if (bumperClip == null) { bumperClip = Resources.Load<AudioClip>("Sfx/bumper"); }
+            if (captureClip == null) { captureClip = Resources.Load<AudioClip>("Sfx/capture"); }
+            if (waterClip == null) { waterClip = Resources.Load<AudioClip>("Sfx/water"); }
+            if (failClip == null) { failClip = Resources.Load<AudioClip>("Sfx/fail"); }
+        }
 
         /// <summary>Wires dependencies (called by the bootstrap).</summary>
         public void Initialize(SimRunner runner, BallView ballView)
