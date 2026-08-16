@@ -1,0 +1,43 @@
+name: CI
+
+# The determinism story is only as strong as its enforcement: every push
+# re-proves that core/src is float-free and that all golden hashes still
+# match, including the 1000-seed property suite.
+#
+# Unity EditMode tests are NOT run here — they need a licensed Unity editor;
+# they run locally via scripts\unity-tests.bat.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core:
+    name: Purity check + core tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mirror of scripts\check-purity.bat: CLAUDE.md hard rules 1 and 2,
+      # enforced mechanically on every push.
+      - name: Purity check (core/src is float/Random/DateTime/UnityEngine-free)
+        run: |
+          fail=0
+          for token in 'float' 'double' 'System\.Random' 'DateTime' 'UnityEngine'; do
+            if grep -rn --include='*.cs' -E "\b${token}\b" core/src; then
+              echo "PURITY VIOLATION: forbidden token '${token}' found in core/src"
+              fail=1
+            fi
+          done
+          if [ "$fail" -eq 0 ]; then
+            echo "Purity check passed."
+          fi
+          exit $fail
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Core test suite (Release — goldens, property suite, codec)
+        run: dotnet test core -c Release --nologo

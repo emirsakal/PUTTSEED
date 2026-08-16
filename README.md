@@ -1,5 +1,7 @@
 # PUTTSEED
 
+[![CI](https://github.com/emirsakal/PUTTSEED/actions/workflows/ci.yml/badge.svg)](https://github.com/emirsakal/PUTTSEED/actions/workflows/ci.yml)
+
 **One mini-golf hole per day. Everyone on Earth plays the same course.**
 
 PUTTSEED is a daily-seed, bit-deterministic 2D mini-golf game for Android
