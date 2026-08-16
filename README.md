@@ -111,7 +111,7 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (169 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Core test suite (160 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
 | Unity EditMode tests | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |

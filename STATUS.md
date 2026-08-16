@@ -1,6 +1,37 @@
-# PUTTSEED — Status (end of Week 3)
+# PUTTSEED — Status (end of Week 4)
 
-Date: 2026-08-16. Scope executed so far: ROADMAP Weeks 1–3.
+Date: 2026-08-16. Scope executed: ROADMAP Weeks 1–4 (all).
+
+## Week 4 — modes, polish, release
+
+- **Modes** (`ModeController`): Daily (UTC seed, stats + streak recorded only
+  while today's actual seed is loaded), Practice (device-entropy seeds
+  filtered by difficulty bucket, ≤8 candidates, closest kept), Tutorial
+  (fixed seeds 56/10/8 — scanned so each isolates its element — with one
+  hint line each). FTUE: first launch opens Tutorial 1.
+- **Stats/streak** (`StatsStore`): JSON at persistentDataPath, plain class,
+  9 EditMode tests (streak increment/gap/reset, best-of-day, corrupt-file
+  recovery). Attempts counted per run start/retry.
+- **Feedback** (`FeedbackController`): audio hookup slots for the purchased
+  pack (empty = silent), driven by new deterministic core counters
+  (`WallHitCount`/`BumperHitCount`/`WaterEntryCount` — tested to stay OUT of
+  StateHash; goldens unchanged), plus haptics, ball squash, hole-in ring.
+- **Release packaging**: generated flat app icon + splash color in
+  BuildTools; Android signing read from gitignored `keystore.properties`
+  (loud warning when absent → debug key); `scripts/build-release.bat`
+  produces `artifacts/PuttSeed-release.aab`.
+- **README.md** (pitch, architecture, determinism proof, run matrix, ASCII
+  render) and **LATER.md** (idea parking per the GDD non-goal rule).
+
+Counts: core 160 (`scripts\test.bat`, Release, ~1.5 min) · Unity EditMode 27.
+
+Week 4 deviations/notes:
+- Practice generation runs on the main thread with coroutine yields between
+  candidates (sub-second hitches possible on device); async version parked
+  in LATER.md.
+- Haptics use coarse `Handheld.Vibrate` (no amplitude API without plugins).
+- The Play Console internal-testing upload itself is a human step: create
+  the keystore per README, run build-release.bat, upload the .aab.
 
 ## Week 3 — Unity layer
 
@@ -134,8 +165,9 @@ averages ~0.9 s (Release), worst observed ~2 s.
 
 .NET SDK 8.0.424 installed via winget in the Week-1 session.
 
-## Next (Week 4, not started)
+## Remaining human steps
 
-Daily/practice mode split, local stats + streak, tutorial courses, audio,
-haptics, signing + .aab on the Play internal testing track, README.
-Precondition per roadmap: your on-device feel verdict on the Week 3 build.
+- On-device feel pass (tune FeelConfig.asset; R in the editor reloads it).
+- Drop the purchased audio pack's clips onto the Feedback object's slots.
+- Create the keystore, run `scripts\build-release.bat`, upload the .aab to
+  the Play Console internal testing track.
