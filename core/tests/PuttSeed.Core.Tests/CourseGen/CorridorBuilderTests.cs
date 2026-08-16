@@ -121,8 +121,36 @@ namespace PuttSeed.Core.Tests.CourseGen
             var corridor = BuildOrFail(5);
             int n = corridor.Centerline.Length - 1;
             var walls = CorridorBuilder.BuildWalls(corridor);
-            // Two offset chains of (2n-1) walls each plus two end caps.
-            Assert.That(walls.Length, Is.EqualTo(2 * (2 * n - 1) + 2));
+            // Two mitered offset chains of n walls each plus two end caps:
+            // joints meet in a single miter point, so no connector stubs.
+            Assert.That(walls.Length, Is.EqualTo(2 * n + 2));
+        }
+
+        [Test]
+        public void WallChains_ShareJointEndpoints_NoKnots()
+        {
+            // Each side chain must be a continuous polyline: segment i's end is
+            // exactly segment i+1's start. The old connector-stub scheme let
+            // offsets cross at tight turns and drew knots.
+            for (ulong seed = 1; seed <= 30; seed++)
+            {
+                if (!CorridorBuilder.TryBuild(new FixRng(seed), GeneratorConfig.Default, out var corridor))
+                {
+                    continue;
+                }
+
+                int n = corridor.Centerline.Length - 1;
+                var walls = CorridorBuilder.BuildWalls(corridor);
+                for (int side = 0; side < 2; side++)
+                {
+                    int start = side * n;
+                    for (int i = 0; i < n - 1; i++)
+                    {
+                        Assert.That(walls[start + i].B, Is.EqualTo(walls[start + i + 1].A),
+                            $"seed {seed}: side {side} chain breaks at joint {i}");
+                    }
+                }
+            }
         }
 
         [Test]

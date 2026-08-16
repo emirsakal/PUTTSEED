@@ -35,11 +35,11 @@ namespace PuttSeed.Core.Tests.Replay
             return (sim.StateHash(), ReplayCodec.Encode(seed, result.AuthorSolution));
         }
 
-        [TestCase(101UL, 12215932400520877527UL, "PUTT-AWUAAAAAAAAAAoD_A0B_AA")]
-        // 2026 re-frozen 2026-08-16: ice zones entered generation (its course
-        // now carries ice; 101 and 777 drew zero ice and were unaffected).
-        [TestCase(2026UL, 5628101179876497918UL, "PUTT-AeoHAAAAAAAAAgD8A4D9Aw")]
-        [TestCase(777UL, 6859109655031616931UL, "PUTT-AQkDAAAAAAAAAoD9A8B9Ag")]
+        // Re-frozen 2026-08-16 (mitered wall joints changed all wall geometry;
+        // earlier re-freeze same day: ice zones entering generation).
+        [TestCase(101UL, 13061230583260924845UL, "PUTT-AWUAAAAAAAAAAgB_A6B_AA")]
+        [TestCase(2026UL, 4755818037070277499UL, "PUTT-AeoHAAAAAAAAAiD8A4D9Aw")]
+        [TestCase(777UL, 17538158318594718253UL, "PUTT-AQkDAAAAAAAAAoD9A-D8Ag")]
         public void GoldenFixture_FinalHashAndCode_AreStable(ulong seed, ulong expectedHash, string expectedCode)
         {
             var (hash, code) = RunFixture(seed);

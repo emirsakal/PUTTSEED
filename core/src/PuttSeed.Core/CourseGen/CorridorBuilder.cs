@@ -111,8 +111,13 @@ namespace PuttSeed.Core.CourseGen
         }
 
         /// <summary>
-        /// Widens the centerline into an enclosed wall set: two offset chains
-        /// (per-segment walls plus joint connectors) and two end caps.
+        /// Widens the centerline into an enclosed wall set: two MITERED offset
+        /// chains plus two end caps. At every interior vertex the two offset
+        /// lines meet in their exact intersection point (the miter), so each
+        /// side is one continuous polyline — no connector stubs, no crossing
+        /// offsets, none of the knot artifacts naive offsetting produces at
+        /// turns. Turn angles are capped at 67.5°, which bounds the miter
+        /// length at ~1.2× the half width.
         /// </summary>
         public static WallSegment[] BuildWalls(Corridor corridor)
         {
@@ -121,26 +126,34 @@ namespace PuttSeed.Core.CourseGen
             int n = c.Length - 1;
             var w = corridor.HalfWidth;
 
-            var walls = new WallSegment[2 * (2 * n - 1) + 2];
+            var walls = new WallSegment[2 * n + 2];
             int at = 0;
 
             for (int side = 0; side < 2; side++)
             {
                 // Left chain uses the +90° normal, right chain the -90° normal.
                 int quarter = side == 0 ? FixTrig.AngleSteps / 4 : -FixTrig.AngleSteps / 4;
-                Vec2Fix prevEnd = default;
-                for (int i = 0; i < n; i++)
+
+                var prev = c[0] + FixTrig.UnitVector(a[0] + quarter) * w;
+                for (int i = 1; i <= n; i++)
                 {
-                    var normal = FixTrig.UnitVector(a[i] + quarter);
-                    var segStart = c[i] + normal * w;
-                    var segEnd = c[i + 1] + normal * w;
-                    if (i > 0)
+                    Vec2Fix point;
+                    if (i == n)
                     {
-                        walls[at++] = new WallSegment(prevEnd, segStart); // joint connector
+                        point = c[n] + FixTrig.UnitVector(a[n - 1] + quarter) * w;
+                    }
+                    else
+                    {
+                        // Miter: intersection of the two neighboring offset
+                        // lines = V + w * (n1 + n2) / (1 + n1·n2).
+                        var n1 = FixTrig.UnitVector(a[i - 1] + quarter);
+                        var n2 = FixTrig.UnitVector(a[i] + quarter);
+                        var denom = Fix64.One + Vec2Fix.Dot(n1, n2);
+                        point = c[i] + (n1 + n2) * (w / denom);
                     }
 
-                    walls[at++] = new WallSegment(segStart, segEnd);
-                    prevEnd = segEnd;
+                    walls[at++] = new WallSegment(prev, point);
+                    prev = point;
                 }
             }
 
