@@ -1,6 +1,8 @@
 # .NET
 bin/
 obj/
+core/artifacts/
+artifacts/
 *.user
 .vs/
 

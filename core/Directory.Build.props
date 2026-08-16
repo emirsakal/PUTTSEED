@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Keep obj/ and bin/ OUT of the source tree. core/src/PuttSeed.Core is
+    junctioned into the Unity project (unity/Assets/PuttSeedCore/src), and
+    MSBuild's generated sources under obj/ (AssemblyInfo, etc.) must never be
+    visible to Unity's compiler or it would compile them twice.
+  -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

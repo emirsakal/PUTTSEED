@@ -1,0 +1,727 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.22f1 (1c726e1fb402) revision 1864302'; Using compiler version '194234433'; Build Type 'Release'
+[Licensing::IpcConnector] Channel LicenseClient-emirh doesn't exist
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'tr' Physical Memory: 32713 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-08-16T10:19:17Z
+[Licensing::Module] Successfully launched the LicensingClient (PId: 37616)
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Unity.exe
+-batchmode
+-quit
+-createProject
+D:\Projects\PUTTSEED\unity
+-logFile
+D:\Projects\PUTTSEED\unity-create.log
+D:/Projects/PUTTSEED/unity
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+Player connection [28492]  Target information:
+
+Player connection [28492]  * "[IP] 192.168.1.166 [Port] 55504 [Flags] 2 [Guid] 422551195 [EditorId] 422551195 [Version] 1048832 [Id] WindowsEditor(7,Emir) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [28492] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [28492] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-31816" after 0.2 seconds.
+[Licensing::Module] Licensing is not yet initialized.
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-emirh" at "2026-08-16T10:19:21.8356369Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 37616, path: "C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.1+9fbee8e
+  Session Id:              6b21a00430e84100b9930b3ad0926288
+  Correlation Id:          c6a76409156e2be9719b011b6c94dc29
+  External correlation Id: 2915311480486401572
+  Machine Id:              Ag8at3vzMa1I7drs6MoEqGrRKTI=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-emirh" (connect: 4.37s, validation: 0.58s, handshake: 0.06s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-emirh-notifications" at "2026-08-16T10:19:22.4769738Z"
+[Licensing::Module] Connected to LicensingClient (PId: 37616, launch time: 0.03, total connection time: 5.01s)
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 18968324052935-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 5.07s
+[Licensing::Module] Licensing is initialized (took 3.77s).
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.3.22f1 (1c726e1fb402)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path D:/Projects/PUTTSEED/unity/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+d3d12: failed to query info queue interface (0x80004002).
+Direct3D:
+    Version:         Direct3D 12 [level 12.2]
+    Renderer:        NVIDIA GeForce RTX 3080 (ID=0x2206)
+    Vendor:          NVIDIA
+    VRAM:            10053 MB
+    App VRAM Budget: 9285 MB
+    Driver:          32.0.16.1047
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56816
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/WebGLSupport/UnityEditor.WebGL.Extensions.dll
+[Licensing::Client] Successfully resolved entitlement details
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/VisionOSPlayer/UnityEditor.VisionOS.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+[Licensing::Client] Successfully resolved entitlement details
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/MetroSupport/UnityEditor.UWP.Extensions.dll
+[Licensing::Client] Successfully resolved entitlement details
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/AppleTVSupport/UnityEditor.AppleTV.Extensions.dll
+Registered in 1.321089 seconds.
+- Loaded All Assemblies, in 13.506 seconds
+Native extension for AppleTV target not found
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for UWP target not found
+Native extension for WindowsStandalone target not found
+Failed to load: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/VisionOSPlayer\x64\UnityEditor.VisionOS.Native.dll
+Native extension for VisionOS target not found
+Native extension for WebGL target not found
+Package Manager log level set to [2]
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:False
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.431 seconds
+Domain Reload Profiling: 14933ms
+	BeginReloadAssembly (9093ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (4ms)
+	RebuildCommonClasses (524ms)
+	RebuildNativeTypeToScriptingClass (14ms)
+	initialDomainReloadingComplete (1385ms)
+	LoadAllAssembliesAndSetupDomain (2484ms)
+		LoadAssemblies (9132ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (2433ms)
+			TypeCache.Refresh (2431ms)
+				TypeCache.ScanAssembly (2097ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (1432ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (1392ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (1087ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (86ms)
+			ProcessInitializeOnLoadAttributes (143ms)
+			ProcessInitializeOnLoadMethodAttributes (72ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] The file [D:\Projects\PUTTSEED\unity\Packages\manifest.json] cannot be found
+[Package Manager] Done resolving packages in 1.37 seconds
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Lock file was modified
+[Package Manager] Registered 37 packages:
+  Built-in packages:
+    com.unity.multiplayer.center@1.0.1 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.multiplayer.center@f01f4ba8d00a)
+    com.unity.modules.accessibility@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: D:\Projects\PUTTSEED\unity\Library\PackageCache\com.unity.modules.hierarchycore)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.00 seconds
+[ScriptCompilation] Requested script compilation because: Assembly Definition File(s) changed
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: D:/Projects/PUTTSEED/unity
+DisplayProgressbar: Compiling Scripts
+ExitCode: 4 Duration: 0s517ms
+[             ] Require frontend run.  Library/Bee/1900b0aE.dag couldn't be loaded
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Data\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
+WorkingDir: D:/Projects/PUTTSEED/unity
+ExitCode: 0 Duration: 2s512ms
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
+WorkingDir: D:/Projects/PUTTSEED/unity
+ExitCode: 0 Duration: 6s835ms
+Finished compiling graph: 174 nodes, 666 flattened edges (654 ToBuild, 4 ToUse), maximum node priority 24
+[  1/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.UnityAdditionalFile.txt
+[  2/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.rsp2
+[  3/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.AssetComplianceModule.dll_263203ADAF52987F.mvfrm
+[  4/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.CoreBusinessMetricsModule.dll_D8C6CA3164F1B318.mvfrm
+[  5/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.AppleTV.Extensions.dll_13BE34DA6152D0F1.mvfrm
+[  6/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.DeviceSimulatorModule.dll_ED56F3BF3496B452.mvfrm
+[  7/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Android.Extensions.dll_268A396D247744A7.mvfrm
+[  8/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityWebRequestAssetBundleModule.dll_654A06E9BAA2B6FD.mvfrm
+[  9/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.iOS.Extensions.Xcode.dll_C2862FB8B7AA114D.mvfrm
+[ 10/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.AccessibilityModule.dll_DD10A5081BBADA92.mvfrm
+[ 11/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UWP.Extensions.dll_9D63060B715143FC.mvfrm
+[ 12/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.WindowsStandalone.Extensions.dll_A4E7E172BBC16DF1.mvfrm
+[ 13/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.VisionOS.Extensions.dll_72F22D6CB34BCEF1.mvfrm
+[ 14/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Apple.Extensions.Common.dll_632928A229885F2C.mvfrm
+[ 15/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.iOS.Extensions.dll_DF0E8FFFD4B01B61.mvfrm
+[ 16/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Apple.Extensions.Common.dll_B774958A0E245612.mvfrm
+[ 17/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/Unity.Android.Types.dll_59CE1ED4E7219725.mvfrm
+[ 18/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.AdaptivePerformanceModule.dll_58DBD0B73EAA841E.mvfrm
+[ 19/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Apple.Extensions.Common.dll_4927DA234F30AD61.mvfrm
+[ 20/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.ClothModule.dll_6913C24917B6168E.mvfrm
+[ 21/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.BuildProfileModule.dll_4BFE3F9895528DBB.mvfrm
+[ 22/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.iOS.Extensions.Xcode.dll_02370F9BB8D04287.mvfrm
+[ 23/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.iOS.Extensions.Xcode.dll_3DE5CA265FB26A88.mvfrm
+[ 24/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.iOS.Extensions.Common.dll_F9DD3318B19ACF04.mvfrm
+[ 25/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.WebGL.Extensions.dll_41763F9977914181.mvfrm
+[ 26/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.CoreModule.dll_801073890A3E749F.mvfrm
+[ 27/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.dll_AE9325D6E4D4FFAB.mvfrm
+[ 28/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VRModule.dll_4CDCA0FEB300F037.mvfrm
+[ 29/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VehiclesModule.dll_89F7DE831C10A002.mvfrm
+[ 30/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/Unity.Android.Gradle.dll_DC958AE6C3220E07.mvfrm
+[ 31/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UmbraModule.dll_432CCDCAFC3D13C2.mvfrm
+[ 32/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.WindModule.dll_19802204437A5E33.mvfrm
+[ 33/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityCurlModule.dll_30CA43252167688A.mvfrm
+[ 34/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityWebRequestTextureModule.dll_FC1646DD28CAFD16.mvfrm
+[ 35/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityWebRequestModule.dll_7094BB8B316B1449.mvfrm
+[ 36/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityWebRequestWWWModule.dll_59E44EAE95399B92.mvfrm
+[ 37/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VectorGraphicsModule.dll_63B7D1C8BD873779.mvfrm
+[ 38/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Graphs.dll_F62F6C9F33099FD1.mvfrm
+[ 39/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.XRModule.dll_7F9B64033C3B3D95.mvfrm
+[ 40/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityAnalyticsCommonModule.dll_5FFBD4EF46625CE7.mvfrm
+[ 41/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UIModule.dll_FA0A7A7911466ABF.mvfrm
+[ 42/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VideoModule.dll_ED61A61D31A883F4.mvfrm
+[ 43/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VirtualTexturingModule.dll_248866C8638871E8.mvfrm
+[ 44/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.VFXModule.dll_A2F1E9D26DF6BD41.mvfrm
+[ 45/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityConnectModule.dll_3497D11DB4BE7380.mvfrm
+[ 46/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UIElementsModule.dll_0A8FA7C042DA5EC6.mvfrm
+[ 47/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityConsentModule.dll_063D6849C1C909D0.mvfrm
+[ 48/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityWebRequestAudioModule.dll_3CB96B89B2E48921.mvfrm
+[ 49/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TilemapModule.dll_46AF925CC432ECF7.mvfrm
+[ 50/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.UnityAnalyticsModule.dll_EC100C5DD7A8132C.mvfrm
+[ 51/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TLSModule.dll_22135163978953D4.mvfrm
+[ 52/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TextRenderingModule.dll_0C903FFB5F926A98.mvfrm
+[ 53/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TerrainModule.dll_A7B32ADBAC760BEE.mvfrm
+[ 54/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TextCoreFontEngineModule.dll_4739D2E115F62608.mvfrm
+[ 55/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.SubsystemsModule.dll_065146583FAE22CF.mvfrm
+[ 56/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.SpriteMaskModule.dll_9BA3DFF671663ABC.mvfrm
+[ 57/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ShaderRuntimeModule.dll_F929405DE4B6C82C.mvfrm
+[ 58/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TextCoreTextEngineModule.dll_8F220952A579DF26.mvfrm
+[ 59/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.StreamingModule.dll_B2428F4400DB2DDB.mvfrm
+[ 60/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ShaderVariantAnalyticsModule.dll_BCD0648DD4973891.mvfrm
+[ 61/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ScreenCaptureModule.dll_E350CDF0A85AEAA3.mvfrm
+[ 62/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.RenderAs2DModule.dll_20EA6F2AA23C53B5.mvfrm
+[ 63/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.PhysicsBackendPhysXModule.dll_F37F4CFA5CAC19E2.mvfrm
+[ 64/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ParticleSystemModule.dll_CC709B942B80C130.mvfrm
+[ 65/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.SubstanceModule.dll_8EEDA38D4C2E2BE9.mvfrm
+[ 66/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.TerrainPhysicsModule.dll_CCEB446744C3BBBD.mvfrm
+[ 67/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.PropertiesModule.dll_DFB2ACA4C2E2097E.mvfrm
+[ 68/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.PerformanceReportingModule.dll_C4BD17AB2C79BE89.mvfrm
+[ 69/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll_EE41076D394542FB.mvfrm
+[ 70/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.SharedInternalsModule.dll_E306F2B69DA4751A.mvfrm
+[ 71/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.PhysicsModule.dll_8D6CAF6CD6B7C300.mvfrm
+[ 72/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.SpriteShapeModule.dll_487473B3ACEE6B75.mvfrm
+[ 73/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.MultiplayerModule.dll_AEBB62E5B013C0E3.mvfrm
+[ 74/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.Physics2DModule.dll_4A5391E452506E32.mvfrm
+[ 75/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.LocalizationModule.dll_05218C77033A3894.mvfrm
+[ 76/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.JSONSerializeModule.dll_C969206B93EEBE41.mvfrm
+[ 77/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.InputModule.dll_2ECDE962E54E8CF3.mvfrm
+[ 78/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ImageConversionModule.dll_5EF5B3E1267679CA.mvfrm
+[ 79/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.InsightsModule.dll_ABFBAD942C641FE6.mvfrm
+[ 80/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.HotReloadModule.dll_7EF65FF98C86921F.mvfrm
+[ 81/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.InputLegacyModule.dll_C05861778F3DE95C.mvfrm
+[ 82/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.IdentifiersModule.dll_079CCE4EB9C50183.mvfrm
+[ 83/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.GridModule.dll_80A262C9CA9875C1.mvfrm
+[ 84/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.GraphicsStateCollectionSerializerModule.dll_BFCA234274E30C9F.mvfrm
+[ 85/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.IMGUIModule.dll_00B7C1193547FC30.mvfrm
+[ 86/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.MarshallingModule.dll_D77BE4EDDB7460BD.mvfrm
+[ 87/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.GIModule.dll_96D3255950AE4D2D.mvfrm
+[ 88/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.InputForUIModule.dll_B529C77FB01741FE.mvfrm
+[ 89/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.HierarchyCoreModule.dll_E06C340A0360B6AD.mvfrm
+[ 90/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.DSPGraphModule.dll_1786466D1447A188.mvfrm
+[ 91/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.DirectorModule.dll_1234E503A1E6D067.mvfrm
+[ 92/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.CrashReportingModule.dll_795E5247BD6F35A2.mvfrm
+[ 93/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.CoreModule.dll_A33146DBB243DFCA.mvfrm
+[ 94/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ContentLoadModule.dll_C8299F99C5CEDB58.mvfrm
+[ 95/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ClusterInputModule.dll_C6D4C2246BBE459B.mvfrm
+[ 96/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ClusterRendererModule.dll_F303B630A451C1D6.mvfrm
+[ 97/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.GameCenterModule.dll_B2776D664FF6A542.mvfrm
+[ 98/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ClothModule.dll_2F407EAD49334733.mvfrm
+[ 99/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AnimationModule.dll_FDADA1F3B153769D.mvfrm
+[100/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AndroidJNIModule.dll_882A234B89B5B451.mvfrm
+[101/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AudioModule.dll_C85821B26F16684F.mvfrm
+[102/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AdaptivePerformanceModule.dll_196B656D79EFD723.mvfrm
+[103/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AssetBundleModule.dll_2F134658F74C336B.mvfrm
+[104/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AIModule.dll_FE96DC4BB4FF6513.mvfrm
+[105/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.dll_7BEEDEFE866172C6.mvfrm
+[106/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.VFXModule.dll_96D0477EFE46AF3C.mvfrm
+[107/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.VideoModule.dll_2734E9B9002B534F.mvfrm
+[108/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.XRModule.dll_412CD273D0BE09CA.mvfrm
+[109/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UIToolkitAuthoringModule.dll_FC30EC1B217EEAFD.mvfrm
+[110/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UnityConnectModule.dll_47384D0EBA3672D5.mvfrm
+[111/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UIElementsSamplesModule.dll_0A2C9DB62BCA6CA2.mvfrm
+[112/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.VectorGraphicsModule.dll_A893702DA19AA36E.mvfrm
+[113/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UIElementsModule.dll_09E13A784096457B.mvfrm
+[114/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UIBuilderModule.dll_83B0D2E749AF1B2B.mvfrm
+[115/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AccessibilityModule.dll_6951972F94B35DB7.mvfrm
+[116/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.ARModule.dll_B809A14F121CC3DC.mvfrm
+[117/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UmbraModule.dll_7D001166CABFE31D.mvfrm
+[118/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.UIAutomationModule.dll_FC9F2E8931C6567B.mvfrm
+[119/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TilemapModule.dll_5434D9B25F2405B2.mvfrm
+[120/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TextRenderingModule.dll_804F4DD3E699E773.mvfrm
+[121/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TreeModule.dll_DDBC6897920409DE.mvfrm
+[122/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TextCoreTextEngineModule.dll_10C28DFF927C205B.mvfrm
+[123/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SubstanceModule.dll_D907B2A466AE7A04.mvfrm
+[124/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SpriteShapeModule.dll_42AEA4249AB45AF0.mvfrm
+[125/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.ShaderFoundryModule.dll_758BFBDBB6ECB2A8.mvfrm
+[126/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TextCoreFontEngineModule.dll_C8DA578E02F8673D.mvfrm
+[127/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SketchUpModule.dll_FF3307D3694D94F7.mvfrm
+[128/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.TerrainModule.dll_B5387231476724A9.mvfrm
+[129/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.ShaderBuildSettingsModule.dll_6102176011A9B560.mvfrm
+[130/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.dll.mvfrm.rsp
+[131/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.rsp
+[132/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SceneViewModule.dll_6DD808D2CC196F05.mvfrm
+[133/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.QuickSearchModule.dll_EB2A136794E57E79.mvfrm
+[134/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SpriteMaskModule.dll_9AF572AE6F222171.mvfrm
+[135/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.rsp2
+[136/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.UnityAdditionalFile.txt
+[137/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.dll.mvfrm.rsp
+[138/171    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.rsp
+[139/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.ShaderCompilationModule.dll_15FB002E0ECE6172.mvfrm
+[140/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SafeModeModule.dll_171E22831E1BF8E0.mvfrm
+[141/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.SceneTemplateModule.dll_36AC2B98943D361A.mvfrm
+[142/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.PropertiesModule.dll_DF043F5CC09DF033.mvfrm
+[143/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.MultiplayerModule.dll_A8F593569DD9B05E.mvfrm
+[144/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.PhysicsModule.dll_9AF1F6C271A8DBBB.mvfrm
+[145/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.PlayModeModule.dll_5D12143CBCE50847.mvfrm
+[146/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.Physics2DModule.dll_946DA0FB6CD0BC4D.mvfrm
+[147/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.QuickInstallModule.dll_2ADD8DD7D6D8FBEE.mvfrm
+[148/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.MediaModule.dll_CDEB7EDFBBE5C038.mvfrm
+[149/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.PresetsUIModule.dll_EA8E5EACD94EF9FC.mvfrm
+[150/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.GridModule.dll_5D818F7722930A96.mvfrm
+[151/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.GraphicsStateCollectionSerializerModule.dll_B6D65652A7E3C33A.mvfrm
+[152/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.HierarchyModule.dll_1C9C2CA694D5E0B9.mvfrm
+[153/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.GraphViewModule.dll_2F2825CAD6F6A1F7.mvfrm
+[154/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.GridAndSnapModule.dll_69D378DBBF733F0F.mvfrm
+[155/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.EmbreeModule.dll_F5DA9484E6D236C8.mvfrm
+[156/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.GIModule.dll_586493C9E5311962.mvfrm
+[157/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.HierarchyModule.dll_D2821D8F7A55929E.mvfrm
+[158/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.DiagnosticsModule.dll_601A925A3C0E8220.mvfrm
+[159/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.NVIDIAModule.dll_4DEBAC6C446F5176.mvfrm
+[160/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEngine.AMDModule.dll_23838DFE7058D881.mvfrm
+[161/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/UnityEditor.EditorToolbarModule.dll_130CBADA95508BE2.mvfrm
+[162/171    0s] MovedFromExtractor-Combine Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.dll.mvfrm
+[163/171    1s] Csc Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Common.dll (+2 others) [CacheWrite 00000000000000000000000000000005]
+[164/171    0s] CopyFiles Library/ScriptAssemblies/Unity.Multiplayer.Center.Common.dll
+[165/171    0s] CopyFiles Library/ScriptAssemblies/Unity.Multiplayer.Center.Common.pdb
+[166/171    0s] MovedFromExtractor Library/Bee/artifacts/mvdfrm/Unity.Multiplayer.Center.Common.ref.dll_EE36537354EA42C8.mvfrm
+[167/171    0s] MovedFromExtractor-Combine Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.dll.mvfrm
+[168/171    0s] Csc Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1900b0aE.dag/Unity.Multiplayer.Center.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000005]
+[169/171    0s] CopyFiles Library/ScriptAssemblies/Unity.Multiplayer.Center.Editor.pdb
+[170/171    0s] CopyFiles Library/ScriptAssemblies/Unity.Multiplayer.Center.Editor.dll
+*** Tundra build success (6.81 seconds), 170 items updated, 171 evaluated
+AssetDatabase: script compilation time: 11.020327s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.771 seconds
+Start importing Assets using Guid(00000000000000001000000000000000) (DefaultImporter) -> (artifact id: '4b55c7cb15071bfc086d0e52a7664a41') in 0.0231842 seconds
+Start importing ProjectSettings/InputManager.asset using Guid(00000000000000002000000000000000) (LibraryAssetImporter) -> (artifact id: '3d278bdfa729973ecf92c670ca181c88') in 0.0032745 seconds
+Start importing ProjectSettings/TagManager.asset using Guid(00000000000000003000000000000000) (LibraryAssetImporter) -> (artifact id: '4aa03ef27a83f311e598313a3ec2fbc3') in 0.001509 seconds
+Start importing ProjectSettings/ProjectSettings.asset using Guid(00000000000000004000000000000000) (LibraryAssetImporter) -> (artifact id: '91e75ffb826de94cd806d8fbad2c76cc') in 0.0034975 seconds
+Start importing ProjectSettings/AudioManager.asset using Guid(00000000000000006000000000000000) (LibraryAssetImporter) -> (artifact id: '7bb8de31f311db17f0fefe3abfd595f1') in 0.0016021 seconds
+Start importing ProjectSettings/TimeManager.asset using Guid(00000000000000007000000000000000) (LibraryAssetImporter) -> (artifact id: '52c307e924e96ceef905bcc2cea85a00') in 0.0017142 seconds
+Start importing ProjectSettings/DynamicsManager.asset using Guid(00000000000000008000000000000000) (LibraryAssetImporter) -> (artifact id: '913ceedd18932e74f6c2ac19d4bebe5c') in 0.002254 seconds
+Start importing ProjectSettings/QualitySettings.asset using Guid(00000000000000009000000000000000) (LibraryAssetImporter) -> (artifact id: '3d22d777d340243128ed3ffa349fb55a') in 0.0020351 seconds
+Start importing ProjectSettings/EditorBuildSettings.asset using Guid(0000000000000000b000000000000000) (LibraryAssetImporter) -> (artifact id: '1923232d45cb936aef47cec131f33975') in 0.0019184 seconds
+Start importing ProjectSettings/EditorSettings.asset using Guid(0000000000000000c000000000000000) (LibraryAssetImporter) -> (artifact id: 'fdcca38f5f1944c9bec0b9f00395ab39') in 0.0015573 seconds
+Start importing ProjectSettings/NavMeshAreas.asset using Guid(00000000000000004100000000000000) (LibraryAssetImporter) -> (artifact id: '4ba0a6bb5cc18b1619eb3b3f4ce570d1') in 0.0013787 seconds
+Start importing ProjectSettings/Physics2DSettings.asset using Guid(00000000000000005100000000000000) (LibraryAssetImporter) -> (artifact id: 'bb8ce7f5b2d944741959db20200075a7') in 0.00163 seconds
+Start importing ProjectSettings/GraphicsSettings.asset using Guid(00000000000000006100000000000000) (LibraryAssetImporter) -> (artifact id: 'b7a369a9c0780e3bb2635b3b3f88ffe1') in 0.0015557 seconds
+Start importing ProjectSettings/ClusterInputManager.asset using Guid(00000000000000007100000000000000) (LibraryAssetImporter) -> (artifact id: '5a028a71a6163b7bc9a46219c48662ec') in 0.0013984 seconds
+Start importing ProjectSettings/UnityConnectSettings.asset using Guid(0000000000000000a100000000000000) (LibraryAssetImporter) -> (artifact id: '5a6e69f8200d884ded3f19f546ea756a') in 0.0013616 seconds
+Start importing ProjectSettings/PresetManager.asset using Guid(0000000000000000b100000000000000) (LibraryAssetImporter) -> (artifact id: '669bd2cb5cdf99ef516d1350fa42393e') in 0.0014926 seconds
+Start importing ProjectSettings/VFXManager.asset using Guid(0000000000000000c100000000000000) (LibraryAssetImporter) -> (artifact id: 'dd6732d958402095937fd19a0cecb735') in 0.0013844 seconds
+Start importing ProjectSettings/VersionControlSettings.asset using Guid(0000000000000000d100000000000000) (LibraryAssetImporter) -> (artifact id: 'b89f810c452b248c014f182ae5caa680') in 0.0014197 seconds
+Start importing ProjectSettings/MemorySettings.asset using Guid(0000000000000000f100000000000000) (LibraryAssetImporter) -> (artifact id: '19f032dc933bd79e61da5c81f7ddd1ac') in 0.0013967 seconds
+Start importing ProjectSettings/MultiplayerManager.asset using Guid(00000000000000000200000000000000) (LibraryAssetImporter) -> (artifact id: 'f060d13f2990d90fc35c577bb4111c66') in 0.0013133 seconds
+Start importing Library/BuildInstructions using Guid(00000000000000002300000000000000) (DefaultImporter) -> (artifact id: 'ade3aeda13ad9960ede0e143cb33502a') in 0.0004301 seconds
+Start importing Packages/com.unity.modules.imgui using Guid(c060426bfd6e82575228df6656368eaa) (DefaultImporter) -> (artifact id: '7d484ab5933192f91b6a2fb9f7498a1e') in 0.0004168 seconds
+Start importing Packages/com.unity.modules.animation using Guid(1158e311a3101950348dcecb1bebc42d) (DefaultImporter) -> (artifact id: 'ad15220686cb46a8486da5a82128437e') in 0.0003998 seconds
+Start importing Packages/com.unity.modules.xr using Guid(515638b803bef8599dbd6d5c8bdaa53e) (DefaultImporter) -> (artifact id: '5cc0ee7d1c42b8eaef23530dfcf3e4db') in 0.0004035 seconds
+Start importing Packages/com.unity.modules.assetbundle using Guid(b219c86ce508e478367c0a46e1aa9fe4) (DefaultImporter) -> (artifact id: 'bc1ccff54e0e81e719a299f618cbc700') in 0.0003993 seconds
+Start importing Packages/com.unity.multiplayer.center using Guid(63792d44a433f53ac2acfbb01766f6e3) (DefaultImporter) -> (artifact id: '7f943148eafd435c6cfcdd8c46be635c') in 0.0003977 seconds
+Start importing Packages/com.unity.modules.vectorgraphics using Guid(04c6898809c37620ac863cc2a5d7c4d0) (DefaultImporter) -> (artifact id: '680f930692278d51ab0cb47a297e0ebc') in 0.0004162 seconds
+Start importing Packages/com.unity.modules.screencapture using Guid(5469ef0820152a4ae45d400fdc4626e4) (DefaultImporter) -> (artifact id: '1b898430acdbbeb6302342e1f16ef5fd') in 0.0003886 seconds
+Start importing Packages/com.unity.modules.cloth using Guid(c4df1124e2787ee0c8d1a911de17ee73) (DefaultImporter) -> (artifact id: 'b88b693b590a4a0a52eea9c60170b5d2') in 0.0003896 seconds
+Start importing Packages/com.unity.modules.imageconversion using Guid(850c54ee0b9e1aa740b1c67792eb1f26) (DefaultImporter) -> (artifact id: '77f78b27bd9bac81a00a007ef6f28867') in 0.0003921 seconds
+Start importing Packages/com.unity.modules.terrainphysics using Guid(95f85adeda79e994f011eb2152cf4fc9) (DefaultImporter) -> (artifact id: '361f0b2a768839d40a5a079492e0ff7f') in 0.0008425 seconds
+Start importing Packages/com.unity.modules.unitywebrequest using Guid(c522a644a29fcab2eaf63298c118a65b) (DefaultImporter) -> (artifact id: 'd98f38a0b0a3a6ad84b730beb63727de') in 0.000421 seconds
+Start importing Packages/com.unity.modules.unitywebrequestassetbundle using Guid(d5f0b0adc6826e9dd3b72e292e8438be) (DefaultImporter) -> (artifact id: '4efb6f2729456c035f8d2599b921b1ba') in 0.0004022 seconds
+Start importing Packages/com.unity.modules.subsystems using Guid(56b94a5b6990c879bb0f057719d1064b) (DefaultImporter) -> (artifact id: '04a7449add44c3b40bdab2ee56a390af') in 0.0003911 seconds
+Start importing Packages/com.unity.modules.unityanalytics using Guid(d6c6a000a805f00649b36b542e8426c2) (DefaultImporter) -> (artifact id: '50e342d51c4bbc49e9992c96072b1439') in 0.0004026 seconds
+Start importing Packages/com.unity.modules.physics using Guid(d6db7caf2e852b75ebb9c6098418179c) (DefaultImporter) -> (artifact id: 'b562405fb5bd1c9305c356f8cfe7a672') in 0.0004343 seconds
+Start importing Packages/com.unity.modules.vr using Guid(178008567c08e6d84014fa87825d10bb) (DefaultImporter) -> (artifact id: '73cec448275baf0a5bb22c2b6702dc1b') in 0.0004035 seconds
+Start importing Packages/com.unity.modules.physics2d using Guid(376c84ea405e0f2b80562c23bb977216) (DefaultImporter) -> (artifact id: 'f030ba7c21f8c3d36c2700ba9484429e') in 0.00041 seconds
+Start importing Packages/com.unity.modules.wind using Guid(b77b1ad9c05af0412725856c6c53b037) (DefaultImporter) -> (artifact id: '61b7785e224d7c7b869e66861a5b4394') in 0.0003909 seconds
+Start importing Packages/com.unity.modules.uielements using Guid(2808ba6bccb2478ec9c7209d8bf1f3cc) (DefaultImporter) -> (artifact id: '49f971d306aab8cb20ddbc00ca94734a') in 0.0003913 seconds
+Start importing Packages/com.unity.modules.unitywebrequestaudio using Guid(38e3a8976f0b9c586b6dfbcef4e4066c) (DefaultImporter) -> (artifact id: 'd22a0a5dce520265216aede629a15820') in 0.000413 seconds
+Start importing Packages/com.unity.modules.particlesystem using Guid(48b10b41f58d5b49717f376cda59eeb8) (DefaultImporter) -> (artifact id: '52931c3585e961751803a41152ba5f0c') in 0.0004043 seconds
+Start importing Packages/com.unity.modules.accessibility using Guid(783ee1c8fd4414848db1be97aacf44fb) (DefaultImporter) -> (artifact id: '8e348ba1cb91a7a56d611c91d2d841c4') in 0.0004207 seconds
+Start importing Packages/com.unity.modules.tilemap using Guid(09e28640d754a611467eebfb261ed749) (DefaultImporter) -> (artifact id: 'e25ff35afe7ee7ac44e2f5154ec1bf6d') in 0.0003962 seconds
+Start importing Packages/com.unity.modules.ui using Guid(39728903e57c60021f80449a8bbc0096) (DefaultImporter) -> (artifact id: '9ba448b29b75a8a1f5c4c31201266424') in 0.0003912 seconds
+Start importing Packages/com.unity.modules.androidjni using Guid(995c08a3305ff9f0dab5e86f340bd9a7) (DefaultImporter) -> (artifact id: 'cb17bea8d2250c1b95c120c742c59ba3') in 0.0004044 seconds
+Start importing Packages/com.unity.modules.adaptiveperformance using Guid(b975297a992381c1f3257d0e96892c8a) (DefaultImporter) -> (artifact id: '1e6f2dc93c835ec2b681bcb9564bfccc') in 0.000408 seconds
+Start importing Packages/com.unity.modules.hierarchycore using Guid(6b81377a4453ba7362eb3322f9bcc6c6) (DefaultImporter) -> (artifact id: 'b5ba94375de312bec58cfc03230046fb') in 0.0004036 seconds
+Start importing Packages/com.unity.modules.vehicles using Guid(1cf2469083ffa484da4d78dd70d708e8) (DefaultImporter) -> (artifact id: '9c6c089c957cf9dd84e226d7cd597cc4') in 0.0004052 seconds
+Start importing Packages/com.unity.modules.umbra using Guid(9c7c268fa6492449654839df69f2a2f4) (DefaultImporter) -> (artifact id: '281c95feba9f039879135a452ddf9925') in 0.0003979 seconds
+Start importing Packages/com.unity.modules.unitywebrequestwww using Guid(dcc8c6e92b172a65719af5ddf47dd968) (DefaultImporter) -> (artifact id: '7f5a98437b302707aa44474c2ba685a9') in 0.0004149 seconds
+Start importing Packages/com.unity.modules.jsonserialize using Guid(fc3a810351931f5e6183e16b9beb5563) (DefaultImporter) -> (artifact id: 'ae149b8f46567b37c6b77b16bb572fe8') in 0.0004286 seconds
+Start importing Packages/com.unity.modules.director using Guid(2d142b475fbfb8cf12ba3a795194300a) (DefaultImporter) -> (artifact id: '048fe235c538004c98f298dced6201df') in 0.0004181 seconds
+Start importing Packages/com.unity.modules.audio using Guid(2d6ba5cbe47e6ad3c87474c56174d4e0) (DefaultImporter) -> (artifact id: '2ad5535b0c9fde796c0a268a703c42c8') in 0.0004064 seconds
+Start importing Packages/com.unity.modules.video using Guid(ede0462698a4a5643aa9872c074acd38) (DefaultImporter) -> (artifact id: '3172065d6af8ff17b025e0af8d219d15') in 0.0004327 seconds
+Start importing Packages/com.unity.modules.ai using Guid(fd871a8be47119612f7c254e96a822b7) (DefaultImporter) -> (artifact id: '619e67a2820f0fb43e606df1f0c95aa2') in 0.0003991 seconds
+Start importing Packages/com.unity.modules.terrain using Guid(6e1c8b97ec8aa0464e92506ffe099558) (DefaultImporter) -> (artifact id: 'd262e4fb78f6fff54404eb87b88b9ac4') in 0.0004285 seconds
+Start importing Packages/com.unity.modules.unitywebrequesttexture using Guid(6f1c7ebc8ac78cb951be24c238cbd3ba) (DefaultImporter) -> (artifact id: '590a54cd80ec2a1da1d11f7ee409e01f') in 0.0004452 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor using Guid(72aad6ae0dafb492cbf852432441bb38) (DefaultImporter) -> (artifact id: '1472e7f5e610b0cbc5fd254e2d90e8af') in 0.0005096 seconds
+Start importing Packages/com.unity.multiplayer.center/Common using Guid(f247964bd405431fbd31840f97bef608) (DefaultImporter) -> (artifact id: '80028f5919b4bee936c04608a509d2e3') in 0.0004688 seconds
+Start importing Packages/com.unity.multiplayer.center/Tests using Guid(baf75c9d3de4941df9ee5f3dd1d3bc34) (DefaultImporter) -> (artifact id: 'c292f37aeb22efaba797eb1a89034c56') in 0.0004746 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Analytics using Guid(21f32d2f4add49b3b11fadb6889a2156) (DefaultImporter) -> (artifact id: '51aff480448f490e143cac19c8fd77f7') in 0.0004859 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Features using Guid(22d3dbf8d488d49d2b1130d698010dee) (DefaultImporter) -> (artifact id: '97b7a3470b31512cc10a8dd26ae2abee') in 0.0004707 seconds
+Start importing Packages/com.unity.multiplayer.center/Tests/Editor using Guid(96c71b811fa50403690b154e216fe217) (DefaultImporter) -> (artifact id: 'f201ce797b3b9aaf0bd388d6daf5c8a9') in 0.0004714 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/OnBoarding using Guid(1726448925bf4bd1af6ca883bae8ff3f) (DefaultImporter) -> (artifact id: 'c547995c98e70de55ed7a0882b0b1d59') in 0.0004758 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Recommendations using Guid(97646f506bf040e9bd4568124c8b425e) (DefaultImporter) -> (artifact id: '2b67414499aad658981bbbe944dda5b8') in 0.0004734 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Questionnaire using Guid(a7f089ed51c2345ffb7ac0bc3562453f) (DefaultImporter) -> (artifact id: '91939e622deced05437de4135bda5ede') in 0.0006024 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow using Guid(7a7dcde6448847648629a13d746ce966) (DefaultImporter) -> (artifact id: '25d35bc9e6545f61b784037e02201bc5') in 0.0004902 seconds
+Start importing Packages/com.unity.multiplayer.center/Tests/Runtime using Guid(8e4d240cf158245a9945c4df01d83bc1) (DefaultImporter) -> (artifact id: '9afa31a007ea527f1ed301c6b16e63c9') in 0.0004867 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI using Guid(9bd34ec3fe8f4aed936c3a0cf2f32e56) (DefaultImporter) -> (artifact id: 'b73da0b57dd0696387d727e85cb54e01') in 0.0004781 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons using Guid(34a09eb4d6e8d44989194a25525c5147) (DefaultImporter) -> (artifact id: '6eef5c1301b509ae1757bc36a5ed6ea8') in 0.0004769 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/RecommendationView using Guid(eab7f42d361b483aaa760c5909002312) (DefaultImporter) -> (artifact id: '8eb859fe06dd083b30bd9c27d3ce7755') in 0.0008741 seconds
+Start importing Packages/com.unity.multiplayer.center/Common/Unity.Multiplayer.Center.Common.asmdef using Guid(84abd2ab34a74600a33a3bb9d72859fe) (AssemblyDefinitionImporter) -> (artifact id: '2e15fdfe053455410c46af8108d4b576') in 0.0019825 seconds
+Start importing Packages/com.unity.multiplayer.center/Tests/Runtime/Unity.Multiplayer.Center.Tests.asmdef using Guid(2664430aff4254d79887d32c3fc1e221) (AssemblyDefinitionImporter) -> (artifact id: '10a8b6cec249c3f1431650b35fb0b23f') in 0.00181 seconds
+Start importing Packages/com.unity.multiplayer.center/Tests/Editor/Unity.Multiplayer.Center.Editor.Tests.asmdef using Guid(787ec048daec145b580d1134da5dd278) (AssemblyDefinitionImporter) -> (artifact id: '29dc17f91cb2a01d8b6be8c932a8280d') in 0.0015791 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Unity.Multiplayer.Center.Editor.asmdef using Guid(be17709716f1648caa5de6d0c38103ed) (AssemblyDefinitionImporter) -> (artifact id: '6ce86c22cc7899b0214f30e55df0ec5c') in 0.0018008 seconds
+Start importing Packages/com.unity.modules.ui/package.ModuleCompilationTrigger using Guid(51fa60bb2bd1e5bc74e8cc95a7bfd5b7) (DefaultImporter) -> (artifact id: '237e32f9541121b786ca4b06eace0dfe') in 0.0245263 seconds
+Start importing Packages/com.unity.modules.unityanalytics/package.ModuleCompilationTrigger using Guid(71136fc5cf34f2cc10be0e33c0b08019) (DefaultImporter) -> (artifact id: '9b0cf4eb7c767f90f530cd263ba24ee4') in 0.0008715 seconds
+Start importing Packages/com.unity.modules.tilemap/package.ModuleCompilationTrigger using Guid(a1c42005fe7c5d78585a77ce396a5eea) (DefaultImporter) -> (artifact id: 'd923349cce1d10fbf9fab4491e59c38f') in 0.0007072 seconds
+Start importing Packages/com.unity.modules.hierarchycore/package.ModuleCompilationTrigger using Guid(d104359075a97392b803d3d5aebc77f7) (DefaultImporter) -> (artifact id: '5f087c93c58d9b1c35f89c539ed3a98d') in 0.0007403 seconds
+Start importing Packages/com.unity.modules.assetbundle/package.ModuleCompilationTrigger using Guid(222fc39b0c85d800342910da2cd64781) (DefaultImporter) -> (artifact id: '9a6a8c4ae725acd0e4d082b2f7469352') in 0.0005164 seconds
+Start importing Packages/com.unity.modules.unitywebrequest/package.ModuleCompilationTrigger using Guid(d2ec2d1228c8e67cdd913cb5609176a2) (DefaultImporter) -> (artifact id: '8af4f3e306c0241d03204a437a8fc5e0') in 0.0004955 seconds
+Start importing Packages/com.unity.modules.ai/package.ModuleCompilationTrigger using Guid(e2d09a26ce46dc617b54e49a534ace20) (DefaultImporter) -> (artifact id: 'a71f1fd08e4e9bf1ecd2d64209645034') in 0.000581 seconds
+Start importing Packages/com.unity.modules.terrain/package.ModuleCompilationTrigger using Guid(23032f4383e95e772bce465c5896d0fd) (DefaultImporter) -> (artifact id: '491a7f75d3e9187fba07a3d515b1da29') in 0.0004947 seconds
+Start importing Packages/com.unity.modules.imageconversion/package.ModuleCompilationTrigger using Guid(830a36a23cf3ab1e61fa47940a6dc35e) (DefaultImporter) -> (artifact id: 'ee0f0c801f95c19382d8b454dc7586e1') in 0.0004969 seconds
+Start importing Packages/com.unity.modules.unitywebrequesttexture/package.ModuleCompilationTrigger using Guid(a31a332ce3485f00f7df8d987302a29c) (DefaultImporter) -> (artifact id: '5b56561b2c8cae5c48817dca1565364f') in 0.0005271 seconds
+Start importing Packages/com.unity.modules.audio/package.ModuleCompilationTrigger using Guid(042dc296246916648e55a43d0eeb2036) (DefaultImporter) -> (artifact id: '93cfeb7be8bf6df4dc4fc167223dc2d5') in 0.0005153 seconds
+Start importing Packages/com.unity.modules.unitywebrequestaudio/package.ModuleCompilationTrigger using Guid(553737203d61a8109f9544a97201e1aa) (DefaultImporter) -> (artifact id: '29c8c1952ecab40326be6fe65bf2dc75') in 0.00054 seconds
+Start importing Packages/com.unity.modules.vr/package.ModuleCompilationTrigger using Guid(b5bd8fa6f4c55ab6f09322b86d18b0e3) (DefaultImporter) -> (artifact id: '7fb6f5a64a18b8abc92ffb2611727976') in 0.0004797 seconds
+Start importing Packages/com.unity.modules.vehicles/package.ModuleCompilationTrigger using Guid(e5c46c19ce0ce2e0103aa6f82df1043a) (DefaultImporter) -> (artifact id: '4efeb502fc9ade03fc8da1a2020cc14d') in 0.0004888 seconds
+Start importing Packages/com.unity.modules.unitywebrequestassetbundle/package.ModuleCompilationTrigger using Guid(7610600f5c83e01041a6fe849d39279f) (DefaultImporter) -> (artifact id: '5ea653cc184754456a13dd8d09c34205') in 0.0004937 seconds
+Start importing Packages/com.unity.modules.jsonserialize/package.ModuleCompilationTrigger using Guid(e6a135e3ea9cb46795d1b0e05ac3e1e5) (DefaultImporter) -> (artifact id: '8d26f1c211bce77f7cf17eccccd57b0d') in 0.0005308 seconds
+Start importing Packages/com.unity.modules.video/package.ModuleCompilationTrigger using Guid(f62135e79edb837b2d2ee3c524da864c) (DefaultImporter) -> (artifact id: '6ebda327ae83705f04de3efed3db9873') in 0.0004886 seconds
+Start importing Packages/com.unity.modules.particlesystem/package.ModuleCompilationTrigger using Guid(17f093324b67f5bd57e55b546736750e) (DefaultImporter) -> (artifact id: '2ff549dcfdc7b1fa23811cebe1444f07') in 0.0005022 seconds
+Start importing Packages/com.unity.modules.accessibility/package.ModuleCompilationTrigger using Guid(4745d06d5a7ca576dcf9e5e67b417652) (DefaultImporter) -> (artifact id: 'ae9e01646ac31a09b3de296582cd6de0') in 0.0004803 seconds
+Start importing Packages/com.unity.modules.xr/package.ModuleCompilationTrigger using Guid(c7a8b0317f4e68556d7509828e9e211e) (DefaultImporter) -> (artifact id: 'cff4c28c132f8374585e00aa928dde3a') in 0.0005231 seconds
+Start importing Packages/com.unity.modules.cloth/package.ModuleCompilationTrigger using Guid(082fbee38a82835433261a5e9c00e267) (DefaultImporter) -> (artifact id: 'fb60fe65bd12026494280cd2600d4c8d') in 0.0004867 seconds
+Start importing Packages/com.unity.modules.androidjni/package.ModuleCompilationTrigger using Guid(c82e859b16636ddd2ca4a1f63fd34938) (DefaultImporter) -> (artifact id: '28e4fd36d397729ef98ce8a6b5fe53a2') in 0.0004869 seconds
+Start importing Packages/com.unity.modules.director/package.ModuleCompilationTrigger using Guid(c88e90bad18cceb5d182d0c805883056) (DefaultImporter) -> (artifact id: '8e742e385eae214c44fd937134cf600f') in 0.0004839 seconds
+Start importing Packages/com.unity.modules.adaptiveperformance/package.ModuleCompilationTrigger using Guid(1af35a910338381f753e8a985eb5daab) (DefaultImporter) -> (artifact id: '867fce9a42b816ffb5ac55f16cf2007e') in 0.0004973 seconds
+Start importing Packages/com.unity.modules.wind/package.ModuleCompilationTrigger using Guid(2adec19fac7df68adf1fd6eb83197bb1) (DefaultImporter) -> (artifact id: '7db7181525b7da8ee072e519f9529aab') in 0.0005007 seconds
+Start importing Packages/com.unity.modules.uielements/package.ModuleCompilationTrigger using Guid(8a752aaaadd2410dd9a84e01c1bace9f) (DefaultImporter) -> (artifact id: 'ae37e7f0f1483578fc0d8d28fd17e0e2') in 0.0004837 seconds
+Start importing Packages/com.unity.modules.umbra/package.ModuleCompilationTrigger using Guid(1b6246f2248883964991eac9e9b4817c) (DefaultImporter) -> (artifact id: 'd1507e2ccffaa842e8d211f5b4e1425f') in 0.0004974 seconds
+Start importing Packages/com.unity.modules.terrainphysics/package.ModuleCompilationTrigger using Guid(cbb1a39d56ce4d9ac1a46ac505893fa7) (DefaultImporter) -> (artifact id: '8d1d3ac1946fa5f9233e968059d3fb13') in 0.0005916 seconds
+Start importing Packages/com.unity.modules.animation/package.ModuleCompilationTrigger using Guid(db8e609a39b9b231fccc54e5fa4cbd1b) (DefaultImporter) -> (artifact id: '76194af19b6b83e46d258b902c79f26f') in 0.000621 seconds
+Start importing Packages/com.unity.modules.vectorgraphics/package.ModuleCompilationTrigger using Guid(3cc1ebf2abb7fef6871ad48f499b6e21) (DefaultImporter) -> (artifact id: '51ba5d987381c742b47376b47674c513') in 0.0005683 seconds
+Start importing Packages/com.unity.modules.physics/package.ModuleCompilationTrigger using Guid(5c1ee4056d0ac7ad3c5a16597fcaa38a) (DefaultImporter) -> (artifact id: '288b7a03d6481d4e92cee0ae908758ad') in 0.0005124 seconds
+Start importing Packages/com.unity.modules.subsystems/package.ModuleCompilationTrigger using Guid(8d4bc6bfa28760b29f13174d6b6ea710) (DefaultImporter) -> (artifact id: '86683c86d6892e456463f75256ee724d') in 0.0005033 seconds
+Start importing Packages/com.unity.modules.screencapture/package.ModuleCompilationTrigger using Guid(cd561f5f687aed43bf280c27a84f79e3) (DefaultImporter) -> (artifact id: '9675ccd07d8427f33d815eef637fd3c3') in 0.0004965 seconds
+Start importing Packages/com.unity.modules.unitywebrequestwww/package.ModuleCompilationTrigger using Guid(ae87256f29d9c8b50490f4caf75b2c41) (DefaultImporter) -> (artifact id: '8a97098fbd52b5ae1a5755ce8a67debb') in 0.0004896 seconds
+Start importing Packages/com.unity.modules.imgui/package.ModuleCompilationTrigger using Guid(be13c398521e3c1ad21fb9da30ab2ab6) (DefaultImporter) -> (artifact id: 'ea0574aa05344c7e80357502346d73fc') in 0.0004868 seconds
+Start importing Packages/com.unity.modules.physics2d/package.ModuleCompilationTrigger using Guid(fe6a6957b37b61417b457a1e0541791d) (DefaultImporter) -> (artifact id: 'a5a6ae7d64235baf32ceb35097cc3c10') in 0.0004996 seconds
+Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Native extension for AppleTV target not found
+Native extension for iOS target not found
+Native extension for Android target not found
+Native extension for UWP target not found
+Native extension for WindowsStandalone target not found
+Failed to load: C:/Program Files/Unity/Hub/Editor/6000.3.22f1/Editor/Data/PlaybackEngines/VisionOSPlayer\x64\UnityEditor.VisionOS.Native.dll
+Native extension for VisionOS target not found
+Native extension for WebGL target not found
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.500 seconds
+Domain Reload Profiling: 1266ms
+	BeginReloadAssembly (340ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (41ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (140ms)
+	RebuildCommonClasses (41ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (28ms)
+	LoadAllAssembliesAndSetupDomain (341ms)
+		LoadAssemblies (292ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (156ms)
+			TypeCache.Refresh (153ms)
+				TypeCache.ScanAssembly (146ms)
+			BuildScriptInfoCaches (1ms)
+			ResolveRequiredComponents (0ms)
+	FinalizeReload (500ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (350ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (64ms)
+			SetLoadedEditorAssemblies (2ms)
+			BeforeProcessingInitializeOnLoad (125ms)
+			ProcessInitializeOnLoadAttributes (111ms)
+			ProcessInitializeOnLoadMethodAttributes (33ms)
+			AfterProcessingInitializeOnLoad (13ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (29ms)
+Start importing Library/BuildPlayer.prefs using Guid(00000000000000005000000000000000) (DefaultImporter) -> (artifact id: '083d37eb6b0e82b8f5c1ec86344d848d') in 0.0061705 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Questionnaire/Questionnaire.questionnaire using Guid(a659150180ae3489ba41c71780ba3779) (DefaultImporter) -> (artifact id: 'f015c12481ca2ebbe281edf6a5646fdb') in 0.0037607 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/Recommendations/RecommendationData_6000.0.recommendations using Guid(b66d076cdcfe3b14388de66307a0e7ff) (DefaultImporter) -> (artifact id: '1cc2974bd6a9df6f05cc50707f3dca04') in 0.0050323 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_PackageInstalled@2x.png using Guid(318df756abab5463e9aa361360784865) (TextureImporter) -> (artifact id: '1ae6de752a635c02742efc5c800b94c6') in 0.0128837 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/Loading.png using Guid(424a8de5def3b46dcb08edd00ad1c7bd) (TextureImporter) -> (artifact id: '8da49db8cbd75ae6e2401becd8fa12c9') in 0.0038872 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_Package.png using Guid(525a6cca8dd9a4d28875a8fe824710d9) (TextureImporter) -> (artifact id: 'cb98f017806cc1d9493aafabe9a0ac53') in 0.0029218 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/CloudCode@2x.png using Guid(a23c0dd570fd44b57a03a8880002fcca) (TextureImporter) -> (artifact id: 'c9bf89aba07d24d2a2a13fb073749780') in 0.0027389 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/ClientHosted.png using Guid(b2ce704e56cc84fb3b347499263c6244) (TextureImporter) -> (artifact id: '16f5545421790ee7be66b8f86509f079') in 0.002653 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/DistributedAuthority@2x.png using Guid(0354877031b64465ea7e5cafea1a2653) (TextureImporter) -> (artifact id: '59440ca94a0075a18291b16ef6018543') in 0.0036455 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/NGO@2x.png using Guid(83b28bcaaf34b4fd580114fb05d9f160) (TextureImporter) -> (artifact id: 'cba5b3e08b74c308c7bdca3979317f2e') in 0.0036276 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/PackageInstalled@2x.png using Guid(0423146d9f51c4563a0f2a8200b6cd38) (TextureImporter) -> (artifact id: 'a224bbc63f779f6110b2f67a0c2f634e') in 0.0023433 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_Questionnaire.png using Guid(741761e72e6f24446bd8ba03ea3d0261) (TextureImporter) -> (artifact id: '18fa495d3bd2be0fc80bdd5a98d9c6c1') in 0.0020789 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/EmptyViewIcon.png using Guid(84e4bbd00035e4671bf14e0380a89001) (TextureImporter) -> (artifact id: 'f6a0695b111c3c15bb6ab7263ce957a8') in 0.0057793 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/PackageManager@2x.png using Guid(9431e8221045c4af189b2fa7174b9e9f) (TextureImporter) -> (artifact id: '5d0ec4942417e1a429eac67fad4c5284') in 0.0023223 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/NoNetcode@2x.png using Guid(b58a826ca804e4c67bab4283ad5a6102) (TextureImporter) -> (artifact id: '54a5d94ebce40a5facbaccc9761e947c') in 0.002881 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/PackageInstalled.png using Guid(4616b2fa4acd1429e931835b80966c2a) (TextureImporter) -> (artifact id: 'b03ff1bb77fce1f6b3eec814cb3bd426') in 0.0021374 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_PackageManager@2x.png using Guid(a6fd0c627f5aa48fa81512221e70a11e) (TextureImporter) -> (artifact id: 'ce51f4daf0a6af6d6fb52539614bdbed') in 0.0021079 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/DistributedAuthority.png using Guid(d63245ece6d8f476c8c7ca24da9937f6) (TextureImporter) -> (artifact id: 'e3906001be91c3537cfdda89a96bba0d') in 0.0024918 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/PackageManager.png using Guid(679f9999c6f8f497e806a2d5d0511879) (TextureImporter) -> (artifact id: '6e1f59618e0c419a33206a205de4d0c9') in 0.0021829 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_PackageInstalled.png using Guid(77be953cf28de42a4ad8532539fef3f5) (TextureImporter) -> (artifact id: 'a52706d5ba2af7ffbcad9ea7d2a4f1e5') in 0.0021459 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/ClientHosted@2x.png using Guid(c7a38e6eccbfc49778cb8b77f594a971) (TextureImporter) -> (artifact id: '8abe27252e711f3c492a45706fe0c568') in 0.0031165 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/CustomNetcode@2x.png using Guid(d7711b0cc806d430b8a95f1e33ec3649) (TextureImporter) -> (artifact id: 'ddb0abf131277adf43595ffd221aed28') in 0.0030255 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/DedicatedServer@2x.png using Guid(38b78df4a34c94fa6a52c90239606ff1) (TextureImporter) -> (artifact id: '146ffae0e0a2bc9c55dc2c2e44a5fda8') in 0.0027524 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_Check.png using Guid(29395f0639574c1fbc8b729aa257fb84) (TextureImporter) -> (artifact id: '12d02ab5712a8fbd825bc8ff22c4c31b') in 0.0020546 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/NGO.png using Guid(99da7b3894f364efdb5fa1443952a55d) (TextureImporter) -> (artifact id: 'f4742b837296515459248d563ef67b20') in 0.0026581 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/N4E.png using Guid(e9669051ff70449b5923861e0e0b8838) (TextureImporter) -> (artifact id: '1a7eb999569fc6e27c3dcc93032be7e8') in 0.0024998 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/EmptyViewIcon@2x.png using Guid(2adffcc506285402aa795dee6f3166d0) (TextureImporter) -> (artifact id: '00ee198e3ce0cc7195e72d151c9f2841') in 0.0143649 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_Loading.png using Guid(dab91f148d99946e7b3c3a87ecf4b973) (TextureImporter) -> (artifact id: 'ccef31069007476069a278bae6a5dc5c') in 0.0027992 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/d_PackageManager.png using Guid(1b4c88814ec6241eb8e327515399c006) (TextureImporter) -> (artifact id: 'dcbbc14319cf368e900c26cdf47a946d') in 0.0023034 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/N4E@2x.png using Guid(2cb589d4e01184d928bb698f06e77561) (TextureImporter) -> (artifact id: '30b8d0aa77b9588aefceb2be311503e4') in 0.0034708 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/CustomNetcode.png using Guid(dce12af736e0a4a1ba35d6424f897dc9) (TextureImporter) -> (artifact id: '0c302b4023b471cfa8d71373dc4baea0') in 0.0026034 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/NoNetcode.png using Guid(1daed49eec0f94f7ebb36dfef6159884) (TextureImporter) -> (artifact id: 'e65bc0a3f3ce6c9003da56d9a70a6c6d') in 0.0024612 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/Package.png using Guid(9d9689eab72c8480c90679f4dcf18820) (TextureImporter) -> (artifact id: 'd1fae14db9d400924c751f1fb634f012') in 0.0021047 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/CloudCode.png using Guid(ad1d29f4654194951a3c8bf507914d05) (TextureImporter) -> (artifact id: '613ca5b569d1caadf6b838500449d52f') in 0.0024545 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/Questionnaire.png using Guid(dd70cd654275d47db807e918055e004f) (TextureImporter) -> (artifact id: '56632d808713f68c6ec985495714fb10') in 0.0025552 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/DedicatedServer.png using Guid(3fe892784421e47f5aa40c2784a6cb3e) (TextureImporter) -> (artifact id: 'b6a7d9eb9f15de101c401862952bac92') in 0.0025449 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/Icons/Check.png using Guid(4f78a544322c742b89e63fb68557b1d2) (TextureImporter) -> (artifact id: 'f50bf2ca72f72086d19066beb17b0d39') in 0.0020723 seconds
+Start importing Packages/com.unity.modules.subsystems/package.json using Guid(30b312a167534621b316172253b08723) (PackageManifestImporter) -> (artifact id: '5fddaf95e1048f20ba7f7820d94a41a8') in 0.0020963 seconds
+Start importing Packages/com.unity.modules.jsonserialize/package.json using Guid(40bf3cec17fa0b49fe04443c8332d638) (PackageManifestImporter) -> (artifact id: '4c54406cdf6f27a0dfd74653ac191550') in 0.0017337 seconds
+Start importing Packages/com.unity.multiplayer.center/LICENSE.md using Guid(70554f6c9e4114e1084bb38f9ea400ce) (TextScriptImporter) -> (artifact id: 'c4bd63aaea861ad58925ef6690300eb1') in 0.0017938 seconds
+Start importing Packages/com.unity.modules.screencapture/package.json using Guid(80beef77cb19e713c7c2d481b65ed485) (PackageManifestImporter) -> (artifact id: '2f4796478e898a299d67d69a4e932b6a') in 0.0016118 seconds
+Start importing Packages/com.unity.modules.cloth/package.json using Guid(906c12bc9cd95d3963c6d58f62522c78) (PackageManifestImporter) -> (artifact id: '3d693bca45ffae6fac5cd7db888ef115') in 0.0016353 seconds
+Start importing Packages/com.unity.modules.unitywebrequesttexture/package.json using Guid(d0e3ad91972c66f5238f5b9b7d5ae58a) (PackageManifestImporter) -> (artifact id: 'e55c9ecf8b6cd2df41ad2d48f83627ef') in 0.0016669 seconds
+Start importing Packages/com.unity.modules.ai/package.json using Guid(f0f13f2ab3d6d13cfc6e4656824bfca8) (PackageManifestImporter) -> (artifact id: '993ffce69848b7fc2884f536f4e72d66') in 0.0019868 seconds
+Start importing Packages/com.unity.modules.assetbundle/package.json using Guid(e1ef8466c8fd01a549f10baa4d51fa17) (PackageManifestImporter) -> (artifact id: 'bd1378d04a55ff92f406f64b548a4dfc') in 0.0017595 seconds
+Start importing Packages/com.unity.modules.imgui/package.json using Guid(42fe78c8fe682715a2cb531422e6ccb3) (PackageManifestImporter) -> (artifact id: 'b643c636c8e55776455f8adce1983951') in 0.0018663 seconds
+Start importing Packages/com.unity.modules.tilemap/package.json using Guid(92a378669877c05c6071d0fed687bb95) (PackageManifestImporter) -> (artifact id: '4056b6dbe265f7ea644917ceb3d938ad') in 0.0017415 seconds
+Start importing Packages/com.unity.modules.accessibility/package.json using Guid(43674d438e19b89d7fe6af07234f3252) (PackageManifestImporter) -> (artifact id: '9a98f0a4a23cfb2780f9ebc86419c8bb') in 0.0014165 seconds
+Start importing Packages/com.unity.multiplayer.center/README.md using Guid(c359bcaf4a0bc4040aac650bf14ec619) (TextScriptImporter) -> (artifact id: '1479d3316a4547e823ef71ef56c076f5') in 0.00153 seconds
+Start importing Packages/com.unity.modules.terrainphysics/package.json using Guid(d3cbe921f7b3d9a3257e7c61a5761796) (PackageManifestImporter) -> (artifact id: 'f5e2c961ee3d9c345b9cfb0721893363') in 0.0019428 seconds
+Start importing Packages/com.unity.modules.unitywebrequestassetbundle/package.json using Guid(05f7f519769978b79b31d063a7fc6fa1) (PackageManifestImporter) -> (artifact id: '4f2160dda0ab469cf2df5b0cd4f92db7') in 0.0018267 seconds
+Start importing Packages/com.unity.modules.imageconversion/package.json using Guid(953fab16d15d5885b3600fcd6388b2ad) (PackageManifestImporter) -> (artifact id: '4914195fadd462954a635b65250787ed') in 0.001737 seconds
+Start importing Packages/com.unity.modules.unityanalytics/package.json using Guid(26a4f29db434fd79025c91f6126382cc) (PackageManifestImporter) -> (artifact id: '4f55ed6c07c9d593d430c69b12caecd5') in 0.0018833 seconds
+Start importing Packages/com.unity.modules.video/package.json using Guid(96d14b71b907bb52333b2886e665aba6) (PackageManifestImporter) -> (artifact id: '5663ce496606d4af708204c817adcf41') in 0.0018707 seconds
+Start importing Packages/com.unity.modules.particlesystem/package.json using Guid(87d720faa37005c08600090e04d8c739) (PackageManifestImporter) -> (artifact id: 'd6aa8c20d84b997ec285a739a17be19d') in 0.0016241 seconds
+Start importing Packages/com.unity.modules.physics2d/package.json using Guid(f7a8357347c80dc69c08d0b1a05e2122) (PackageManifestImporter) -> (artifact id: 'e2187f6cfb7435ccc7f0487e9567b857') in 0.0015916 seconds
+Start importing Packages/com.unity.modules.vr/package.json using Guid(18a4fadfef534684d5af39ca8dc48fe9) (PackageManifestImporter) -> (artifact id: '84052aabb171f6ab790f35d596f62a3c') in 0.0017784 seconds
+Start importing Packages/com.unity.modules.vectorgraphics/package.json using Guid(78e5667e52329c3ceef41288763404ae) (PackageManifestImporter) -> (artifact id: '8bda5c963352e20d9c07831179d6adc4') in 0.0019066 seconds
+Start importing Packages/com.unity.modules.wind/package.json using Guid(b83f06ac0c0696e9563230865ca72b81) (PackageManifestImporter) -> (artifact id: '48870b0fad529c24ec23948838d08134') in 0.0017693 seconds
+Start importing Packages/com.unity.multiplayer.center/Third Party Notices.md using Guid(c8f6fa942856442b8bd72594d3ce7363) (TextScriptImporter) -> (artifact id: 'f117005acc7b64b33c08eea913553eaf') in 0.0018719 seconds
+Start importing Packages/com.unity.modules.umbra/package.json using Guid(d85e5eeaf8f135aeaaebdc8aa3cff6c3) (PackageManifestImporter) -> (artifact id: '6d849251c9e4cdd9848460d7e0ea0550') in 0.0018455 seconds
+Start importing Packages/com.unity.modules.audio/package.json using Guid(e9df95f53f1c1d0c9199e235d6c42b50) (PackageManifestImporter) -> (artifact id: '14bdb854ae6daae762f5873a0a889a4a') in 0.002133 seconds
+Start importing Packages/com.unity.modules.physics/package.json using Guid(1a4266815e998967becf686f9c71f0a6) (PackageManifestImporter) -> (artifact id: '4fbeefd29956a8cb2b920ec02d72eda6') in 0.0018565 seconds
+Start importing Packages/com.unity.modules.vehicles/package.json using Guid(6afb166a156df2d20433d981f4bb2832) (PackageManifestImporter) -> (artifact id: '16ef665dac3746b447ea167f980da255') in 0.0018104 seconds
+Start importing Packages/com.unity.modules.unitywebrequestwww/package.json using Guid(fa27413e9edb06a6058d6c894eca0338) (PackageManifestImporter) -> (artifact id: '544e02c2e4fff416b5755915f1fd3dbb') in 0.0016758 seconds
+Start importing Packages/com.unity.multiplayer.center/CHANGELOG.md using Guid(3bbd27b3dd7be4a74aeab8da6b0af5cc) (TextScriptImporter) -> (artifact id: 'cc786d9fe9f62ad8c73bc5c3c7572c6b') in 0.0015974 seconds
+Start importing Packages/com.unity.modules.unitywebrequestaudio/package.json using Guid(4b518b37798c97b0f860962cbf615533) (PackageManifestImporter) -> (artifact id: 'ef897d7e225c33dae9315c5417c1634d') in 0.0014885 seconds
+Start importing Packages/com.unity.modules.hierarchycore/package.json using Guid(9b1a5759726ef9d39a0ab82047b615f1) (PackageManifestImporter) -> (artifact id: '2c156e03cb13bcc2a06b8c9b0a7a8ac4') in 0.0017959 seconds
+Start importing Packages/com.unity.modules.xr/package.json using Guid(2c814623cb42764d304be0c5ddd03ceb) (PackageManifestImporter) -> (artifact id: '5cf90f838d6837d1fee4108bf50e9644') in 0.0024141 seconds
+Start importing Packages/com.unity.modules.adaptiveperformance/package.json using Guid(4c413a81cadcce7038e446e56570117e) (PackageManifestImporter) -> (artifact id: 'a6f258ba23d61d479758aecde11c60fd') in 0.002431 seconds
+Start importing Packages/com.unity.modules.director/package.json using Guid(ec02776fe29df900b897106d61977735) (PackageManifestImporter) -> (artifact id: '050663fa3328fcc8ba0607ef180c9ff4') in 0.0017112 seconds
+Start importing Packages/com.unity.modules.terrain/package.json using Guid(6d56244f8c39a851975d3c0bd432c66f) (PackageManifestImporter) -> (artifact id: '7f03c5409fa603fad1c4d8ccf7d0f4c3') in 0.0013832 seconds
+Start importing Packages/com.unity.modules.androidjni/package.json using Guid(bd1af0a6633ee94ae21c7d1d702cdc12) (PackageManifestImporter) -> (artifact id: 'e8484e022b3ccedd12256bf63c408f83') in 0.0018258 seconds
+Start importing Packages/com.unity.modules.animation/package.json using Guid(7ef8348b8ea834d7e1bc214b07f7fb87) (PackageManifestImporter) -> (artifact id: '0ce165297b0905ed3c714c8d81c161e8') in 0.0014739 seconds
+Start importing Packages/com.unity.modules.unitywebrequest/package.json using Guid(3fdd83b151eb8d25c5e2f82fc39dcb04) (PackageManifestImporter) -> (artifact id: 'dd8e3d3d718b3295cafb73aeafc2d7e8') in 0.0014241 seconds
+Start importing Packages/com.unity.modules.uielements/package.json using Guid(4f0f9b9f3ed97ad2b9ba8f1a8e4666c2) (PackageManifestImporter) -> (artifact id: 'b4bf06aa21c6a6487308088a12a0a110') in 0.0014161 seconds
+Start importing Packages/com.unity.modules.ui/package.json using Guid(bfd567a3d1631a761bca9e99fa53d86d) (PackageManifestImporter) -> (artifact id: 'b6a9b41c4f747864b57f61357f87e39b') in 0.0015949 seconds
+Start importing Packages/com.unity.multiplayer.center/package.json using Guid(df0857f6a11054383be91b1f8e1b5800) (PackageManifestImporter) -> (artifact id: 'f7d7a4be8267ea77ff8fe0735c13d1dd') in 0.0019937 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/light.uss using Guid(f1ac2efb1bcd4dfd95dc196ed3c11367) (ScriptedImporter) -> (artifact id: '458bf44e1ac492fdc83fab3f0ce4a01f') in 0.0664357 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/dark.uss using Guid(1984cd07fe96417f9e88f5771f6b4b32) (ScriptedImporter) -> (artifact id: 'e3f46b2f53ad9be56c19483d28960867') in 0.0086786 seconds
+Start importing Packages/com.unity.multiplayer.center/Editor/MultiplayerCenterWindow/UI/MultiplayerCenterWindow.uss using Guid(bac00d6e07f0b4305bb395363c89d92b) (ScriptedImporter) -> (artifact id: 'fd0e67db121a8d5c77fd0c3a4446df4c') in 0.0435699 seconds
+Launched and connected shader compiler UnityShaderCompiler.exe after 1.24 seconds
+Loading style catalogs (6)
+	StyleSheets/Extensions/base/common.uss
+	UIPackageResources/StyleSheets/Default/Variables/Public/common.uss
+	StyleSheets/Northstar/common.uss
+	StyleSheets/Extensions/fonts/inter.uss
+	StyleSheets/Extensions/base/dark.uss
+	UIPackageResources/StyleSheets/Default/Northstar/Palette/dark.uss
+Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=566e4bfb01901454482c2e72e442d7cc): Total: 17.828 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=193 (actual=193, local cache=0, cache server=0)
+		Asset DB Process Time: managed=12 ms, native=1654 ms
+		Asset DB Callback time: managed=144 ms, native=4208 ms
+		Scripting: domain reloads=1, domain reload time=771 ms, compile time=11022 ms, other=14 ms
+		Project Asset Count: scripts=112, non-scripts=81
+		Asset File Changes: new=255, changed=255, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.002ms
+	InvokePackagesCallback: 1620.953ms
+	ApplyChangesToAssetFolders: 0.644ms
+	Scan: 187.675ms
+	OnSourceAssetsModified: 1.509ms
+	CategorizeAssetsWithTransientArtifact: 0.990ms
+	ProcessAssetsWithTransientArtifactChanges: 2.100ms
+	CategorizeAssets: 1.694ms
+	ImportOutOfDateAssets: 1381.311ms (-10518.604ms without children)
+		ImportManagerImport: 876.546ms (403.960ms without children)
+			ImportInProcess: 472.149ms
+			UpdateCategorizedAssets: 0.437ms
+		CompileScripts: 11022.461ms
+		ReloadNativeAssets: 0.001ms
+		UnloadImportedAssets: 0.373ms
+		ReloadImportedAssets: 0.018ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.037ms
+		InitializingProgressBar: 0.009ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
+		OnDemandSchedulerStart: 0.469ms
+	PostProcessAllAssets: 2735.292ms
+	Hotreload: 1.853ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.016ms
+	UnloadStreamsBegin: 1.159ms
+	PersistCurrentRevisions: 0.190ms
+	UnloadStreamsEnd: 0.002ms
+	GenerateScriptTypeHashes: 0.099ms
+	Untracked: 11892.759ms
+
+Application.AssetDatabase Initial Refresh End
+Scanning for USB devices : 61.552ms
+Start importing ProjectSettings/ProjectSettings.asset using Guid(00000000000000004000000000000000) (LibraryAssetImporter) -> (artifact id: 'bd896ce9cce25504a5426a0bd1f44f42') in 0.0033006 seconds
+Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=38f0c96aad7f9ba4d9d94f74930f44e5): Total: 0.024 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-unity
+Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 76 unused Assets / (505.3 KB). Loaded Objects now: 746.
+Memory consumption went from 93.2 MB to 92.7 MB.
+Total: 6.109900 ms (FindLiveObjects: 0.074600 ms CreateObjectMapping: 0.007800 ms MarkObjects: 5.787600 ms  DeleteObjects: 0.238700 ms)
+
+Batchmode quit successfully invoked - shutting down!
+Killing ADB server in 2,1063257 seconds.
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-emirh-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-emirh channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+Exiting batchmode successfully now!
+Exiting without the bug reporter. Application will terminate with return code 0
