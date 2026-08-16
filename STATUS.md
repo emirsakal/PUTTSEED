@@ -1,86 +1,92 @@
-# PUTTSEED — Status (end of Week 1)
+# PUTTSEED — Status (end of Week 2)
 
-Date: 2026-08-15. Scope executed: ROADMAP Week 1 (deterministic core) only.
-Unity, generation and replay were intentionally not touched.
+Date: 2026-08-16. Scope executed so far: ROADMAP Weeks 1–2. Unity untouched.
 
 ## What exists
 
 ```
-core/PuttSeed.sln
+core/PuttSeed.sln                  (core lib + tests + tools/CourseViewer)
 core/src/PuttSeed.Core/            netstandard2.1, C# 9, nullable, warnings-as-errors
-  FixedMath/Fix64.cs               Q32.32 on long; mul via 128-bit hi/lo split;
-                                   shift-subtract div (round-to-nearest, saturating);
-                                   Newton-iteration sqrt; Abs/Sign/Min/Max/Clamp
-  FixedMath/Vec2Fix.cs             value struct; ops, dot, lengthSq/length, perp
-  FixedMath/FixRng.cs              xorshift128, state seeded via SplitMix64; the only
-                                   randomness source in core
-  FixedMath/FixTrig.cs             sin/cos by 1024-entry table index; UnitVector
-  FixedMath/FixTrigTable.cs        committed generated table (long[] constants)
-  Sim/GolfSim.cs                   fixed 1/120 s tick; damping -> sub-stepped move ->
-                                   bumper -> wall -> water -> hole; rest detection;
-                                   FNV-1a StateHash over raw state fields
-  Sim/SimConfig.cs                 all tuning constants (fixed point), Default
-  Sim/CourseData.cs                start, hole, par, walls, bumpers, sand, water
-  Sim/{BallState,ShotInput,WallSegment,Bumper,ZonePolygon}.cs
-core/tests/PuttSeed.Core.Tests/    NUnit, net8.0 — 92 tests, all green
-scripts/test.bat                   purity grep + dotnet test core
-scripts/check-purity.bat           fails on float/double/System.Random/DateTime/
-                                   UnityEngine anywhere in core/src
+  FixedMath/                       Fix64 (Q32.32), Vec2Fix, FixRng (xorshift128),
+                                   FixTrig + committed 1024-entry sine table
+  Sim/                             GolfSim (120 Hz fixed tick, sub-stepping, walls,
+                                   bumpers, sand, water, hole, rest detection,
+                                   FNV-1a StateHash, RestoreRest solver API),
+                                   SimConfig, CourseData + element types
+  CourseGen/                       CorridorBuilder (growth + widening + caps),
+                                   CourseDecorator (clearance rules), GeomFix,
+                                   SolvabilityChecker (bounded BFS + author
+                                   solution + tightness), DifficultyRater,
+                                   CourseGenerator (attempts, sub-seeds,
+                                   decoration relaxation), GeneratorConfig,
+                                   SolverConfig
+  Replay/ReplayCodec.cs            PUTT- base64url codes, version byte
+  Daily/DailySeed.cs               FNV-1a(salt + yyyyMMdd) -> SplitMix64
+core/tests/PuttSeed.Core.Tests/    NUnit — 149 tests, all green
+tools/CourseViewer/                console ASCII renderer (seed or date input)
+scripts/test.bat                   purity grep + dotnet test core -c Release
+scripts/check-purity.bat           float/double/System.Random/DateTime/UnityEngine grep
 ```
 
-## Test counts (92 total, `dotnet test core` green, zero warnings)
+## Test counts (149 total; `scripts\test.bat` ≈ 1.5 min, Release)
 
 | Area | Tests |
 |---|---|
-| Fix64 (raw constants, 128-bit mul, div rounding, sqrt, overflow edges) | 17 |
-| Vec2Fix | 9 |
-| FixRng (golden sequences from offline reference, ranges) | 9 |
-| FixTrig (cardinal exactness, ±1 ulp vs reference sine, symmetry, sin²+cos²) | 7 |
-| GolfSim integration + friction | 8 |
-| Wall collision + sub-stepping (incl. full-power no-tunneling, corner) | 7 |
-| Rest detection + StateHash | 9 |
-| Bumper (boost, cap, no-penetration, deflection) | 5 |
-| ZonePolygon (even-odd, concave, vertex-level rays) | 4 |
-| Sand | 3 |
-| Water (penalty, last-rest reset, no skip-over) | 5 |
-| Hole capture (capture, rim-out, terminal state) | 6 |
-| Determinism (10k ticks × 2 in-process + committed golden hash) | 2 |
+| Week 1: FixedMath + Sim + determinism golden hash | 92 |
+| ReplayCodec (round-trip incl. 1000 random cases, tamper, golden string) | 10 |
+| DailySeed (distinctness, golden cross-device values) | 5 |
+| GolfSim.RestoreRest (bit-exact vs naturally reached states) | 4 |
+| CorridorBuilder (bounds, self-avoidance, enclosure by simulation) | 9 |
+| CourseDecorator (counts, passage clearance, start/hole clearance) | 7 |
+| SolvabilityChecker (solvable/sealed/L fixtures, replay, determinism) | 6 |
+| DifficultyRater (buckets, monotonicity) | 6 |
+| CourseGenerator (solvable + replayable per seed, determinism, bounds) | 6 |
+| Property suite: 1000 seeds in parallel (bounded generation, author
+  solution captures within par, codec round-trips) | 1 |
+| Golden replay fixtures (3 seeds: frozen final hash + code) | 3 |
 
-Golden 10k-tick hash: `531089411828813883` (fixture course exercising walls,
-bumpers, sand, water; 8-shot script; see `DeterminismTests.cs` for the
-regeneration procedure).
+Golden values: 10k-tick sim hash `531089411828813883`; replay fixtures in
+`GoldenReplayTests.cs`; daily seeds in `DailySeedTests.cs`.
 
-## Deviations from ARCHITECTURE.md (with reasons)
+## CourseViewer
 
-1. **Sin/cos table generator is not committed as a repo tool.** The table was
-   generated offline (scratch console tool using double, outside `core/`) and
-   committed as constants per the doc. The doc's "test-verified tool" intent is
-   covered differently: `FixTrigTests.Table_MatchesDoubleSine_WithinOneUlp`
-   re-derives every entry from double sine in the test project, so the committed
-   table is pinned bit-for-bit and trivially regenerable from the formula in
-   that test. The repo layout in CLAUDE.md has no `tools/` directory; say the
-   word and I'll add one with the generator project.
-2. **Fix64 div saturates on overflow instead of wrapping** (mul wraps,
-   documented in XML docs). Any fixed choice is determinism-safe; saturation is
-   the safer failure mode for physics.
-3. **"Overlap" for hole capture = ball center inside cup radius** (not
-   circle-overlap). Standard mini-golf reading; keeps capture strictly harder
-   than grazing.
-4. **Rim-out is a reduced-restitution reflection** off the cup edge
-   (restitution 0.4). The doc says "rim-out impulse" without prescribing form;
-   this is the simplest deterministic one. Tunable in `SimConfig`.
-5. **Water triggers on center-in-polygon checked every sub-step**, which covers
-   both "at rest in water" and "while crossing" from the doc with one rule.
+`dotnet run --project tools/CourseViewer -c Release -- <seed|yyyy-mm-dd> [--stats]`
+prints an ASCII map (`#` walls, `o` bumper, `:` sand, `~` water, `S`/`H`),
+the author solution shot list and the shareable replay code. Generation
+averages ~0.9 s (Release), worst observed ~2 s.
 
-Everything else follows the doc directly: semi-implicit Euler, exponential
-damping (stronger in sand), circle–segment walls with sub-stepping instead of
-swept collision, xorshift RNG, FNV-1a state hash.
+## Deviations / interpretation choices (Week 2)
+
+1. **Solver is BFS with a twist.** ARCHITECTURE.md prescribes breadth-first
+   over shot sequences with a coarse grid; implemented exactly that, plus two
+   bounds it doesn't mention: a total sim-tick budget (hard cost ceiling per
+   solve) and nearest-hole-first ordering *within* a depth level. Ordering
+   affects only how fast a solution is found inside the budget, never which
+   sequences are reachable. Budget cuts may reject a solvable course; that
+   only costs a re-roll (solvability is never loosened).
+2. **Reachability pre-check.** Corridors whose centerline exceeds ~12 units
+   are rejected before solving (a shot advances ~4 units; budget explores ~3
+   levels). Cheap, conservative, deterministic.
+3. **Par is derived, not targeted:** author-solution strokes clamped to 2..5.
+   With current tuning most courses land at par 2–3 — flag for the Week 3
+   feel pass if deeper courses are wanted (raise budget/depth, accept slower
+   generation).
+4. **Segment lengths tuned to 1.25–2.5** (architecture gives counts and turn
+   constraints but no lengths) so 4–8 segments stay solvable within the
+   depth cap.
+5. **`scripts\test.bat` runs Release** so the property suite finishes in
+   ~1.5 min; plain `dotnet test core` (Debug) stays green, just slower.
+6. **Golden replay fixtures are committed constants**, not separate fixture
+   files — same guarantee, less plumbing.
+7. Week 1 deviations still apply (sqrt/rim-out/hole-overlap choices, offline
+   table generator not committed as a tool — `tools/` now exists, say the
+   word and I'll move a generator project in).
 
 ## Environment note
 
-.NET SDK 8.0.424 was installed via winget this session (none was present).
+.NET SDK 8.0.424 installed via winget in the Week-1 session.
 
-## Next (Week 2, not started)
+## Next (Week 3, not started)
 
-Corridor generator, SolvabilityChecker, DifficultyRater, ReplayCodec,
-DailySeed, 1000-seed property suite, ASCII console harness.
+Unity 6 project, SimRunner + interpolation, drag input quantization,
+course rendering, ghost playback, minimal UI, on-device feel pass.
