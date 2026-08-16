@@ -77,9 +77,14 @@ namespace PuttSeed.Unity
             runner.RunReset += OnRunReset;
         }
 
-        /// <summary>True when the player has never completed a daily nor practiced (FTUE gate).</summary>
-        public bool IsFirstLaunch =>
-            _stats.Data.lastCompletedDay == 0 && _stats.Data.practicePlayed == 0 && _stats.Data.days.Count == 0;
+        /// <summary>
+        /// The share text for a finished run — the GDD format with the day
+        /// number when today's daily is loaded, plain otherwise.
+        /// </summary>
+        public string BuildShareText(int strokes, int par, string code)
+            => Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0
+                ? $"PUTTSEED day {_todayDayNumber} — {strokes} strokes (par {par}). Watch: {code}"
+                : $"PUTTSEED — {strokes} strokes (par {par}). Watch: {code}";
 
         /// <summary>
         /// Starts whatever the menu put into <see cref="GameSession"/> —
@@ -303,6 +308,8 @@ namespace PuttSeed.Unity
                 {
                     _runner.AddGhost(ghostShots, "import");
                 }
+
+                AttachBestGhostIfDaily();
             }
             else
             {
@@ -348,10 +355,40 @@ namespace PuttSeed.Unity
                 }
 
                 _stats.RecordDailyCompletion(
-                    _todayDayNumber, sim.Strokes, ReplayCodec.Encode(_runner.Seed, shots));
+                    _todayDayNumber, sim.Strokes,
+                    Scoring.Stars(sim.Strokes, _runner.Generation!.Course.Par),
+                    ReplayCodec.Encode(_runner.Seed, shots));
+
+                // The next retry races the (possibly new) best run.
+                _runner.RemoveGhosts("best");
+                AttachBestGhostIfDaily();
             }
 
             ModeChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// In daily mode, attaches today's stored best replay as a ghost — the
+        /// GDD's "race your best" retention surface. No-op before the first
+        /// completion or when the stored code belongs to another seed.
+        /// </summary>
+        private void AttachBestGhostIfDaily()
+        {
+            if (Mode != GameMode.Daily || _runner.Seed != _dailySeed || _dailySeed == 0)
+            {
+                return;
+            }
+
+            var record = _stats.GetOrCreateDay(_todayDayNumber);
+            if (!record.completed || record.bestReplay.Length == 0)
+            {
+                return;
+            }
+
+            if (ReplayCodec.TryDecode(record.bestReplay, out var seed, out var shots) && seed == _dailySeed)
+            {
+                _runner.AddGhost(shots, "best");
+            }
         }
 
         /// <summary>Days since 2020-01-01 UTC — the streak arithmetic unit.</summary>

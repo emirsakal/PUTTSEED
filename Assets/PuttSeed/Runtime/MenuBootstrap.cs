@@ -48,6 +48,15 @@ namespace PuttSeed.Unity
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
 
+            // FTUE (GDD): the very first launch drops straight into Tutorial 1.
+            // One-shot — quitting the tutorial returns to a normal menu.
+            if (firstLaunch && !stats.Data.tutorialSeen)
+            {
+                stats.MarkTutorialSeen();
+                Launch(GameMode.Tutorial);
+                return;
+            }
+
             var utc = DateTime.UtcNow;
             int today = ModeController.DayNumber(utc);
             var todayRecord = stats.GetOrCreateDay(today);

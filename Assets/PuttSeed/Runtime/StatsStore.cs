@@ -12,6 +12,7 @@ namespace PuttSeed.Unity
     {
         public int day;
         public int bestStrokes;
+        public int bestStars;
         public int attempts;
         public bool completed;
         public string bestReplay = "";
@@ -24,6 +25,7 @@ namespace PuttSeed.Unity
         public int streak;
         public int lastCompletedDay;
         public int practicePlayed;
+        public bool tutorialSeen;
         public List<DayRecord> days = new List<DayRecord>();
     }
 
@@ -81,17 +83,18 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// Records holing out the daily: keeps the best stroke count and its
-        /// replay; first completion of a day advances the streak (consecutive
-        /// day numbers) or restarts it at 1 after a gap.
+        /// Records holing out the daily: keeps the best stroke count, its star
+        /// rating and its replay; first completion of a day advances the
+        /// streak (consecutive day numbers) or restarts it at 1 after a gap.
         /// </summary>
-        public void RecordDailyCompletion(int day, int strokes, string replayCode)
+        public void RecordDailyCompletion(int day, int strokes, int stars, string replayCode)
         {
             var record = GetOrCreateDay(day);
             bool firstCompletionToday = !record.completed;
             if (firstCompletionToday || strokes < record.bestStrokes)
             {
                 record.bestStrokes = strokes;
+                record.bestStars = stars;
                 record.bestReplay = replayCode;
             }
 
@@ -105,6 +108,13 @@ namespace PuttSeed.Unity
                 Data.lastCompletedDay = day;
             }
 
+            Save();
+        }
+
+        /// <summary>Marks the FTUE tutorial as launched (persisted immediately).</summary>
+        public void MarkTutorialSeen()
+        {
+            Data.tutorialSeen = true;
             Save();
         }
 

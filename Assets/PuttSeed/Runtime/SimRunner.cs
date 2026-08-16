@@ -153,6 +153,27 @@ namespace PuttSeed.Unity
             StateChanged?.Invoke();
         }
 
+        /// <summary>Removes the ghosts carrying a label ("author", "best", "import").</summary>
+        public void RemoveGhosts(string label)
+        {
+            _ghosts.RemoveAll(g => g.Label == label);
+            StateChanged?.Invoke();
+        }
+
+        /// <summary>True when any ghost carries the label.</summary>
+        public bool HasGhost(string label)
+        {
+            for (int i = 0; i < _ghosts.Count; i++)
+            {
+                if (_ghosts[i].Label == label)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void ResetGhost(Ghost ghost)
         {
             ghost.Sim = new GolfSim(_generation!.Course, _simConfig);

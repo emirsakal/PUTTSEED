@@ -96,6 +96,44 @@ namespace PuttSeed.Unity
             ui.statusText = UIFactory.CreateText(canvas.transform, "Status",
                 new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), 76, TextAnchor.MiddleCenter, shadow: true);
 
+            // Star row (GDD scoring: 3 under par / 2 par / 1 within limit) —
+            // shown by GameUI on hole-out, dimmed stars stay as empty slots.
+            var starsRow = UIFactory.CreateRect(canvas.transform, "StarsRow",
+                new Vector2(0.32f, 0.72f), new Vector2(0.68f, 0.79f));
+            ui.starsRow = starsRow.gameObject;
+            ui.starImages = new Image[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var starRect = UIFactory.CreateRect(starsRow, $"Star{i + 1}",
+                    new Vector2(i / 3f + 0.03f, 0f), new Vector2((i + 1) / 3f - 0.03f, 1f));
+                var starImage = starRect.gameObject.AddComponent<Image>();
+                starImage.sprite = UIFactory.StarSprite();
+                starImage.preserveAspect = true;
+                starImage.raycastTarget = false;
+                var starShadow = starRect.gameObject.AddComponent<Shadow>();
+                starShadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
+                starShadow.effectDistance = new Vector2(0f, -3f);
+                ui.starImages[i] = starImage;
+            }
+
+            ui.starsRow.SetActive(false);
+
+            // Fail panel: a proper card for the stroke-limit fail state (the
+            // status line alone was easy to miss). GameUI toggles it.
+            var failPanel = UIFactory.CreatePanel(canvas.transform, "FailPanel",
+                new Vector2(0.12f, 0.38f), new Vector2(0.88f, 0.62f), UIStyle.PanelDark);
+            ui.failPanel = failPanel.gameObject;
+            var failTitle = UIFactory.CreateText(failPanel.transform, "FailTitle",
+                new Vector2(0.05f, 0.6f), new Vector2(0.95f, 0.94f), 56, TextAnchor.MiddleCenter, shadow: true);
+            failTitle.text = "Out of strokes!";
+            var failSub = UIFactory.CreateText(failPanel.transform, "FailSubtitle",
+                new Vector2(0.05f, 0.42f), new Vector2(0.95f, 0.6f), 28, TextAnchor.MiddleCenter);
+            failSub.text = "The limit is par + 3 — line up and go again.";
+            failSub.color = UIStyle.CreamDim;
+            ui.failRetryButton = ButtonOf(UIFactory.CreateButton(failPanel.transform, "Retry",
+                new Vector2(0.28f, 0.08f), new Vector2(0.72f, 0.36f), NoOp, 36, primary: true));
+            ui.failPanel.SetActive(false);
+
             var toastChip = UIFactory.CreatePanel(canvas.transform, "ToastChip",
                 new Vector2(0.12f, 0.25f), new Vector2(0.88f, 0.3f), UIStyle.PanelDark);
             ui.toastChip = toastChip.gameObject;

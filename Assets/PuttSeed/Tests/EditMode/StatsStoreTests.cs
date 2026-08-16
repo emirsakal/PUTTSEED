@@ -44,15 +44,16 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
-        public void Completion_KeepsBestStrokesAndReplay()
+        public void Completion_KeepsBestStrokesStarsAndReplay()
         {
             var store = new StatsStore(_path);
-            store.RecordDailyCompletion(100, 4, "PUTT-worse");
-            store.RecordDailyCompletion(100, 2, "PUTT-better");
-            store.RecordDailyCompletion(100, 3, "PUTT-mediocre");
+            store.RecordDailyCompletion(100, 4, 1, "PUTT-worse");
+            store.RecordDailyCompletion(100, 2, 3, "PUTT-better");
+            store.RecordDailyCompletion(100, 3, 2, "PUTT-mediocre");
 
             var record = store.GetOrCreateDay(100);
             Assert.That(record.bestStrokes, Is.EqualTo(2));
+            Assert.That(record.bestStars, Is.EqualTo(3));
             Assert.That(record.bestReplay, Is.EqualTo("PUTT-better"));
             Assert.That(record.completed, Is.True);
         }
@@ -61,9 +62,9 @@ namespace PuttSeed.Unity.Tests
         public void Streak_IncrementsOnConsecutiveDays()
         {
             var store = new StatsStore(_path);
-            store.RecordDailyCompletion(100, 3, "a");
-            store.RecordDailyCompletion(101, 3, "b");
-            store.RecordDailyCompletion(102, 3, "c");
+            store.RecordDailyCompletion(100, 3, 2, "a");
+            store.RecordDailyCompletion(101, 3, 2, "b");
+            store.RecordDailyCompletion(102, 3, 2, "c");
             Assert.That(store.Data.streak, Is.EqualTo(3));
         }
 
@@ -71,9 +72,9 @@ namespace PuttSeed.Unity.Tests
         public void Streak_ResetsAfterGap()
         {
             var store = new StatsStore(_path);
-            store.RecordDailyCompletion(100, 3, "a");
-            store.RecordDailyCompletion(101, 3, "b");
-            store.RecordDailyCompletion(105, 3, "c"); // missed 102-104
+            store.RecordDailyCompletion(100, 3, 2, "a");
+            store.RecordDailyCompletion(101, 3, 2, "b");
+            store.RecordDailyCompletion(105, 3, 2, "c"); // missed 102-104
             Assert.That(store.Data.streak, Is.EqualTo(1));
         }
 
@@ -81,8 +82,8 @@ namespace PuttSeed.Unity.Tests
         public void RepeatCompletionSameDay_DoesNotDoubleStreak()
         {
             var store = new StatsStore(_path);
-            store.RecordDailyCompletion(100, 3, "a");
-            store.RecordDailyCompletion(100, 2, "a2");
+            store.RecordDailyCompletion(100, 3, 2, "a");
+            store.RecordDailyCompletion(100, 2, 3, "a2");
             Assert.That(store.Data.streak, Is.EqualTo(1));
         }
 
@@ -90,7 +91,7 @@ namespace PuttSeed.Unity.Tests
         public void FirstEverCompletion_StartsStreakAtOne()
         {
             var store = new StatsStore(_path);
-            store.RecordDailyCompletion(1, 3, "a"); // day 1 with lastCompletedDay 0
+            store.RecordDailyCompletion(1, 3, 2, "a"); // day 1 with lastCompletedDay 0
             Assert.That(store.Data.streak, Is.EqualTo(1));
         }
 
@@ -102,6 +103,15 @@ namespace PuttSeed.Unity.Tests
             Assert.That(store.Data.days, Is.Empty);
             store.RecordDailyAttempt(50); // and can still save
             Assert.That(new StatsStore(_path).GetOrCreateDay(50).attempts, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TutorialSeen_Persists()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.tutorialSeen, Is.False);
+            store.MarkTutorialSeen();
+            Assert.That(new StatsStore(_path).Data.tutorialSeen, Is.True);
         }
 
         [Test]

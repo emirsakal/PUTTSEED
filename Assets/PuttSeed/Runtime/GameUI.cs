@@ -20,6 +20,10 @@ namespace PuttSeed.Unity
         public GameObject? hintChip;
         public Text? hintText;
         public Text? statusText;
+        public GameObject? starsRow;
+        public Image[] starImages = new Image[0];
+        public GameObject? failPanel;
+        public Button? failRetryButton;
         public GameObject? toastChip;
         public Text? toastText;
         public Button? menuButton;
@@ -44,6 +48,7 @@ namespace PuttSeed.Unity
             nextLessonButton?.onClick.AddListener(() => _modes.NextTutorial());
             watchButton?.onClick.AddListener(OnImport);
             retryButton?.onClick.AddListener(() => _runner.Retry());
+            failRetryButton?.onClick.AddListener(() => _runner.Retry());
             shareButton?.onClick.AddListener(OnShare);
             ghostButton?.onClick.AddListener(OnToggleAuthorGhost);
 
@@ -95,9 +100,37 @@ namespace PuttSeed.Unity
             counterText.text = $"{modeLabel}   Strokes {sim.Strokes}/{sim.StrokeLimit}   Par {gen.Course.Par}{streakLabel}";
             if (statusText != null)
             {
-                statusText.text = sim.IsHoled
-                    ? SuccessLine(sim.Strokes, gen.Course.Par)
-                    : sim.IsFailed ? "Out of strokes — retry!" : "";
+                // The fail state gets its own panel; the status line is for success.
+                statusText.text = sim.IsHoled ? SuccessLine(sim.Strokes, gen.Course.Par) : "";
+            }
+
+            failPanel?.SetActive(sim.IsFailed);
+            RefreshStars(sim, gen.Course.Par);
+        }
+
+        /// <summary>Shows earned stars on hole-out; unearned slots stay dim.</summary>
+        private void RefreshStars(PuttSeed.Core.Sim.GolfSim sim, int par)
+        {
+            if (starsRow == null)
+            {
+                return;
+            }
+
+            starsRow.SetActive(sim.IsHoled);
+            if (!sim.IsHoled)
+            {
+                return;
+            }
+
+            int stars = PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, par);
+            for (int i = 0; i < starImages.Length; i++)
+            {
+                if (starImages[i] != null)
+                {
+                    starImages[i].color = i < stars
+                        ? UIStyle.Accent
+                        : new Color(1f, 1f, 1f, 0.16f);
+                }
             }
         }
 
@@ -127,9 +160,9 @@ namespace PuttSeed.Unity
             }
 
             var code = ReplayCodec.Encode(_runner.Seed, shots);
-            GUIUtility.systemCopyBuffer =
-                $"PUTTSEED — {sim.Strokes} strokes (par {_runner.Generation!.Course.Par}). Watch: {code}";
-            ShowToast("Copied to clipboard!");
+            string text = _modes.BuildShareText(sim.Strokes, _runner.Generation!.Course.Par, code);
+            GUIUtility.systemCopyBuffer = text; // clipboard as well, on every platform
+            ShowToast(NativeShare.Share(text) ? "Sharing…" : "Copied to clipboard!");
         }
 
         private void OnToggleAuthorGhost()
@@ -139,10 +172,12 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            if (_runner.Ghosts.Count > 0)
+            // Only the author ghost toggles here; best/imported ghosts have
+            // their own lifecycles (daily load, import field).
+            if (_runner.HasGhost("author"))
             {
-                _runner.ClearGhosts();
-                ShowToast("Ghost off.");
+                _runner.RemoveGhosts("author");
+                ShowToast("Author ghost off.");
             }
             else
             {

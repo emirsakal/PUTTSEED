@@ -39,16 +39,18 @@ namespace PuttSeed.Unity
     {
         private static Sprite? _roundedSprite;
         private static Sprite? _circleSprite;
+        private static Sprite? _starSprite;
 
         /// <summary>
         /// Uses imported sprite ASSETS instead of transient generated sprites.
         /// The editor scene builder calls this before baking UI into a scene,
         /// so saved scenes reference real assets the user can swap or repaint.
         /// </summary>
-        public static void UseSpriteAssets(Sprite rounded, Sprite circle)
+        public static void UseSpriteAssets(Sprite rounded, Sprite circle, Sprite star)
         {
             _roundedSprite = rounded;
             _circleSprite = circle;
+            _starSprite = star;
         }
 
         /// <summary>The built-in legacy font.</summary>
@@ -85,10 +87,30 @@ namespace PuttSeed.Unity
             return png;
         }
 
+        /// <summary>An anti-aliased five-point star sprite (asset when set, else generated).</summary>
+        public static Sprite StarSprite()
+        {
+            if (_starSprite == null)
+            {
+                _starSprite = BuildStarSprite(size: 64);
+            }
+
+            return _starSprite;
+        }
+
         /// <summary>Generates the raw PNG bytes for the circle sprite asset.</summary>
         public static byte[] CircleSpritePng()
         {
             var tex = BuildCircleTexture(64);
+            var png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            return png;
+        }
+
+        /// <summary>Generates the raw PNG bytes for the star sprite asset.</summary>
+        public static byte[] StarSpritePng()
+        {
+            var tex = BuildStarTexture(64);
             var png = tex.EncodeToPNG();
             Object.DestroyImmediate(tex);
             return png;
@@ -281,5 +303,64 @@ namespace PuttSeed.Unity
 
         private static Sprite BuildCircleSprite(int size)
             => Sprite.Create(BuildCircleTexture(size), new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+
+        private static Texture2D BuildStarTexture(int size)
+        {
+            // Ten-vertex star polygon (point up), rasterized with 3x3
+            // supersampling for anti-aliased edges.
+            var verts = new Vector2[10];
+            var center = new Vector2(size * 0.5f, size * 0.5f);
+            float outer = size * 0.5f - 1.5f;
+            float inner = outer * 0.45f;
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = Mathf.PI * 0.5f + i * Mathf.PI / 5f;
+                float radius = i % 2 == 0 ? outer : inner;
+                verts[i] = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+            }
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int hits = 0;
+                    for (int sy = 0; sy < 3; sy++)
+                    {
+                        for (int sx = 0; sx < 3; sx++)
+                        {
+                            var p = new Vector2(x + (sx + 0.5f) / 3f, y + (sy + 0.5f) / 3f);
+                            if (InsidePolygon(p, verts))
+                            {
+                                hits++;
+                            }
+                        }
+                    }
+
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, hits / 9f));
+                }
+            }
+
+            tex.Apply();
+            return tex;
+        }
+
+        private static bool InsidePolygon(Vector2 p, Vector2[] verts)
+        {
+            bool inside = false;
+            for (int i = 0, j = verts.Length - 1; i < verts.Length; j = i++)
+            {
+                if (verts[i].y > p.y != verts[j].y > p.y &&
+                    p.x < (verts[j].x - verts[i].x) * (p.y - verts[i].y) / (verts[j].y - verts[i].y) + verts[i].x)
+                {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
+        private static Sprite BuildStarSprite(int size)
+            => Sprite.Create(BuildStarTexture(size), new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 }

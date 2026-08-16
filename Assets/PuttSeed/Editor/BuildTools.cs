@@ -82,6 +82,7 @@ namespace PuttSeed.Unity.Editor
             const string dir = "Assets/PuttSeed/UI";
             const string roundedPath = dir + "/rounded.png";
             const string circlePath = dir + "/circle.png";
+            const string starPath = dir + "/star.png";
             Directory.CreateDirectory(dir);
 
             if (!File.Exists(roundedPath))
@@ -105,11 +106,22 @@ namespace PuttSeed.Unity.Editor
                 importer.SaveAndReimport();
             }
 
+            if (!File.Exists(starPath))
+            {
+                File.WriteAllBytes(starPath, UIFactory.StarSpritePng());
+                AssetDatabase.ImportAsset(starPath);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(starPath);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
             var rounded = AssetDatabase.LoadAssetAtPath<Sprite>(roundedPath);
             var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
-            if (rounded != null && circle != null)
+            var star = AssetDatabase.LoadAssetAtPath<Sprite>(starPath);
+            if (rounded != null && circle != null && star != null)
             {
-                UIFactory.UseSpriteAssets(rounded, circle);
+                UIFactory.UseSpriteAssets(rounded, circle, star);
             }
         }
 
