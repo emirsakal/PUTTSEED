@@ -6,6 +6,11 @@ artifacts/
 *.user
 .vs/
 
+# Junction into core sources (tracked once under core/src; the junction
+# path must not duplicate them). The .meta files Unity writes inside the
+# junction are tracked via the core/src path.
+/unity/Assets/PuttSeedCore/src/
+
 # Unity (unity/ project — populated in Week 3)
 unity/Library/
 unity/Temp/
