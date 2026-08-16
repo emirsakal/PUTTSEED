@@ -47,6 +47,19 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public bool IsFailed => !IsHoled && IsAtRest && Strokes >= StrokeLimit;
 
+        /// <summary>
+        /// Wall bounces so far. Presentation-facing observation (audio,
+        /// haptics): deterministic, but deliberately NOT part of
+        /// <see cref="StateHash"/> — it adds no dynamics information.
+        /// </summary>
+        public int WallHitCount { get; private set; }
+
+        /// <summary>Bumper bounces so far (see <see cref="WallHitCount"/> caveat).</summary>
+        public int BumperHitCount { get; private set; }
+
+        /// <summary>Water resets so far (see <see cref="WallHitCount"/> caveat).</summary>
+        public int WaterEntryCount { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -155,6 +168,7 @@ namespace PuttSeed.Core.Sim
                 }
 
                 Strokes++;
+                WaterEntryCount++;
                 _position = _lastRestPosition;
                 _velocity = Vec2Fix.Zero;
                 _restTicks = 0;
@@ -312,6 +326,7 @@ namespace PuttSeed.Core.Sim
                 var vn = Vec2Fix.Dot(_velocity, normal);
                 if (vn < Fix64.Zero)
                 {
+                    BumperHitCount++;
                     var bounce = Fix64.One + _config.BumperRestitution;
                     _velocity -= normal * (bounce * vn);
 
@@ -379,6 +394,7 @@ namespace PuttSeed.Core.Sim
                 var vn = Vec2Fix.Dot(_velocity, normal);
                 if (vn < Fix64.Zero)
                 {
+                    WallHitCount++;
                     var bounce = Fix64.One + _config.WallRestitution;
                     _velocity -= normal * (bounce * vn);
                 }
