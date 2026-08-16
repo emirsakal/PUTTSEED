@@ -23,15 +23,14 @@ Nothing below is planned; it is written down so it stops occupying headspace.
 - **Deeper pars** — raise the solver's tick budget/depth so generation can
   certify par 4–5 courses; costs generation time, revisit after profiling on
   device (see SolverConfig notes in STATUS.md).
-- **Async practice generation** — practice candidates are generated on the
-  main thread with a coroutine yield between tries; a background Task would
-  remove the sub-second hitches entirely (core is pure C#, thread-safe per
-  instance).
 - **Squash orientation** — impact squash is axis-aligned; orienting it along
   the contact normal reads better on side hits.
 - **Colorblind palettes** — the palette is a single static class
   (PaletteMaterials); swapping it per accessibility profile is cheap.
 - **Replay scrubbing** — since replays are re-simulation, a timeline scrubber
   only needs periodic state snapshots (RestoreRest already exists).
-- **Course of the day archive** — any past date regenerates its course from
-  the date alone; a calendar picker is enough (no storage needed).
+
+## Graduated (built after parking)
+
+- Async practice generation (background `Task.Run`, 2026-08-16)
+- Course of the day archive (menu Archive panel, 2026-08-17)
