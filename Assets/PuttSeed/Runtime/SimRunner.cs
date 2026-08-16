@@ -98,7 +98,9 @@ namespace PuttSeed.Unity
         public void AdoptGeneration(ulong seed, GenerationResult generation, SimConfig config)
         {
             Seed = seed;
-            _simConfig = config;
+            // Play may relax hole capture on Easy/Normal courses (rated
+            // difficulty is seed-deterministic, so replays stay identical).
+            _simConfig = feel != null ? feel.BuildPlayConfig(config, generation.Difficulty) : config;
             _generation = generation;
             _ghosts.Clear();
             ResetRun();

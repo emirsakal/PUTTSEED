@@ -51,7 +51,10 @@ namespace PuttSeed.Unity.Tests
             Assert.That(built.MaxShotSpeed.Raw, Is.EqualTo(core.MaxShotSpeed.Raw));
             Assert.That(built.RollDamping.Raw, Is.EqualTo(core.RollDamping.Raw));
             Assert.That(built.SandDamping.Raw, Is.EqualTo(core.SandDamping.Raw));
-            Assert.That(built.IceDamping.Raw, Is.EqualTo(core.IceDamping.Raw));
+
+            // Intentional divergence (2026-08-16 feel pass): ice slides more
+            // than core's frozen 0.997 baseline.
+            Assert.That(built.IceDamping.Raw, Is.EqualTo(FeelConfig.Quantize(0.9985f).Raw));
             Assert.That(built.WallRestitution.Raw, Is.EqualTo(core.WallRestitution.Raw));
             Assert.That(built.BumperRestitution.Raw, Is.EqualTo(core.BumperRestitution.Raw));
             Assert.That(built.BumperMaxExitSpeed.Raw, Is.EqualTo(core.BumperMaxExitSpeed.Raw));
@@ -68,6 +71,34 @@ namespace PuttSeed.Unity.Tests
             Assert.That(built.HoleCaptureSpeedSq.Raw,
                 Is.EqualTo((expectedCapture * expectedCapture).Raw).Within(2));
             Assert.That(built.RestTicksRequired, Is.EqualTo(core.RestTicksRequired));
+
+            Object.DestroyImmediate(feel);
+        }
+
+        [Test]
+        public void PlayConfig_TouchCaptureOnEasyAndNormal_ThresholdOnHard()
+        {
+            var feel = ScriptableObject.CreateInstance<FeelConfig>();
+            var baseConfig = feel.BuildSimConfig();
+
+            var easy = feel.BuildPlayConfig(baseConfig, PuttSeed.Core.CourseGen.Difficulty.Easy);
+            var normal = feel.BuildPlayConfig(baseConfig, PuttSeed.Core.CourseGen.Difficulty.Normal);
+            var hard = feel.BuildPlayConfig(baseConfig, PuttSeed.Core.CourseGen.Difficulty.Hard);
+
+            // Touch capture: threshold far above any reachable speed².
+            Assert.That(easy.HoleCaptureSpeedSq.Raw, Is.EqualTo(Fix64.FromInt(1_000_000).Raw));
+            Assert.That(normal.HoleCaptureSpeedSq.Raw, Is.EqualTo(Fix64.FromInt(1_000_000).Raw));
+            Assert.That(hard.HoleCaptureSpeedSq.Raw, Is.EqualTo(baseConfig.HoleCaptureSpeedSq.Raw));
+
+            // Everything else must carry over unchanged.
+            Assert.That(easy.RollDamping.Raw, Is.EqualTo(baseConfig.RollDamping.Raw));
+            Assert.That(easy.IceDamping.Raw, Is.EqualTo(baseConfig.IceDamping.Raw));
+            Assert.That(easy.HoleRadius.Raw, Is.EqualTo(baseConfig.HoleRadius.Raw));
+
+            // The toggle turns the relaxation off entirely.
+            feel.touchCaptureBelowHard = false;
+            var strict = feel.BuildPlayConfig(baseConfig, PuttSeed.Core.CourseGen.Difficulty.Easy);
+            Assert.That(strict.HoleCaptureSpeedSq.Raw, Is.EqualTo(baseConfig.HoleCaptureSpeedSq.Raw));
 
             Object.DestroyImmediate(feel);
         }

@@ -43,8 +43,14 @@ namespace PuttSeed.Unity
                 new Vector2(-0.2f, 0.7f), new Vector2(0.4f, 1.05f), new Color(1f, 1f, 1f, 0.05f));
             UIFactory.CreateCircle(cover, "Deco2",
                 new Vector2(0.72f, -0.1f), new Vector2(1.3f, 0.22f), new Color(1f, 1f, 1f, 0.05f));
-            UIFactory.CreateCircle(cover, "Ball",
-                new Vector2(0.465f, 0.565f), new Vector2(0.535f, 0.605f), UIStyle.Cream);
+            // Fixed square size + circle sprite = perfectly round on any aspect.
+            var ballRect = UIFactory.CreateRect(cover, "Ball",
+                new Vector2(0.5f, 0.585f), new Vector2(0.5f, 0.585f));
+            ballRect.sizeDelta = new Vector2(72f, 72f);
+            var ballImage = ballRect.gameObject.AddComponent<Image>();
+            ballImage.sprite = UIFactory.CircleSprite();
+            ballImage.color = UIStyle.Cream;
+            ballImage.raycastTarget = false;
 
             _label = UIFactory.CreateText(cover, "Label",
                 new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f), 52, TextAnchor.MiddleCenter, shadow: true);

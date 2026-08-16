@@ -17,8 +17,9 @@ namespace PuttSeed.Unity
         [Header("Friction (per-tick damping factors)")]
         [Range(0.9f, 0.999f)] public float rollDamping = 0.988f;
         [Range(0.8f, 0.99f)] public float sandDamping = 0.94f;
-        [Tooltip("Barely below 1: the ball slides on and on across ice.")]
-        [Range(0.99f, 0.9995f)] public float iceDamping = 0.997f;
+        [Tooltip("Barely below 1: the ball slides on and on across ice. " +
+            "Raised from the core default 0.997 for a more dramatic glide (2026-08-16 feel pass).")]
+        [Range(0.99f, 0.9995f)] public float iceDamping = 0.9985f;
 
         [Header("Shot")]
         [Range(2f, 16f)] public float maxShotSpeed = 8f;
@@ -41,6 +42,9 @@ namespace PuttSeed.Unity
         [Range(0.4f, 3f)] public float captureSpeed = 1.5f;
         [Tooltip("How lively a too-fast ball bounces off the rim (lower = dies at the lip).")]
         [Range(0.1f, 1f)] public float rimRestitution = 0.4f;
+        [Tooltip("Easy/Normal courses capture on ANY touch (no rim-out); Hard keeps the speed threshold. " +
+            "The rule follows the course's rated difficulty, so replays stay identical on every device.")]
+        public bool touchCaptureBelowHard = true;
 
         [Header("Rest detection")]
         [Range(0.005f, 0.1f)] public float restSpeed = 0.02f;
@@ -49,6 +53,33 @@ namespace PuttSeed.Unity
         /// <summary>Quantizes a feel float onto the fixed 1/10000 grid (the determinism boundary).</summary>
         public static Fix64 Quantize(float value)
             => Fix64.FromFraction(Mathf.RoundToInt(value * 10000f), 10000);
+
+        /// <summary>
+        /// The config the ball is PLAYED under. Generation and solving always
+        /// use <see cref="BuildSimConfig"/> (the stricter threshold rule), so
+        /// the solvability proof holds; play may then relax capture to
+        /// touch-anything on Easy/Normal courses. The rated difficulty is a
+        /// deterministic function of the seed, so this stays replay-safe.
+        /// </summary>
+        public SimConfig BuildPlayConfig(SimConfig baseConfig, PuttSeed.Core.CourseGen.Difficulty difficulty)
+        {
+            if (!touchCaptureBelowHard || difficulty == PuttSeed.Core.CourseGen.Difficulty.Hard)
+            {
+                return baseConfig;
+            }
+
+            // Any overlap captures: a threshold far above any reachable speed².
+            return SimConfig.Create(
+                baseConfig.Dt, baseConfig.BallRadius, baseConfig.MaxShotSpeed,
+                baseConfig.RollDamping, baseConfig.SandDamping, baseConfig.IceDamping,
+                baseConfig.WallRestitution, baseConfig.MaxTravelPerSubStep,
+                baseConfig.BumperRestitution, baseConfig.BumperMaxExitSpeed,
+                baseConfig.HoleRadius,
+                holeCaptureSpeedSq: Fix64.FromInt(1_000_000),
+                rimRestitution: baseConfig.RimRestitution,
+                restSpeedEpsSq: baseConfig.RestSpeedEpsSq,
+                restTicksRequired: baseConfig.RestTicksRequired);
+        }
 
         /// <summary>Builds the deterministic sim config from the current knob values.</summary>
         public SimConfig BuildSimConfig()
