@@ -61,24 +61,20 @@ namespace PuttSeed.Unity
 
             var modesGo = new GameObject("Modes");
             var modes = modesGo.AddComponent<ModeController>();
-            modes.Initialize(runner, courseRenderer, cam,
-                System.IO.Path.Combine(Application.persistentDataPath, "puttseed-stats.json"));
+            modes.Initialize(runner, courseRenderer, cam, MenuBootstrap.StatsPath());
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);
 
+            // The menu wrote the session; the inspector override wins in the
+            // editor when the Game scene is played directly with a fixed seed.
             if (useFixedSeed)
             {
-                modes.StartFixedSeed(fixedSeed);
+                GameSession.UseFixedSeed = true;
+                GameSession.FixedSeed = fixedSeed;
             }
-            else if (modes.IsFirstLaunch)
-            {
-                modes.StartTutorial(0); // GDD FTUE: teach before the first daily
-            }
-            else
-            {
-                modes.StartDaily();
-            }
+
+            modes.StartFromSession();
 
             Application.targetFrameRate = 120;
         }

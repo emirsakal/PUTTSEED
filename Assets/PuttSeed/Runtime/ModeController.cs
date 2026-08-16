@@ -74,6 +74,33 @@ namespace PuttSeed.Unity
         public bool IsFirstLaunch =>
             _stats.Data.lastCompletedDay == 0 && _stats.Data.practicePlayed == 0 && _stats.Data.days.Count == 0;
 
+        /// <summary>
+        /// Starts whatever the menu put into <see cref="GameSession"/> —
+        /// called once by the game scene's bootstrap.
+        /// </summary>
+        public void StartFromSession()
+        {
+            PracticeDifficulty = GameSession.PracticeDifficulty;
+            if (GameSession.UseFixedSeed)
+            {
+                StartFixedSeed(GameSession.FixedSeed);
+                return;
+            }
+
+            switch (GameSession.Mode)
+            {
+                case GameMode.Practice:
+                    StartPractice();
+                    break;
+                case GameMode.Tutorial:
+                    StartTutorial(GameSession.TutorialIndex);
+                    break;
+                default:
+                    StartDaily();
+                    break;
+            }
+        }
+
         /// <summary>Loads today's daily course.</summary>
         public void StartDaily()
         {

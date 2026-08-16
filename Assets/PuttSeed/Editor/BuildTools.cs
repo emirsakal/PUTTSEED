@@ -15,25 +15,44 @@ namespace PuttSeed.Unity.Editor
     /// </summary>
     public static class BuildTools
     {
-        private const string ScenePath = "Assets/Scenes/Main.unity";
+        private const string MenuScenePath = "Assets/Scenes/Menu.unity";
+        private const string GameScenePath = "Assets/Scenes/Game.unity";
+        private const string LegacyScenePath = "Assets/Scenes/Main.unity";
         private const string FeelConfigPath = "Assets/PuttSeed/Resources/FeelConfig.asset";
 
-        /// <summary>Creates the FeelConfig asset and the single main scene.</summary>
-        [MenuItem("PuttSeed/Create Main Scene")]
-        public static void CreateMainScene()
+        /// <summary>
+        /// Creates the FeelConfig asset and both scenes: Menu (entry, index 0)
+        /// and Game. Each scene is a single bootstrap GameObject; everything
+        /// else is built in code at runtime.
+        /// </summary>
+        [MenuItem("PuttSeed/Create Scenes")]
+        public static void CreateScenes()
         {
             EnsureFeelConfig();
+            Directory.CreateDirectory("Assets/Scenes");
 
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            var menuScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            new GameObject("Menu").AddComponent<MenuBootstrap>();
+            EditorSceneManager.SaveScene(menuScene, MenuScenePath);
+
+            var gameScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var bootstrapGo = new GameObject("Bootstrap");
             bootstrapGo.AddComponent<GameBootstrap>().feel =
                 AssetDatabase.LoadAssetAtPath<FeelConfig>(FeelConfigPath);
+            EditorSceneManager.SaveScene(gameScene, GameScenePath);
 
-            Directory.CreateDirectory("Assets/Scenes");
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            if (File.Exists(LegacyScenePath))
+            {
+                AssetDatabase.DeleteAsset(LegacyScenePath);
+            }
+
+            EditorBuildSettings.scenes = new[]
+            {
+                new EditorBuildSettingsScene(MenuScenePath, true),
+                new EditorBuildSettingsScene(GameScenePath, true),
+            };
             AssetDatabase.SaveAssets();
-            Debug.Log($"PuttSeed: created {ScenePath}");
+            Debug.Log($"PuttSeed: created {MenuScenePath} and {GameScenePath}");
         }
 
         /// <summary>
@@ -69,9 +88,9 @@ namespace PuttSeed.Unity.Editor
             EnsureFeelConfig();
             EnsureAppIcon();
             ConfigureSplash();
-            if (!File.Exists(ScenePath))
+            if (!File.Exists(MenuScenePath) || !File.Exists(GameScenePath))
             {
-                CreateMainScene();
+                CreateScenes();
             }
 
             PlayerSettings.companyName = "PuttSeed";
@@ -89,7 +108,7 @@ namespace PuttSeed.Unity.Editor
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath },
+                scenes = new[] { MenuScenePath, GameScenePath },
                 target = BuildTarget.Android,
                 locationPathName = output,
             };
