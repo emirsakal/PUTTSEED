@@ -204,8 +204,8 @@ namespace PuttSeed.Unity
                     // Part 2: roll the remaining distance smoothly — eased so
                     // the ball glides and settles into the cup, never jumps.
                     float u = Mathf.Clamp01((_phaseTime - _finishSwingSeconds) / _finishRollSeconds);
-                    float eased = u * u * (3f - 2f * u); // smoothstep
-                    _progress = Mathf.Lerp(_finishStartProgress, 1f, eased);
+                    float rollEased = u * u * (3f - 2f * u); // smoothstep
+                    _progress = Mathf.Lerp(_finishStartProgress, 1f, rollEased);
                     ball.anchoredPosition = Vector2.Lerp(_ballStart, _holePosition, _progress);
                     if (u >= 1f)
                     {
