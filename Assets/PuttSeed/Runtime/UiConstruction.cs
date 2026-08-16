@@ -148,13 +148,53 @@ namespace PuttSeed.Unity
                 new Vector2(-0.2f, 0.7f), new Vector2(0.4f, 1.05f), new Color(1f, 1f, 1f, 0.05f));
             UIFactory.CreateCircle(cover, "Deco2",
                 new Vector2(0.72f, -0.1f), new Vector2(1.3f, 0.22f), new Color(1f, 1f, 1f, 0.05f));
+
+            // The putt vignette: cup on the right, ball on the left, club above
+            // the ball pivoting at its grip. LoadingOverlay animates these.
+            var holeRect = UIFactory.CreateRect(cover, "Hole",
+                new Vector2(0.5f, 0.585f), new Vector2(0.5f, 0.585f));
+            holeRect.sizeDelta = new Vector2(90f, 90f);
+            holeRect.anchoredPosition = new Vector2(270f, -2f);
+            var holeImage = holeRect.gameObject.AddComponent<Image>();
+            holeImage.sprite = UIFactory.CircleSprite();
+            holeImage.color = new Color(0.05f, 0.09f, 0.06f, 0.95f);
+            holeImage.raycastTarget = false;
+            overlay.hole = holeRect;
+
             var ballRect = UIFactory.CreateRect(cover, "Ball",
                 new Vector2(0.5f, 0.585f), new Vector2(0.5f, 0.585f));
-            ballRect.sizeDelta = new Vector2(72f, 72f);
+            ballRect.sizeDelta = new Vector2(44f, 44f);
+            ballRect.anchoredPosition = new Vector2(-270f, 0f);
             var ballImage = ballRect.gameObject.AddComponent<Image>();
             ballImage.sprite = UIFactory.CircleSprite();
             ballImage.color = UIStyle.Cream;
             ballImage.raycastTarget = false;
+            overlay.ball = ballRect;
+
+            var clubRoot = UIFactory.CreateRect(cover, "Club",
+                new Vector2(0.5f, 0.585f), new Vector2(0.5f, 0.585f));
+            clubRoot.sizeDelta = new Vector2(10f, 10f);
+            clubRoot.anchoredPosition = new Vector2(-296f, 168f); // grip: pivot of the swing
+            overlay.club = clubRoot;
+
+            var shaft = UIFactory.CreateRect(clubRoot, "Shaft", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            shaft.pivot = new Vector2(0.5f, 1f);
+            shaft.sizeDelta = new Vector2(9f, 172f);
+            shaft.anchoredPosition = Vector2.zero;
+            var shaftImage = shaft.gameObject.AddComponent<Image>();
+            shaftImage.color = new Color(0.85f, 0.83f, 0.78f);
+            shaftImage.raycastTarget = false;
+
+            var head = UIFactory.CreateRect(clubRoot, "Head", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            head.sizeDelta = new Vector2(46f, 20f);
+            head.anchoredPosition = new Vector2(14f, -180f);
+            var headImage = head.gameObject.AddComponent<Image>();
+            headImage.sprite = UIFactory.RoundedSprite();
+            headImage.type = Image.Type.Sliced;
+            headImage.color = new Color(0.32f, 0.3f, 0.34f);
+            headImage.raycastTarget = false;
+
+            clubRoot.localEulerAngles = new Vector3(0f, 0f, 40f); // baked wind-up pose
 
             overlay.label = UIFactory.CreateText(cover, "Label",
                 new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f), 52, TextAnchor.MiddleCenter, shadow: true);
