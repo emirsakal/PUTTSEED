@@ -51,6 +51,7 @@ namespace PuttSeed.Unity.Tests
             Assert.That(built.MaxShotSpeed.Raw, Is.EqualTo(core.MaxShotSpeed.Raw));
             Assert.That(built.RollDamping.Raw, Is.EqualTo(core.RollDamping.Raw));
             Assert.That(built.SandDamping.Raw, Is.EqualTo(core.SandDamping.Raw));
+            Assert.That(built.IceDamping.Raw, Is.EqualTo(core.IceDamping.Raw));
             Assert.That(built.WallRestitution.Raw, Is.EqualTo(core.WallRestitution.Raw));
             Assert.That(built.BumperRestitution.Raw, Is.EqualTo(core.BumperRestitution.Raw));
             Assert.That(built.BumperMaxExitSpeed.Raw, Is.EqualTo(core.BumperMaxExitSpeed.Raw));

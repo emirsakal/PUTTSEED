@@ -32,6 +32,7 @@ share your run as a ~20-character replay code. Wordle loop, golf body.
 | Wall segment | static collision, restitution ~0.8 |
 | Bumper (circle) | restitution > 1, slight speed boost, satisfying *boing* |
 | Sand zone (polygon) | high rolling friction while inside |
+| Ice zone (polygon) | near-zero rolling friction: the ball slides far (added post-MVP, 2026-08-16) |
 | Water zone (polygon) | ball sinks: +1 stroke, ball returns to last rest position |
 | Hole | capture when ball overlaps at low enough speed; fast overlap rims out |
 

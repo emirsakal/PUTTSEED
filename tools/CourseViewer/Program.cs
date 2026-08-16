@@ -47,7 +47,7 @@ Render(course);
 Console.WriteLine();
 Console.WriteLine($"seed        {seed}");
 Console.WriteLine($"par         {course.Par}   difficulty {result.Difficulty}");
-Console.WriteLine($"walls       {course.Walls.Length}   bumpers {course.Bumpers.Length}   sand {course.SandZones.Length}   water {course.WaterZones.Length}");
+Console.WriteLine($"walls       {course.Walls.Length}   bumpers {course.Bumpers.Length}   sand {course.SandZones.Length}   water {course.WaterZones.Length}   ice {course.IceZones.Length}");
 Console.WriteLine($"author solution ({result.AuthorSolution.Length} shots, {result.AuthorStrokes} strokes):");
 for (int i = 0; i < result.AuthorSolution.Length; i++)
 {
@@ -97,6 +97,11 @@ static void Render(CourseData course)
         for (int c = 0; c < cols; c++)
         {
             var probe = new Vec2Fix(FromDouble(minX + (c + 0.5) * cell), FromDouble(minY + (r + 0.5) * cell));
+            foreach (var zone in course.IceZones)
+            {
+                if (zone.Contains(probe)) { grid[r, c] = '*'; }
+            }
+
             foreach (var zone in course.SandZones)
             {
                 if (zone.Contains(probe)) { grid[r, c] = ':'; }

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PuttSeed.Unity::PuttSeed.Unity.FeelConfig
   rollDamping: 0.988
   sandDamping: 0.94
+  iceDamping: 0.997
   maxShotSpeed: 8
   maxDragLength: 2.5
   powerCurveExponent: 1.35

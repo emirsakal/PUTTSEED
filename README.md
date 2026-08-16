@@ -144,8 +144,9 @@ builds unsigned.
 ## Game rules in one breath
 
 Drag to aim (slingshot), release to shoot; ball must rest before the next
-stroke. Walls bounce, bumpers boost, sand drags, water costs a stroke and a
-reset. Capture needs a slow ball over the cup — fast attempts rim out.
+stroke. Walls bounce, bumpers boost, sand drags, ice slides, water costs a
+stroke and a reset. Capture needs a slow ball over the cup — fast attempts
+rim out.
 Stroke limit is par + 3. Daily mode tracks local stats and a streak;
 practice mode serves unlimited courses by difficulty; three fixed tutorial
 courses teach the elements. Feel tuning lives in one ScriptableObject

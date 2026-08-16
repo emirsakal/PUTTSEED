@@ -39,6 +39,9 @@ namespace PuttSeed.Unity
         /// <summary>Water zone fill.</summary>
         public static readonly Color Water = new Color(0.27f, 0.55f, 0.83f);
 
+        /// <summary>Ice zone fill (pale glacial blue).</summary>
+        public static readonly Color Ice = new Color(0.78f, 0.91f, 0.96f);
+
         /// <summary>Bumper fill.</summary>
         public static readonly Color Bumper = new Color(0.91f, 0.36f, 0.46f);
 

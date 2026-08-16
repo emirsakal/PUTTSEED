@@ -17,6 +17,8 @@ namespace PuttSeed.Unity
         [Header("Friction (per-tick damping factors)")]
         [Range(0.9f, 0.999f)] public float rollDamping = 0.988f;
         [Range(0.8f, 0.99f)] public float sandDamping = 0.94f;
+        [Tooltip("Barely below 1: the ball slides on and on across ice.")]
+        [Range(0.99f, 0.9995f)] public float iceDamping = 0.997f;
 
         [Header("Shot")]
         [Range(2f, 16f)] public float maxShotSpeed = 8f;
@@ -59,6 +61,7 @@ namespace PuttSeed.Unity
                 maxShotSpeed: Quantize(maxShotSpeed),
                 rollDamping: Quantize(rollDamping),
                 sandDamping: Quantize(sandDamping),
+                iceDamping: Quantize(iceDamping),
                 wallRestitution: Quantize(wallRestitution),
                 maxTravelPerSubStep: Fix64.FromFraction(1, 20),
                 bumperRestitution: Quantize(bumperRestitution),

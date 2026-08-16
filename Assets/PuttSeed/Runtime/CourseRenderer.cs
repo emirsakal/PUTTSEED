@@ -21,6 +21,11 @@ namespace PuttSeed.Unity
                 Destroy(transform.GetChild(i).gameObject);
             }
 
+            foreach (var zone in course.IceZones)
+            {
+                MeshFactory.CreateMeshObject(transform, "Ice", MeshFactory.Zone(zone, PaletteMaterials.Ice), -0.008f);
+            }
+
             foreach (var zone in course.SandZones)
             {
                 MeshFactory.CreateMeshObject(transform, "Sand", MeshFactory.Zone(zone, PaletteMaterials.Sand), -0.01f);
