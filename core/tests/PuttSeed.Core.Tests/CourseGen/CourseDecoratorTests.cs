@@ -14,7 +14,8 @@ namespace PuttSeed.Core.Tests.CourseGen
             out Corridor corridor,
             out Bumper[] bumpers,
             out ZonePolygon[] sand,
-            out ZonePolygon[] water)
+            out ZonePolygon[] water,
+            out ZonePolygon[] ice)
         {
             var cfg = GeneratorConfig.Default;
             var rng = new FixRng(seed);
@@ -23,11 +24,12 @@ namespace PuttSeed.Core.Tests.CourseGen
                 bumpers = System.Array.Empty<Bumper>();
                 sand = System.Array.Empty<ZonePolygon>();
                 water = System.Array.Empty<ZonePolygon>();
+                ice = System.Array.Empty<ZonePolygon>();
                 return false;
             }
 
             CourseDecorator.Decorate(rng, corridor, cfg, cfg.MaxBumpers, cfg.MaxSand, cfg.MaxWater,
-                out bumpers, out sand, out water);
+                cfg.MaxIce, out bumpers, out sand, out water, out ice);
             return true;
         }
 
@@ -53,11 +55,12 @@ namespace PuttSeed.Core.Tests.CourseGen
         {
             for (ulong seed = 1; seed <= 40; seed++)
             {
-                if (!BuildDecorated(seed, out _, out var bumpers, out var sand, out var water))
+                if (!BuildDecorated(seed, out _, out var bumpers, out var sand, out var water, out var ice))
                 {
                     continue;
                 }
 
+                Assert.That(ice.Length, Is.InRange(0, 2), $"seed {seed}");
                 Assert.That(bumpers.Length, Is.InRange(0, 3), $"seed {seed}");
                 Assert.That(sand.Length, Is.InRange(0, 2), $"seed {seed}");
                 Assert.That(water.Length, Is.InRange(0, 1), $"seed {seed}");
@@ -71,7 +74,7 @@ namespace PuttSeed.Core.Tests.CourseGen
             // leaves at least a ball-diameter passage on one side.
             for (ulong seed = 1; seed <= 40; seed++)
             {
-                if (!BuildDecorated(seed, out var corridor, out var bumpers, out _, out _))
+                if (!BuildDecorated(seed, out var corridor, out var bumpers, out _, out _, out _))
                 {
                     continue;
                 }
@@ -90,7 +93,7 @@ namespace PuttSeed.Core.Tests.CourseGen
         {
             for (ulong seed = 1; seed <= 40; seed++)
             {
-                if (!BuildDecorated(seed, out _, out var bumpers, out _, out _))
+                if (!BuildDecorated(seed, out _, out var bumpers, out _, out _, out _))
                 {
                     continue;
                 }
@@ -113,12 +116,20 @@ namespace PuttSeed.Core.Tests.CourseGen
         {
             for (ulong seed = 1; seed <= 40; seed++)
             {
-                if (!BuildDecorated(seed, out var corridor, out _, out var sand, out var water))
+                if (!BuildDecorated(seed, out var corridor, out _, out var sand, out var water, out var ice))
                 {
                     continue;
                 }
 
                 var limit = corridor.HalfWidth + Fix64.FromFraction(1, 10);
+                foreach (var zone in ice)
+                {
+                    foreach (var v in zone.Vertices)
+                    {
+                        Assert.That(DistanceToCenterline(corridor, v) <= limit, Is.True,
+                            $"seed {seed}: ice vertex {v} outside corridor");
+                    }
+                }
                 foreach (var zone in sand)
                 {
                     foreach (var v in zone.Vertices)
@@ -146,7 +157,7 @@ namespace PuttSeed.Core.Tests.CourseGen
             // lateral band of at least ~0.5 units free of water.
             for (ulong seed = 1; seed <= 60; seed++)
             {
-                if (!BuildDecorated(seed, out var corridor, out _, out _, out var water))
+                if (!BuildDecorated(seed, out var corridor, out _, out _, out var water, out _))
                 {
                     continue;
                 }
@@ -213,7 +224,7 @@ namespace PuttSeed.Core.Tests.CourseGen
         {
             for (ulong seed = 1; seed <= 40; seed++)
             {
-                if (!BuildDecorated(seed, out var corridor, out var bumpers, out var sand, out var water))
+                if (!BuildDecorated(seed, out var corridor, out var bumpers, out var sand, out var water, out _))
                 {
                     continue;
                 }
@@ -238,8 +249,8 @@ namespace PuttSeed.Core.Tests.CourseGen
         [Test]
         public void SameSeed_SameDecorations()
         {
-            Assert.That(BuildDecorated(42, out _, out var b1, out var s1, out var w1), Is.True);
-            Assert.That(BuildDecorated(42, out _, out var b2, out var s2, out var w2), Is.True);
+            Assert.That(BuildDecorated(42, out _, out var b1, out var s1, out var w1, out var i1), Is.True);
+            Assert.That(BuildDecorated(42, out _, out var b2, out var s2, out var w2, out var i2), Is.True);
             Assert.That(b1.Length, Is.EqualTo(b2.Length));
             for (int i = 0; i < b1.Length; i++)
             {
@@ -249,6 +260,7 @@ namespace PuttSeed.Core.Tests.CourseGen
 
             Assert.That(s1.Length, Is.EqualTo(s2.Length));
             Assert.That(w1.Length, Is.EqualTo(w2.Length));
+            Assert.That(i1.Length, Is.EqualTo(i2.Length));
         }
     }
 }

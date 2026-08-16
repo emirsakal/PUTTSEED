@@ -18,6 +18,7 @@ namespace PuttSeed.Core.CourseGen
         private static readonly Fix64 EndClearance = Fix64.FromFraction(12, 10);
         private static readonly Fix64 SandBandWidth = Fix64.FromFraction(12, 10);
         private static readonly Fix64 WaterBandWidth = Fix64.One;
+        private static readonly Fix64 IceBandWidth = Fix64.FromFraction(14, 10);
         private const int PlacementTries = 8;
 
         /// <summary>
@@ -31,9 +32,11 @@ namespace PuttSeed.Core.CourseGen
             int maxBumpers,
             int maxSand,
             int maxWater,
+            int maxIce,
             out Bumper[] bumpers,
             out ZonePolygon[] sand,
-            out ZonePolygon[] water)
+            out ZonePolygon[] water,
+            out ZonePolygon[] ice)
         {
             int segments = corridor.SegmentAngles.Length;
             var start = CorridorBuilder.StartPosition(corridor);
@@ -92,9 +95,21 @@ namespace PuttSeed.Core.CourseGen
                 placedWater.Add(SideBand(corridor, rng, seg, WaterBandWidth));
             }
 
+            // Ice: slippery bands hugging one wall; unlike sand they may sit on
+            // the last segment (a slide toward the hole is a fun finish), but
+            // never on the start pad segment.
+            int iceCount = rng.NextInt(0, maxIce + 1);
+            var placedIce = new List<ZonePolygon>(iceCount);
+            for (int i = 0; i < iceCount && segments >= 2; i++)
+            {
+                int seg = rng.NextInt(1, segments);
+                placedIce.Add(SideBand(corridor, rng, seg, IceBandWidth));
+            }
+
             bumpers = placedBumpers.ToArray();
             sand = placedSand.ToArray();
             water = placedWater.ToArray();
+            ice = placedIce.ToArray();
         }
 
         private static bool IsClearOfBumpers(List<Bumper> placed, Vec2Fix candidate)

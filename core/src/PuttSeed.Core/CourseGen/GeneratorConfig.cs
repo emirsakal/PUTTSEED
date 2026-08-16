@@ -45,6 +45,9 @@ namespace PuttSeed.Core.CourseGen
         /// <summary>Max water zones to place (0..1 per GDD).</summary>
         public int MaxWater { get; }
 
+        /// <summary>Max ice zones to place (0..2).</summary>
+        public int MaxIce { get; }
+
         /// <summary>Generation attempts per relaxation level before decorations are reduced.</summary>
         public int AttemptsPerLevel { get; }
 
@@ -53,7 +56,7 @@ namespace PuttSeed.Core.CourseGen
             Fix64 minSegmentLength, Fix64 maxSegmentLength,
             int minTurnSteps, int maxTurnSteps,
             Fix64 halfWidth, Vec2Fix boundsMin, Vec2Fix boundsMax,
-            int maxBumpers, int maxSand, int maxWater, int attemptsPerLevel)
+            int maxBumpers, int maxSand, int maxWater, int maxIce, int attemptsPerLevel)
         {
             MinSegments = minSegments;
             MaxSegments = maxSegments;
@@ -67,6 +70,7 @@ namespace PuttSeed.Core.CourseGen
             MaxBumpers = maxBumpers;
             MaxSand = maxSand;
             MaxWater = maxWater;
+            MaxIce = maxIce;
             AttemptsPerLevel = attemptsPerLevel;
         }
 
@@ -84,6 +88,7 @@ namespace PuttSeed.Core.CourseGen
             maxBumpers: 3,
             maxSand: 2,
             maxWater: 1,
+            maxIce: 2,
             attemptsPerLevel: 12);
     }
 }

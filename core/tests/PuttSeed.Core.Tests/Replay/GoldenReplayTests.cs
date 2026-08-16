@@ -36,7 +36,9 @@ namespace PuttSeed.Core.Tests.Replay
         }
 
         [TestCase(101UL, 12215932400520877527UL, "PUTT-AWUAAAAAAAAAAoD_A0B_AA")]
-        [TestCase(2026UL, 3094461438326056594UL, "PUTT-AeoHAAAAAAAAAmB8A0B9Ag")]
+        // 2026 re-frozen 2026-08-16: ice zones entered generation (its course
+        // now carries ice; 101 and 777 drew zero ice and were unaffected).
+        [TestCase(2026UL, 5628101179876497918UL, "PUTT-AeoHAAAAAAAAAgD8A4D9Aw")]
         [TestCase(777UL, 6859109655031616931UL, "PUTT-AQkDAAAAAAAAAoD9A8B9Ag")]
         public void GoldenFixture_FinalHashAndCode_AreStable(ulong seed, ulong expectedHash, string expectedCode)
         {

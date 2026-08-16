@@ -70,6 +70,7 @@ namespace PuttSeed.Core.CourseGen
                 int maxBumpers = Math.Max(0, cfg.MaxBumpers - level);
                 int maxSand = Math.Max(0, cfg.MaxSand - level);
                 int maxWater = Math.Max(0, cfg.MaxWater - level);
+                int maxIce = Math.Max(0, cfg.MaxIce - level);
 
                 for (int a = 0; a < cfg.AttemptsPerLevel; a++)
                 {
@@ -89,8 +90,8 @@ namespace PuttSeed.Core.CourseGen
                         continue;
                     }
 
-                    CourseDecorator.Decorate(rng, corridor, cfg, maxBumpers, maxSand, maxWater,
-                        out var bumpers, out var sand, out var water);
+                    CourseDecorator.Decorate(rng, corridor, cfg, maxBumpers, maxSand, maxWater, maxIce,
+                        out var bumpers, out var sand, out var water, out var ice);
 
                     var walls = CorridorBuilder.BuildWalls(corridor);
                     var start = CorridorBuilder.StartPosition(corridor);
@@ -99,7 +100,7 @@ namespace PuttSeed.Core.CourseGen
                     // Par does not influence physics; solve with the cap, then
                     // stamp the real par from the author solution.
                     var candidate = new CourseData(start, hole, solverConfig.MaxPar,
-                        walls, bumpers, sand, water);
+                        walls, bumpers, sand, water, ice);
                     var solve = SolvabilityChecker.Solve(candidate, simConfig, solverConfig);
                     if (!solve.Solved)
                     {
@@ -107,10 +108,10 @@ namespace PuttSeed.Core.CourseGen
                     }
 
                     int par = Math.Min(Math.Max(solve.AuthorStrokes, 2), solverConfig.MaxPar);
-                    var course = new CourseData(start, hole, par, walls, bumpers, sand, water);
+                    var course = new CourseData(start, hole, par, walls, bumpers, sand, water, ice);
 
                     int turns = corridor.SegmentAngles.Length - 1;
-                    int hazards = bumpers.Length + sand.Length + water.Length;
+                    int hazards = bumpers.Length + sand.Length + water.Length + ice.Length;
                     var difficulty = DifficultyRater.Rate(
                         solve.CaptureShotCount, solve.SampledShotCount, turns, hazards);
 
