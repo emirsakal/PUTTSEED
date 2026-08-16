@@ -15,7 +15,7 @@ if not exist artifacts mkdir artifacts
 set EXTRA=
 if /i "%~1"=="apk" set EXTRA=-buildApk
 
-"%UNITY_EXE%" -batchmode -quit -projectPath unity ^
+"%UNITY_EXE%" -batchmode -quit -projectPath "%CD%" ^
     -executeMethod PuttSeed.Unity.Editor.BuildTools.BuildAndroid %EXTRA% ^
     -logFile "%CD%\artifacts\android-build.log"
 set RESULT=%ERRORLEVEL%

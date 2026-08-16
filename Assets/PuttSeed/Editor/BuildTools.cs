@@ -61,8 +61,8 @@ namespace PuttSeed.Unity.Editor
 
             AddAlwaysIncludedShader("Sprites/Default");
 
-            Directory.CreateDirectory("../artifacts");
-            string output = apk ? "../artifacts/PuttSeed.apk" : "../artifacts/PuttSeed.aab";
+            Directory.CreateDirectory("artifacts");
+            string output = apk ? "artifacts/PuttSeed.apk" : "artifacts/PuttSeed.aab";
 
             var options = new BuildPlayerOptions
             {

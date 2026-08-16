@@ -11,7 +11,7 @@ if not exist "%UNITY_EXE%" (
 
 if not exist artifacts mkdir artifacts
 
-"%UNITY_EXE%" -batchmode -projectPath unity -runTests -testPlatform EditMode ^
+"%UNITY_EXE%" -batchmode -projectPath "%CD%" -runTests -testPlatform EditMode ^
     -testResults "%CD%\artifacts\editmode-results.xml" ^
     -logFile "%CD%\artifacts\unity-tests.log"
 set RESULT=%ERRORLEVEL%

@@ -12,14 +12,21 @@ starting any phase. Work phase by phase as prompted; do not skip ahead.
 ## Repo layout
 
 ```
+Assets/                     # Unity 6 project lives at the REPO ROOT
+  PuttSeedCore/src          #   junction -> core/src/PuttSeed.Core (asmdef:
+                            #   noEngineReferences) — git-ignores the junction path
+  PuttSeed/                 #   Unity layer (rendering, input, UI only)
+Packages/ ProjectSettings/  # Unity project files (Library/ etc. git-ignored)
 core/
   src/PuttSeed.Core/        # pure C# (netstandard2.1). ZERO UnityEngine refs.
   tests/PuttSeed.Core.Tests/# NUnit, runs via `dotnet test`
-unity/                      # Unity 6 project (rendering, input, UI only)
 docs/                       # GDD, architecture, roadmap
 scripts/                    # win batch: test.bat, build-android.bat, unity-tests.bat
+tools/                      # CourseViewer console app
 prompts/                    # working prompts (not part of the product)
 ```
+
+Open the repo root itself in Unity Hub — there is no `unity/` subfolder.
 
 ## Commands
 

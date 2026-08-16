@@ -4,8 +4,11 @@ Date: 2026-08-16. Scope executed so far: ROADMAP Weeks 1–3.
 
 ## Week 3 — Unity layer
 
+The Unity project lives at the REPO ROOT (moved from unity/ by request,
+2026-08-16 — open the repo root in Unity Hub).
+
 ```
-unity/                              Unity 6000.3.22f1 (Android module), built-in pipeline
+Assets/ Packages/ ProjectSettings/  Unity 6000.3.22f1 (Android module), built-in pipeline
   Assets/PuttSeedCore/              PuttSeed.Core.asmdef (noEngineReferences: true)
     src -> junction to core/src/PuttSeed.Core (git-ignored; sources tracked once)
   Assets/PuttSeed/Runtime/          PuttSeed.Unity asmdef —
