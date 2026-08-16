@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using PuttSeed.Core.CourseGen;
+using PuttSeed.Core.FixedMath;
 using PuttSeed.Core.Sim;
 using UnityEngine;
 
@@ -74,6 +75,12 @@ namespace PuttSeed.Unity
 
         /// <summary>Shots accepted this run, in order (for sharing the replay).</summary>
         public IReadOnlyList<ShotInput> PlayedShots => _playedShots;
+
+        /// <summary>The rest position the latest accepted shot launched from.</summary>
+        public Vec2Fix LastShotOrigin { get; private set; }
+
+        /// <summary>The latest accepted shot (slow-mo replay support).</summary>
+        public ShotInput LastShot { get; private set; }
 
         /// <summary>Interpolated ball position at the current render frame.</summary>
         public Vector2 BallRenderPosition => Vector2.Lerp(
@@ -199,12 +206,15 @@ namespace PuttSeed.Unity
             }
 
             int before = _sim.Strokes;
+            var origin = _sim.Ball.Position; // at rest — Shoot only sets velocity
             _sim.Shoot(shot);
             if (_sim.Strokes == before)
             {
                 return false;
             }
 
+            LastShotOrigin = origin;
+            LastShot = shot;
             _playedShots.Add(shot);
             ShotFired?.Invoke();
             StateChanged?.Invoke();

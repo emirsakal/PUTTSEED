@@ -37,12 +37,17 @@ namespace PuttSeed.Unity
                 cam = camGo.AddComponent<Camera>();
             }
 
+            var cameraJuice = cam.gameObject.AddComponent<CameraJuice>();
+
             var runnerGo = new GameObject("SimRunner");
             var runner = runnerGo.AddComponent<SimRunner>();
             runner.feel = feel;
 
             var courseGo = new GameObject("CourseView");
             var courseRenderer = courseGo.AddComponent<CourseRenderer>();
+
+            var flagGo = new GameObject("Flag");
+            flagGo.AddComponent<FlagView>().Initialize(runner);
 
             var ballGo = new GameObject("Ball");
             var ballView = ballGo.AddComponent<BallView>();
@@ -55,6 +60,7 @@ namespace PuttSeed.Unity
             var feedback = feedbackGo.AddComponent<FeedbackController>();
             feedback.LoadDefaultClips();
             feedback.SetSettings(stats);
+            feedback.SetCameraJuice(cameraJuice);
             feedback.Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");

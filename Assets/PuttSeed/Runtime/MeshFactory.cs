@@ -86,6 +86,61 @@ namespace PuttSeed.Unity
             return Build(vertices, triangles, colors);
         }
 
+        /// <summary>An axis-aligned rectangle (poles, shadows, simple props).</summary>
+        public static Mesh Quad(Vector2 min, Vector2 max, Color color)
+        {
+            var vertices = new List<Vector3>
+            {
+                new Vector3(min.x, min.y), new Vector3(min.x, max.y),
+                new Vector3(max.x, max.y), new Vector3(max.x, min.y),
+            };
+            var triangles = new List<int> { 0, 1, 2, 0, 2, 3 };
+            var colors = new List<Color> { color, color, color, color };
+            return Build(vertices, triangles, colors);
+        }
+
+        /// <summary>A single triangle (the flag pennant).</summary>
+        public static Mesh Triangle(Vector2 a, Vector2 b, Vector2 c, Color color)
+        {
+            var vertices = new List<Vector3> { a, b, c };
+            var triangles = new List<int> { 0, 1, 2 };
+            var colors = new List<Color> { color, color, color };
+            return Build(vertices, triangles, colors);
+        }
+
+        /// <summary>
+        /// Horizontal mowed-grass bands covering a rectangle: alternating tones
+        /// every <paramref name="bandHeight"/> units, aligned to world Y so the
+        /// pattern is stable across courses.
+        /// </summary>
+        public static Mesh Stripes(Vector2 min, Vector2 max, float bandHeight, Color a, Color b)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var colors = new List<Color>();
+
+            int firstBand = Mathf.FloorToInt(min.y / bandHeight);
+            int lastBand = Mathf.CeilToInt(max.y / bandHeight);
+            for (int band = firstBand; band < lastBand; band++)
+            {
+                float y0 = band * bandHeight;
+                float y1 = y0 + bandHeight;
+                var color = (band & 1) == 0 ? a : b;
+                int baseIndex = vertices.Count;
+                vertices.Add(new Vector3(min.x, y0));
+                vertices.Add(new Vector3(min.x, y1));
+                vertices.Add(new Vector3(max.x, y1));
+                vertices.Add(new Vector3(max.x, y0));
+                triangles.AddRange(new[] { baseIndex, baseIndex + 1, baseIndex + 2, baseIndex, baseIndex + 2, baseIndex + 3 });
+                for (int i = 0; i < 4; i++)
+                {
+                    colors.Add(color);
+                }
+            }
+
+            return Build(vertices, triangles, colors);
+        }
+
         private static Mesh Build(List<Vector3> vertices, List<int> triangles, List<Color> colors)
         {
             var mesh = new Mesh();

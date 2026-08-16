@@ -38,11 +38,22 @@ namespace PuttSeed.Unity
             _trail.sortingOrder = -1;
 
             _trail.enabled = false;
+
+            // Soft drop shadow trailing the ball down-right, one layer behind.
+            var shadowGo = new GameObject("BallShadow");
+            shadowGo.transform.SetParent(transform, false);
+            shadowGo.transform.localPosition = new Vector3(0.04f, -0.05f, 0.012f);
+            shadowGo.AddComponent<MeshFilter>().sharedMesh =
+                MeshFactory.Disc(Vector2.zero, 0.1f, PaletteMaterials.Shadow);
+            shadowGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            shadowGo.SetActive(false);
+
             runner.RunReset += () =>
             {
                 _renderer.enabled = true;
                 _trail.enabled = true;
                 _trail.Clear();
+                shadowGo.SetActive(true);
             };
         }
 

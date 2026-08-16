@@ -30,6 +30,15 @@ namespace PuttSeed.Unity
         /// <summary>Felt background.</summary>
         public static readonly Color Felt = new Color(0.22f, 0.52f, 0.31f);
 
+        /// <summary>Lighter felt band — the mowed-stripe alternate tone.</summary>
+        public static readonly Color FeltLight = new Color(0.245f, 0.555f, 0.335f);
+
+        /// <summary>Flag cloth (matches the menu emblem).</summary>
+        public static readonly Color Flag = new Color(0.86f, 0.24f, 0.19f);
+
+        /// <summary>Soft drop shadow under raised elements.</summary>
+        public static readonly Color Shadow = new Color(0f, 0f, 0f, 0.22f);
+
         /// <summary>Wall color.</summary>
         public static readonly Color Wall = new Color(0.16f, 0.15f, 0.18f);
 

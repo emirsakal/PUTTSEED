@@ -43,6 +43,12 @@ namespace PuttSeed.Unity
         private bool _wasInSand;
         private Vector2 _lastBallPos;
 
+        private CameraJuice? _cameraJuice;
+        private LineRenderer _putterFace = null!;
+        private Coroutine? _swingRoutine;
+        private Coroutine? _slowMoRoutine;
+        private GameObject? _slowMoBall;
+
         private static readonly Color SandPuff = new Color(0.85f, 0.78f, 0.55f);
         private static readonly Color WaterSplash = new Color(0.42f, 0.62f, 0.88f);
         private static readonly Color[] ConfettiColors =
@@ -70,6 +76,9 @@ namespace PuttSeed.Unity
         /// <summary>The settings source (menu toggles); null means everything on.</summary>
         public void SetSettings(StatsStore settings) => _settings = settings;
 
+        /// <summary>Camera effect target (shake, celebration zoom).</summary>
+        public void SetCameraJuice(CameraJuice juice) => _cameraJuice = juice;
+
         /// <summary>Wires dependencies (called by the bootstrap).</summary>
         public void Initialize(SimRunner runner, BallView ballView)
         {
@@ -79,6 +88,18 @@ namespace PuttSeed.Unity
             _source.playOnAwake = false;
             _burstPs = CreateParticleSystem("Bursts", gravity: 0f);
             _confettiPs = CreateParticleSystem("Confetti", gravity: 0.7f);
+
+            // The putter face: a short flat bar that slides into the ball on
+            // every accepted shot (the swing read, no physics involvement).
+            var putterGo = new GameObject("PutterFace");
+            putterGo.transform.SetParent(transform, false);
+            _putterFace = putterGo.AddComponent<LineRenderer>();
+            _putterFace.positionCount = 2;
+            _putterFace.startWidth = 0.09f;
+            _putterFace.endWidth = 0.09f;
+            _putterFace.material = PaletteMaterials.Shared;
+            _putterFace.sortingOrder = 15;
+            _putterFace.enabled = false;
 
             runner.ShotFired += OnShotFired;
             runner.RunReset += SyncCounters;
@@ -121,6 +142,31 @@ namespace PuttSeed.Unity
             _lastFailed = sim.IsFailed;
             _wasInSand = false;
             _lastBallPos = FixView.ToVector2(sim.Ball.Position);
+
+            // A reset interrupts any in-flight presentation.
+            _cameraJuice?.CancelEffects();
+            if (_swingRoutine != null)
+            {
+                StopCoroutine(_swingRoutine);
+                _swingRoutine = null;
+            }
+
+            if (_putterFace != null)
+            {
+                _putterFace.enabled = false;
+            }
+
+            if (_slowMoRoutine != null)
+            {
+                StopCoroutine(_slowMoRoutine);
+                _slowMoRoutine = null;
+            }
+
+            if (_slowMoBall != null)
+            {
+                Destroy(_slowMoBall);
+                _slowMoBall = null;
+            }
         }
 
         /// <summary>Read-only zone lookup for presentation (core's own test).</summary>
@@ -147,6 +193,47 @@ namespace PuttSeed.Unity
         private void OnShotFired()
         {
             Play(shotClip, 1f);
+            if (_swingRoutine != null)
+            {
+                StopCoroutine(_swingRoutine);
+            }
+
+            _swingRoutine = StartCoroutine(PutterSwing());
+        }
+
+        /// <summary>The putter face slides into the contact point, then fades.</summary>
+        private IEnumerator PutterSwing()
+        {
+            var sim = _runner.Sim;
+            if (sim == null)
+            {
+                yield break;
+            }
+
+            float angle = _runner.LastShot.AngleIndex * 2f * Mathf.PI / 1024f;
+            var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            var perp = new Vector2(-dir.y, dir.x) * 0.16f;
+            var origin = FixView.ToVector2(_runner.LastShotOrigin);
+            var faceColor = new Color(0.16f, 0.15f, 0.18f);
+
+            _putterFace.enabled = true;
+            const float slideTime = 0.09f;
+            const float fadeTime = 0.16f;
+            for (float t = 0f; t < slideTime + fadeTime; t += Time.deltaTime)
+            {
+                float slide = Mathf.Clamp01(t / slideTime);
+                float alpha = t < slideTime ? 1f : 1f - (t - slideTime) / fadeTime;
+                var center = origin - dir * Mathf.Lerp(0.5f, 0.16f, Mathf.SmoothStep(0f, 1f, slide));
+                _putterFace.SetPosition(0, new Vector3(center.x - perp.x, center.y - perp.y, -0.055f));
+                _putterFace.SetPosition(1, new Vector3(center.x + perp.x, center.y + perp.y, -0.055f));
+                var c = new Color(faceColor.r, faceColor.g, faceColor.b, alpha);
+                _putterFace.startColor = c;
+                _putterFace.endColor = c;
+                yield return null;
+            }
+
+            _putterFace.enabled = false;
+            _swingRoutine = null;
         }
 
         private void OnStateChanged()
@@ -166,6 +253,7 @@ namespace PuttSeed.Unity
             {
                 OnBounce(bumperClip);
                 Tap();
+                _cameraJuice?.Shake(0.05f, 0.18f);
             }
 
             if (sim.WaterEntryCount > _lastWaterEntries)
@@ -191,10 +279,18 @@ namespace PuttSeed.Unity
                 Tap();
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);
                 StartCoroutine(CelebrationRing(hole));
+                _cameraJuice?.CelebrateZoom(hole);
                 if (PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3)
                 {
                     EmitConfetti(hole);
                 }
+
+                if (_slowMoRoutine != null)
+                {
+                    StopCoroutine(_slowMoRoutine);
+                }
+
+                _slowMoRoutine = StartCoroutine(SlowMoWinningPutt(sim.Strokes));
             }
 
             if (sim.IsFailed && !_lastFailed)
@@ -271,6 +367,64 @@ namespace PuttSeed.Unity
             {
                 HapticsPlayer.Tap();
             }
+        }
+
+        /// <summary>
+        /// The winning putt again at 0.35x: a translucent ball re-simulates
+        /// the exact final shot on a throwaway sim (RestoreRest + LastShot),
+        /// rolls to the cup in slow motion and sinks. Interrupted by resets.
+        /// </summary>
+        private IEnumerator SlowMoWinningPutt(int finalStrokes)
+        {
+            yield return new WaitForSeconds(0.7f);
+            var gen = _runner.Generation;
+            if (gen == null)
+            {
+                yield break;
+            }
+
+            var replay = new PuttSeed.Core.Sim.GolfSim(gen.Course, _runner.PlayConfig);
+            replay.RestoreRest(_runner.LastShotOrigin, Mathf.Max(0, finalStrokes - 1));
+            replay.Shoot(_runner.LastShot);
+
+            _slowMoBall = new GameObject("SlowMoBall");
+            _slowMoBall.AddComponent<MeshFilter>().sharedMesh =
+                MeshFactory.Disc(Vector2.zero, 0.1f, new Color(0.97f, 0.97f, 0.95f, 0.6f));
+            _slowMoBall.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            var trail = _slowMoBall.AddComponent<TrailRenderer>();
+            trail.time = 0.9f;
+            trail.startWidth = 0.07f;
+            trail.endWidth = 0.01f;
+            trail.material = PaletteMaterials.Shared;
+            trail.startColor = new Color(1f, 1f, 1f, 0.3f);
+            trail.endColor = new Color(1f, 1f, 1f, 0f);
+
+            float ticks = 0f;
+            int safety = 2000;
+            while (!replay.IsHoled && safety-- > 0)
+            {
+                ticks += Time.deltaTime * 120f * 0.35f;
+                while (ticks >= 1f && !replay.IsHoled)
+                {
+                    replay.Tick();
+                    ticks -= 1f;
+                }
+
+                var p = FixView.ToVector2(replay.Ball.Position);
+                _slowMoBall.transform.position = new Vector3(p.x, p.y, -0.058f);
+                yield return null;
+            }
+
+            // Sink: shrink into the cup.
+            for (float t = 0f; t < 0.25f; t += Time.deltaTime)
+            {
+                _slowMoBall.transform.localScale = Vector3.one * (1f - t / 0.25f);
+                yield return null;
+            }
+
+            Destroy(_slowMoBall);
+            _slowMoBall = null;
+            _slowMoRoutine = null;
         }
 
         /// <summary>Flat expanding ring at the hole, fading out over ~0.8 s.</summary>
