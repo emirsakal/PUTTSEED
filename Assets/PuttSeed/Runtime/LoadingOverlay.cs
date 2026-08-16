@@ -142,9 +142,16 @@ namespace PuttSeed.Unity
                 return;
             }
 
+            // CRITICAL: the first frame after a blocking load reports the whole
+            // block (1-2 s) as one delta, which would fast-forward the putt to
+            // the cup in a single frame — the "teleport". Clamp so a hitch can
+            // only advance the animation by one smooth step; the vignette then
+            // plays out over real rendered frames.
+            float dt = Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);
+
             if (label != null)
             {
-                _dotTimer += Time.unscaledDeltaTime;
+                _dotTimer += dt;
                 int dots = 1 + (int)(_dotTimer * 2f) % 3;
                 label.text = _baseText + new string('.', dots);
             }
@@ -154,8 +161,8 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            _phaseTime += Time.unscaledDeltaTime;
-            _shownTime += Time.unscaledDeltaTime;
+            _phaseTime += dt;
+            _shownTime += dt;
             switch (_phase)
             {
                 case Phase.Swing:
