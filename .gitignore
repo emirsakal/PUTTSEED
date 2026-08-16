@@ -25,6 +25,11 @@ unity-create.log
 # junction are tracked via the core/src path.
 /Assets/PuttSeedCore/src/
 
+# Signing secrets — NEVER commit these
+keystore.properties
+*.keystore
+*.jks
+
 # OS
 Thumbs.db
 .DS_Store

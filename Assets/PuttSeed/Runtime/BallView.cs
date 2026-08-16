@@ -11,6 +11,7 @@ namespace PuttSeed.Unity
     {
         private SimRunner _runner = null!;
         private TrailRenderer _trail = null!;
+        private float _squash;
 
         /// <summary>Creates the ball visuals and subscribes to run resets.</summary>
         public void Initialize(SimRunner runner)
@@ -33,6 +34,9 @@ namespace PuttSeed.Unity
             runner.RunReset += () => _trail.Clear();
         }
 
+        /// <summary>Impact juice: a brief squash pulse that eases back to round.</summary>
+        public void Squash() => _squash = 1f;
+
         private void LateUpdate()
         {
             if (_runner == null || _runner.Sim == null)
@@ -42,6 +46,17 @@ namespace PuttSeed.Unity
 
             var p = _runner.BallRenderPosition;
             transform.position = new Vector3(p.x, p.y, -0.06f);
+
+            if (_squash > 0f)
+            {
+                _squash = Mathf.Max(0f, _squash - Time.deltaTime * 8f);
+                float k = _squash * 0.22f;
+                transform.localScale = new Vector3(1f + k, 1f - k, 1f);
+            }
+            else
+            {
+                transform.localScale = Vector3.one;
+            }
         }
     }
 }

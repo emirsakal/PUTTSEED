@@ -51,6 +51,9 @@ namespace PuttSeed.Unity
         /// <summary>Raised after a run reset (load or retry) — clear trails etc.</summary>
         public event Action? RunReset;
 
+        /// <summary>Raised when the sim accepts a stroke (audio/haptics hook).</summary>
+        public event Action? ShotFired;
+
         /// <summary>Seed of the loaded course.</summary>
         public ulong Seed { get; private set; }
 
@@ -81,10 +84,22 @@ namespace PuttSeed.Unity
         /// </summary>
         public void LoadSeed(ulong seed)
         {
+            var config = feel != null ? feel.BuildSimConfig() : SimConfig.Default;
+            AdoptGeneration(seed, CourseGenerator.Generate(
+                seed, GeneratorConfig.Default, config, SolverConfig.Default), config);
+        }
+
+        /// <summary>
+        /// Adopts an externally generated course (e.g. the practice mode's
+        /// difficulty-filtered candidates). The generation MUST have been
+        /// produced under <paramref name="config"/> for the solvability proof
+        /// to hold.
+        /// </summary>
+        public void AdoptGeneration(ulong seed, GenerationResult generation, SimConfig config)
+        {
             Seed = seed;
-            _simConfig = feel != null ? feel.BuildSimConfig() : SimConfig.Default;
-            _generation = CourseGenerator.Generate(
-                seed, GeneratorConfig.Default, _simConfig, SolverConfig.Default);
+            _simConfig = config;
+            _generation = generation;
             _ghosts.Clear();
             ResetRun();
         }
@@ -162,6 +177,7 @@ namespace PuttSeed.Unity
             }
 
             _playedShots.Add(shot);
+            ShotFired?.Invoke();
             StateChanged?.Invoke();
             return true;
         }

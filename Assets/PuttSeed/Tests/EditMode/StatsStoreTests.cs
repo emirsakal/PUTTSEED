@@ -1,0 +1,116 @@
+using System.IO;
+using NUnit.Framework;
+using PuttSeed.Unity;
+
+namespace PuttSeed.Unity.Tests
+{
+    public class StatsStoreTests
+    {
+        private string _path;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _path = Path.Combine(Path.GetTempPath(), $"puttseed-stats-{System.Guid.NewGuid():N}.json");
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (File.Exists(_path))
+            {
+                File.Delete(_path);
+            }
+        }
+
+        [Test]
+        public void FreshStore_StartsEmpty()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.streak, Is.EqualTo(0));
+            Assert.That(store.Data.days, Is.Empty);
+            Assert.That(store.Data.practicePlayed, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Attempts_PersistAcrossReload()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyAttempt(100);
+            store.RecordDailyAttempt(100);
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.GetOrCreateDay(100).attempts, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Completion_KeepsBestStrokesAndReplay()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 4, "PUTT-worse");
+            store.RecordDailyCompletion(100, 2, "PUTT-better");
+            store.RecordDailyCompletion(100, 3, "PUTT-mediocre");
+
+            var record = store.GetOrCreateDay(100);
+            Assert.That(record.bestStrokes, Is.EqualTo(2));
+            Assert.That(record.bestReplay, Is.EqualTo("PUTT-better"));
+            Assert.That(record.completed, Is.True);
+        }
+
+        [Test]
+        public void Streak_IncrementsOnConsecutiveDays()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, "a");
+            store.RecordDailyCompletion(101, 3, "b");
+            store.RecordDailyCompletion(102, 3, "c");
+            Assert.That(store.Data.streak, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Streak_ResetsAfterGap()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, "a");
+            store.RecordDailyCompletion(101, 3, "b");
+            store.RecordDailyCompletion(105, 3, "c"); // missed 102-104
+            Assert.That(store.Data.streak, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RepeatCompletionSameDay_DoesNotDoubleStreak()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, "a");
+            store.RecordDailyCompletion(100, 2, "a2");
+            Assert.That(store.Data.streak, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void FirstEverCompletion_StartsStreakAtOne()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(1, 3, "a"); // day 1 with lastCompletedDay 0
+            Assert.That(store.Data.streak, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CorruptFile_StartsFresh()
+        {
+            File.WriteAllText(_path, "{not json!!");
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.days, Is.Empty);
+            store.RecordDailyAttempt(50); // and can still save
+            Assert.That(new StatsStore(_path).GetOrCreateDay(50).attempts, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void PracticeCounter_Persists()
+        {
+            var store = new StatsStore(_path);
+            store.RecordPracticePlayed();
+            store.RecordPracticePlayed();
+            Assert.That(new StatsStore(_path).Data.practicePlayed, Is.EqualTo(2));
+        }
+    }
+}

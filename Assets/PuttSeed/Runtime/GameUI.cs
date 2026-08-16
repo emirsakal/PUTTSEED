@@ -6,29 +6,29 @@ using UnityEngine.UI;
 namespace PuttSeed.Unity
 {
     /// <summary>
-    /// The GDD's minimal UI, built entirely in code: stroke/par counter,
-    /// status line, retry, share (copies the PUTT- code of the finished run),
-    /// import field (plays any pasted code as a ghost, loading its course if
-    /// needed), and an author-ghost toggle. Pure presentation + boundary calls.
+    /// The GDD's minimal UI, built entirely in code: stroke/par/streak counter,
+    /// mode row (daily, practice + difficulty, tutorial), hint line, status
+    /// line, retry, share (copies the finished run's PUTT- code), import field
+    /// and author-ghost toggle. Pure presentation + boundary calls.
     /// </summary>
     public sealed class GameUI : MonoBehaviour
     {
         private SimRunner _runner = null!;
-        private CourseRenderer _courseRenderer = null!;
-        private Camera _camera = null!;
+        private ModeController _modes = null!;
 
         private Text _counter = null!;
+        private Text _hint = null!;
         private Text _status = null!;
         private Text _toast = null!;
+        private Text _difficultyLabel = null!;
         private InputField _importField = null!;
         private float _toastUntil;
 
         /// <summary>Builds the canvas hierarchy and wires events.</summary>
-        public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam)
+        public void Initialize(SimRunner runner, ModeController modes)
         {
             _runner = runner;
-            _courseRenderer = courseRenderer;
-            _camera = cam;
+            _modes = modes;
 
             var canvasGo = new GameObject("Canvas");
             canvasGo.transform.SetParent(transform, false);
@@ -42,18 +42,29 @@ namespace PuttSeed.Unity
 
             EnsureEventSystem();
 
-            _counter = CreateText(canvasGo.transform, "Counter", new Vector2(0.02f, 0.93f), new Vector2(0.7f, 0.99f), 44, TextAnchor.UpperLeft);
+            _counter = CreateText(canvasGo.transform, "Counter", new Vector2(0.02f, 0.93f), new Vector2(0.98f, 0.99f), 42, TextAnchor.UpperLeft);
+            _hint = CreateText(canvasGo.transform, "Hint", new Vector2(0.03f, 0.88f), new Vector2(0.97f, 0.925f), 32, TextAnchor.UpperCenter);
+            _hint.color = new Color(1f, 1f, 0.75f);
             _status = CreateText(canvasGo.transform, "Status", new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), 72, TextAnchor.MiddleCenter);
-            _toast = CreateText(canvasGo.transform, "Toast", new Vector2(0.05f, 0.15f), new Vector2(0.95f, 0.2f), 34, TextAnchor.MiddleCenter);
+            _toast = CreateText(canvasGo.transform, "Toast", new Vector2(0.05f, 0.24f), new Vector2(0.95f, 0.29f), 34, TextAnchor.MiddleCenter);
 
-            CreateButton(canvasGo.transform, "Retry", new Vector2(0.02f, 0.02f), new Vector2(0.24f, 0.09f), OnRetry);
-            CreateButton(canvasGo.transform, "Share", new Vector2(0.26f, 0.02f), new Vector2(0.48f, 0.09f), OnShare);
-            CreateButton(canvasGo.transform, "Ghost", new Vector2(0.5f, 0.02f), new Vector2(0.72f, 0.09f), OnToggleAuthorGhost);
+            // Mode row.
+            CreateButton(canvasGo.transform, "Daily", new Vector2(0.02f, 0.165f), new Vector2(0.24f, 0.235f), () => _modes.StartDaily());
+            CreateButton(canvasGo.transform, "Practice", new Vector2(0.26f, 0.165f), new Vector2(0.48f, 0.235f), () => _modes.StartPractice());
+            _difficultyLabel = CreateButton(canvasGo.transform, "Normal", new Vector2(0.5f, 0.165f), new Vector2(0.72f, 0.235f), () => _modes.CyclePracticeDifficulty());
+            CreateButton(canvasGo.transform, "Tutorial", new Vector2(0.74f, 0.165f), new Vector2(0.98f, 0.235f), OnTutorial);
 
+            // Import row.
             _importField = CreateInputField(canvasGo.transform, new Vector2(0.02f, 0.1f), new Vector2(0.72f, 0.155f));
             CreateButton(canvasGo.transform, "Watch", new Vector2(0.74f, 0.1f), new Vector2(0.98f, 0.155f), OnImport);
 
+            // Action row.
+            CreateButton(canvasGo.transform, "Retry", new Vector2(0.02f, 0.02f), new Vector2(0.24f, 0.09f), () => _runner.Retry());
+            CreateButton(canvasGo.transform, "Share", new Vector2(0.26f, 0.02f), new Vector2(0.48f, 0.09f), OnShare);
+            CreateButton(canvasGo.transform, "Ghost", new Vector2(0.5f, 0.02f), new Vector2(0.72f, 0.09f), OnToggleAuthorGhost);
+
             runner.StateChanged += Refresh;
+            modes.ModeChanged += Refresh;
             Refresh();
         }
 
@@ -69,13 +80,25 @@ namespace PuttSeed.Unity
         {
             var sim = _runner.Sim;
             var gen = _runner.Generation;
+            _difficultyLabel.text = _modes.PracticeDifficulty.ToString();
+            _hint.text = _modes.CurrentHint;
+
             if (sim == null || gen == null)
             {
                 _counter.text = "generating…";
                 return;
             }
 
-            _counter.text = $"Strokes {sim.Strokes}/{sim.StrokeLimit}   Par {gen.Course.Par}   {gen.Difficulty}";
+            string modeLabel = _modes.Mode switch
+            {
+                GameMode.Daily => "Daily",
+                GameMode.Practice => $"Practice · {gen.Difficulty}",
+                _ => $"Tutorial {_modes.TutorialIndex + 1}/{TutorialConfig.Stages.Length}",
+            };
+
+            int streak = _modes.Stats.Data.streak;
+            string streakLabel = streak > 0 ? $"   Streak {streak}" : "";
+            _counter.text = $"{modeLabel}   Strokes {sim.Strokes}/{sim.StrokeLimit}   Par {gen.Course.Par}{streakLabel}";
             _status.text = sim.IsHoled
                 ? SuccessLine(sim.Strokes, gen.Course.Par)
                 : sim.IsFailed ? "Out of strokes — retry!" : "";
@@ -86,9 +109,16 @@ namespace PuttSeed.Unity
              : strokes == par ? "Par — well played!"
              : "Holed!";
 
-        private void OnRetry()
+        private void OnTutorial()
         {
-            _runner.Retry();
+            if (_modes.Mode == GameMode.Tutorial)
+            {
+                _modes.NextTutorial();
+            }
+            else
+            {
+                _modes.StartTutorial(0);
+            }
         }
 
         private void OnShare()
@@ -133,38 +163,14 @@ namespace PuttSeed.Unity
 
         private void OnImport()
         {
-            var text = _importField.text.Trim();
-            int at = text.IndexOf("PUTT-", System.StringComparison.Ordinal);
-            if (at < 0 || !ReplayCodec.TryDecode(ExtractCode(text, at), out var seed, out var shots))
-            {
-                ShowToast("Not a valid PUTT- code.");
-                return;
-            }
-
-            if (seed != _runner.Seed)
-            {
-                _runner.LoadSeed(seed);
-                _courseRenderer.Rebuild(_runner.Generation!.Course);
-                CameraFramer.Frame(_camera, _runner.Generation.Course);
-                ShowToast("Loaded that day's course; ghost playing.");
-            }
-            else
+            if (_modes.ImportReplay(_importField.text.Trim()))
             {
                 ShowToast("Ghost playing.");
             }
-
-            _runner.AddGhost(shots, "import");
-        }
-
-        private static string ExtractCode(string text, int start)
-        {
-            int end = start;
-            while (end < text.Length && !char.IsWhiteSpace(text[end]))
+            else
             {
-                end++;
+                ShowToast("Not a valid PUTT- code.");
             }
-
-            return text.Substring(start, end - start);
         }
 
         private void ShowToast(string message)
@@ -209,7 +215,7 @@ namespace PuttSeed.Unity
             return text;
         }
 
-        private static void CreateButton(Transform parent, string label, Vector2 anchorMin, Vector2 anchorMax, UnityEngine.Events.UnityAction onClick)
+        private static Text CreateButton(Transform parent, string label, Vector2 anchorMin, Vector2 anchorMax, UnityEngine.Events.UnityAction onClick)
         {
             var rect = CreateRect(parent, $"Button{label}", anchorMin, anchorMax);
             var image = rect.gameObject.AddComponent<Image>();
@@ -217,8 +223,9 @@ namespace PuttSeed.Unity
             var button = rect.gameObject.AddComponent<Button>();
             button.onClick.AddListener(onClick);
 
-            var text = CreateText(rect, "Label", Vector2.zero, Vector2.one, 36, TextAnchor.MiddleCenter);
+            var text = CreateText(rect, "Label", Vector2.zero, Vector2.one, 34, TextAnchor.MiddleCenter);
             text.text = label;
+            return text;
         }
 
         private static InputField CreateInputField(Transform parent, Vector2 anchorMin, Vector2 anchorMax)

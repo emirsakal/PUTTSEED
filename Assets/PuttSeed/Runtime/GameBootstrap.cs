@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using PuttSeed.Core.Daily;
 using UnityEngine;
 
 namespace PuttSeed.Unity
@@ -43,7 +41,11 @@ namespace PuttSeed.Unity
             var courseRenderer = courseGo.AddComponent<CourseRenderer>();
 
             var ballGo = new GameObject("Ball");
-            ballGo.AddComponent<BallView>().Initialize(runner);
+            var ballView = ballGo.AddComponent<BallView>();
+            ballView.Initialize(runner);
+
+            var feedbackGo = new GameObject("Feedback");
+            feedbackGo.AddComponent<FeedbackController>().Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");
             ghostsGo.AddComponent<GhostViewManager>().Initialize(runner);
@@ -57,20 +59,28 @@ namespace PuttSeed.Unity
             var devGo = new GameObject("DevReload");
             var devReload = devGo.AddComponent<DevReloadController>();
 
-            ulong seed = useFixedSeed ? fixedSeed : TodaySeed();
-            runner.LoadSeed(seed);
-            courseRenderer.Rebuild(runner.Generation!.Course);
-            CameraFramer.Frame(cam, runner.Generation.Course);
-            ui.Initialize(runner, courseRenderer, cam);
+            var modesGo = new GameObject("Modes");
+            var modes = modesGo.AddComponent<ModeController>();
+            modes.Initialize(runner, courseRenderer, cam,
+                System.IO.Path.Combine(Application.persistentDataPath, "puttseed-stats.json"));
+
+            ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);
 
-            Application.targetFrameRate = 120;
-        }
+            if (useFixedSeed)
+            {
+                modes.StartFixedSeed(fixedSeed);
+            }
+            else if (modes.IsFirstLaunch)
+            {
+                modes.StartTutorial(0); // GDD FTUE: teach before the first daily
+            }
+            else
+            {
+                modes.StartDaily();
+            }
 
-        private static ulong TodaySeed()
-        {
-            var utc = DateTime.UtcNow;
-            return DailySeed.FromUtcDate(utc.Year, utc.Month, utc.Day);
+            Application.targetFrameRate = 120;
         }
     }
 }
