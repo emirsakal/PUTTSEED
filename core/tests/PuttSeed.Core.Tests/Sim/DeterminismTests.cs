@@ -24,10 +24,13 @@ namespace PuttSeed.Core.Tests.Sim
         private static Vec2Fix V(int x, int y) => new Vec2Fix(Fix64.FromInt(x), Fix64.FromInt(y));
 
         /// <summary>Fixture course: box walls, bumper, sand, water, far hole.</summary>
+        // Par 10 keeps the stroke limit (par + 3) above anything the 8-shot
+        // script plus water penalties can reach, so no shot is ever refused and
+        // the golden hash predates the stroke-limit rule unchanged.
         private static CourseData FixtureCourse() => new CourseData(
             startPosition: V(0, 0),
             holePosition: V(10, 4),
-            par: 3,
+            par: 10,
             walls: new[]
             {
                 new WallSegment(V(-1, -5), V(11, -5)),
