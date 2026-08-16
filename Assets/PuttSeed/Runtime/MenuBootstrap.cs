@@ -29,6 +29,9 @@ namespace PuttSeed.Unity
         public Text? soundLabel;
         public Button? hapticsButton;
         public Text? hapticsLabel;
+        public Text? countdownText;
+
+        private bool _showCountdown;
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
         {
@@ -71,6 +74,10 @@ namespace PuttSeed.Unity
                     ? $"Daily {utc:MMM d} — done in {todayRecord.bestStrokes}"
                     : $"Play today's hole · {utc:MMM d}";
             }
+
+            // Today's hole is done — the loop's next beat is the countdown.
+            _showCountdown = todayRecord.completed;
+            countdownText?.gameObject.SetActive(_showCountdown);
 
             if (tutorialLabel != null && firstLaunch)
             {
@@ -119,6 +126,19 @@ namespace PuttSeed.Unity
                 hapticsLabel.text = stats.Data.hapticsEnabled ? "Haptics: On" : "Haptics: Off";
                 hapticsLabel.color = stats.Data.hapticsEnabled ? UIStyle.Cream : UIStyle.CreamDim;
             }
+        }
+
+        private void Update()
+        {
+            if (!_showCountdown || countdownText == null)
+            {
+                return;
+            }
+
+            var remaining = DailyCountdown.UntilNextHole(DateTime.UtcNow);
+            countdownText.text = remaining.TotalSeconds <= 0
+                ? "New hole is ready — restart to play!"
+                : $"next hole in {DailyCountdown.Format(remaining)}";
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)

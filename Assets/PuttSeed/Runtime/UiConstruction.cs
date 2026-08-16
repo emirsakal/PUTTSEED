@@ -57,6 +57,12 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), NoOp, 44, primary: true);
             menu.dailyButton = menu.dailyLabel.GetComponentInParent<Button>();
 
+            // Next-hole countdown; MenuBootstrap fills it once today is done.
+            menu.countdownText = UIFactory.CreateText(canvas.transform, "Countdown",
+                new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), 26, TextAnchor.MiddleCenter);
+            menu.countdownText.color = UIStyle.CreamDim;
+            menu.countdownText.gameObject.SetActive(false);
+
             var practiceLabel = UIFactory.CreateButton(canvas.transform, "Practice",
                 new Vector2(0.1f, 0.43f), new Vector2(0.6f, 0.52f), NoOp, 44);
             menu.practiceButton = practiceLabel.GetComponentInParent<Button>();
