@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using PuttSeed.Core.CourseGen;
 using PuttSeed.Core.Daily;
 using PuttSeed.Core.Replay;
@@ -214,17 +215,23 @@ namespace PuttSeed.Unity
                 var buffer = new byte[8];
                 entropy.NextBytes(buffer);
                 ulong seed = BitConverter.ToUInt64(buffer, 0);
-                GenerationResult candidate;
-                try
+
+                // Background generation: frames (and the putt vignette) keep
+                // running while each candidate is solved.
+                var task = Task.Run(() => CourseGenerator.Generate(
+                    seed, GeneratorConfig.Default, config, SolverConfig.Default));
+                while (!task.IsCompleted)
                 {
-                    candidate = CourseGenerator.Generate(
-                        seed, GeneratorConfig.Default, config, SolverConfig.Default);
+                    yield return null;
                 }
-                catch (InvalidOperationException)
+
+                if (task.Status != TaskStatus.RanToCompletion)
                 {
+                    _ = task.Exception; // observed; bounded-generation misses just retry
                     continue;
                 }
 
+                var candidate = task.Result;
                 if (best == null || candidate.Difficulty == PracticeDifficulty)
                 {
                     best = candidate;
@@ -235,8 +242,6 @@ namespace PuttSeed.Unity
                 {
                     break;
                 }
-
-                yield return null; // keep the app responsive between tries
             }
 
             if (best != null)
@@ -257,8 +262,11 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// Every course load goes through here: cover the screen, render one
-        /// overlay frame, then do the blocking generate + rebuild behind it.
+        /// Every course load goes through here: cover the screen, run the
+        /// generation on a BACKGROUND thread (core is pure C#, no Unity API),
+        /// and keep rendering frames while it works — the overlay's putt
+        /// vignette genuinely rolls toward the cup during the load. The result
+        /// is adopted on the main thread, then Hide plays the drop-in.
         /// </summary>
         private IEnumerator LoadRoutine(ulong seed, ShotInput[]? ghostShots)
         {
@@ -270,13 +278,30 @@ namespace PuttSeed.Unity
             IsLoading = true;
             _overlay?.Show("Generating course");
             ModeChanged?.Invoke();
-            yield return null; // the overlay must be on screen before we block
 
-            _runner.LoadSeed(seed);
-            RebuildView();
-            if (ghostShots != null)
+            // Read Unity-side state (the ScriptableObject) on the main thread;
+            // the task only touches pure core types.
+            var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
+            var task = Task.Run(() => CourseGenerator.Generate(
+                seed, GeneratorConfig.Default, config, SolverConfig.Default));
+            while (!task.IsCompleted)
             {
-                _runner.AddGhost(ghostShots, "import");
+                yield return null; // frames render; the ball rolls while we wait
+            }
+
+            if (task.Status == TaskStatus.RanToCompletion)
+            {
+                _runner.AdoptGeneration(seed, task.Result, config);
+                RebuildView();
+                if (ghostShots != null)
+                {
+                    _runner.AddGhost(ghostShots, "import");
+                }
+            }
+            else
+            {
+                Debug.LogError($"PuttSeed: generation failed for seed {seed}: " +
+                    task.Exception?.GetBaseException().Message);
             }
 
             _overlay?.Hide();
