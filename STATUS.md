@@ -180,8 +180,8 @@ averages ~0.9 s (Release), worst observed ~2 s.
 ## Remaining human steps
 
 - On-device feel pass (tune FeelConfig.asset; R in the editor reloads it).
-- Audio: source clips (none in the repo) and give `FeedbackController` a
-  scene-authored surface to assign them — the object is currently created at
-  runtime, so hookup needs a small scene/code change, not just asset drops.
+- Audio: DONE post-Week-4 — six procedurally synthesized clips (SfxSynth,
+  `PuttSeed → Generate SFX`) load automatically; only an on-device listen
+  pass remains (tweak the recipes in SfxSynth.cs if any feel wrong).
 - Create the keystore, run `scripts\build-release.bat`, upload the .aab to
   the Play Console internal testing track.
