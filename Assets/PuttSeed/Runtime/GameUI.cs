@@ -90,7 +90,7 @@ namespace PuttSeed.Unity
 
             string modeLabel = _modes.Mode switch
             {
-                GameMode.Daily => "Daily",
+                GameMode.Daily => _modes.DailyModeLabel,
                 GameMode.Practice => $"Practice · {gen.Difficulty}",
                 _ => $"Tutorial {_modes.TutorialIndex + 1}/{TutorialConfig.Stages.Length}",
             };

@@ -72,8 +72,12 @@ namespace PuttSeed.Unity
             menu.difficultyButton = menu.difficultyLabel.GetComponentInParent<Button>();
 
             menu.tutorialLabel = UIFactory.CreateButton(canvas.transform, "Tutorial",
-                new Vector2(0.1f, 0.315f), new Vector2(0.9f, 0.405f), NoOp, 44);
+                new Vector2(0.1f, 0.315f), new Vector2(0.6f, 0.405f), NoOp, 40);
             menu.tutorialButton = menu.tutorialLabel.GetComponentInParent<Button>();
+
+            var archiveLabel = UIFactory.CreateButton(canvas.transform, "Archive",
+                new Vector2(0.62f, 0.315f), new Vector2(0.9f, 0.405f), NoOp, 36);
+            menu.archiveButton = archiveLabel.GetComponentInParent<Button>();
 
             UIFactory.CreatePanel(canvas.transform, "FooterChip",
                 new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), UIStyle.PanelSoft);
@@ -89,6 +93,55 @@ namespace PuttSeed.Unity
             menu.hapticsLabel = UIFactory.CreateButton(canvas.transform, "Haptics: On",
                 new Vector2(0.52f, 0.145f), new Vector2(0.86f, 0.195f), NoOp, 28);
             menu.hapticsButton = menu.hapticsLabel.GetComponentInParent<Button>();
+
+            BuildArchivePanel(canvas.transform, menu);
+        }
+
+        /// <summary>
+        /// The archive overlay: seven past-day rows plus paging. Any past date
+        /// regenerates its course from the date alone, so browsing needs no
+        /// storage — MenuBootstrap only fills labels from the local records.
+        /// </summary>
+        private static void BuildArchivePanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "ArchivePanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true; // swallow clicks under the panel
+            menu.archivePanel = dim.gameObject;
+
+            UIFactory.CreatePanel(dim, "Card",
+                new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Archive";
+
+            menu.archiveRowButtons = new Button[7];
+            menu.archiveRowLabels = new Text[7];
+            for (int i = 0; i < 7; i++)
+            {
+                float yMax = 0.72f - i * 0.062f;
+                var rowLabel = UIFactory.CreateButton(dim, "—",
+                    new Vector2(0.12f, yMax - 0.055f), new Vector2(0.88f, yMax), NoOp, 30);
+                menu.archiveRowLabels[i] = rowLabel;
+                menu.archiveRowButtons[i] = rowLabel.GetComponentInParent<Button>();
+            }
+
+            var older = UIFactory.CreateButton(dim, "Older",
+                new Vector2(0.12f, 0.20f), new Vector2(0.34f, 0.26f), NoOp, 28);
+            menu.archiveOlderButton = older.GetComponentInParent<Button>();
+            menu.archivePageLabel = UIFactory.CreateText(dim, "Page",
+                new Vector2(0.35f, 0.20f), new Vector2(0.65f, 0.26f), 26, TextAnchor.MiddleCenter);
+            menu.archivePageLabel.color = UIStyle.CreamDim;
+            var newer = UIFactory.CreateButton(dim, "Newer",
+                new Vector2(0.66f, 0.20f), new Vector2(0.88f, 0.26f), NoOp, 28);
+            menu.archiveNewerButton = newer.GetComponentInParent<Button>();
+
+            var close = UIFactory.CreateButton(dim, "Close",
+                new Vector2(0.3f, 0.135f), new Vector2(0.7f, 0.19f), NoOp, 30, primary: true);
+            menu.archiveCloseButton = close.GetComponentInParent<Button>();
+
+            menu.archivePanel.SetActive(false);
         }
 
         /// <summary>Builds the in-game HUD under the UI root and wires its references.</summary>

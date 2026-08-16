@@ -66,6 +66,20 @@ namespace PuttSeed.Unity
             }
         }
 
+        /// <summary>The record for a day number, or null — never creates (archive browsing).</summary>
+        public DayRecord? FindDay(int day)
+        {
+            for (int i = 0; i < Data.days.Count; i++)
+            {
+                if (Data.days[i].day == day)
+                {
+                    return Data.days[i];
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>The record for a day number, created on first touch.</summary>
         public DayRecord GetOrCreateDay(int day)
         {
@@ -90,11 +104,14 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// Records holing out the daily: keeps the best stroke count, its star
+        /// Records holing out a daily: keeps the best stroke count, its star
         /// rating and its replay; first completion of a day advances the
         /// streak (consecutive day numbers) or restarts it at 1 after a gap.
+        /// Archive plays pass <paramref name="countsForStreak"/> false — the
+        /// record fills in, but history cannot be farmed for streak credit.
         /// </summary>
-        public void RecordDailyCompletion(int day, int strokes, int stars, string replayCode)
+        public void RecordDailyCompletion(int day, int strokes, int stars, string replayCode,
+            bool countsForStreak = true)
         {
             var record = GetOrCreateDay(day);
             bool firstCompletionToday = !record.completed;
@@ -107,7 +124,7 @@ namespace PuttSeed.Unity
 
             record.completed = true;
 
-            if (firstCompletionToday && day > Data.lastCompletedDay)
+            if (countsForStreak && firstCompletionToday && day > Data.lastCompletedDay)
             {
                 Data.streak = day == Data.lastCompletedDay + 1 && Data.lastCompletedDay != 0
                     ? Data.streak + 1

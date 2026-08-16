@@ -39,9 +39,17 @@ namespace PuttSeed.Unity
         private StatsStore _stats = null!;
         private LoadingOverlay? _overlay;
 
+        // The ACTIVE daily: today's, or a past day picked from the archive.
         private ulong _dailySeed;
-        private int _todayDayNumber;
+        private int _activeDayNumber;
+        private DateTime _activeDayDate;
         private bool _completionRecorded;
+
+        /// <summary>True when the loaded daily is a past day from the archive.</summary>
+        public bool IsArchiveDay { get; private set; }
+
+        /// <summary>HUD label for daily mode ("Daily", or dated for archive days).</summary>
+        public string DailyModeLabel => IsArchiveDay ? $"Daily · {_activeDayDate:MMM d}" : "Daily";
 
         /// <summary>The active mode.</summary>
         public GameMode Mode { get; private set; } = GameMode.Daily;
@@ -83,7 +91,7 @@ namespace PuttSeed.Unity
         /// </summary>
         public string BuildShareText(int strokes, int par, string code)
             => Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0
-                ? $"PUTTSEED day {_todayDayNumber} — {strokes} strokes (par {par}). Watch: {code}"
+                ? $"PUTTSEED day {_activeDayNumber} — {strokes} strokes (par {par}). Watch: {code}"
                 : $"PUTTSEED — {strokes} strokes (par {par}). Watch: {code}";
 
         /// <summary>
@@ -108,7 +116,16 @@ namespace PuttSeed.Unity
                     StartTutorial(GameSession.TutorialIndex);
                     break;
                 default:
-                    StartDaily();
+                    if (GameSession.ArchiveDayNumber >= 0)
+                    {
+                        StartArchiveDay(GameSession.ArchiveDayNumber);
+                        GameSession.ArchiveDayNumber = -1;
+                    }
+                    else
+                    {
+                        StartDaily();
+                    }
+
                     break;
             }
         }
@@ -118,9 +135,28 @@ namespace PuttSeed.Unity
         {
             Mode = GameMode.Daily;
             CurrentHint = "";
+            IsArchiveDay = false;
             var utc = DateTime.UtcNow;
-            _todayDayNumber = DayNumber(utc);
+            _activeDayNumber = DayNumber(utc);
+            _activeDayDate = utc.Date;
             _dailySeed = DailySeed.FromUtcDate(utc.Year, utc.Month, utc.Day);
+            LoadAndShow(_dailySeed);
+        }
+
+        /// <summary>
+        /// Loads a past day's course from the archive. The date alone
+        /// regenerates it — no storage. Stats fill that day's record, but the
+        /// completion never counts toward the streak.
+        /// </summary>
+        public void StartArchiveDay(int dayNumber)
+        {
+            Mode = GameMode.Daily;
+            CurrentHint = "";
+            IsArchiveDay = true;
+            _activeDayNumber = dayNumber;
+            _activeDayDate = DateOfDay(dayNumber);
+            _dailySeed = DailySeed.FromUtcDate(
+                _activeDayDate.Year, _activeDayDate.Month, _activeDayDate.Day);
             LoadAndShow(_dailySeed);
         }
 
@@ -129,6 +165,7 @@ namespace PuttSeed.Unity
         {
             Mode = GameMode.Practice;
             CurrentHint = "";
+            IsArchiveDay = false;
             StartCoroutine(GeneratePracticeCourse());
         }
 
@@ -136,6 +173,7 @@ namespace PuttSeed.Unity
         public void StartTutorial(int index)
         {
             Mode = GameMode.Tutorial;
+            IsArchiveDay = false;
             TutorialIndex = ((index % TutorialConfig.Stages.Length) + TutorialConfig.Stages.Length)
                 % TutorialConfig.Stages.Length;
             var stage = TutorialConfig.Stages[TutorialIndex];
@@ -151,6 +189,7 @@ namespace PuttSeed.Unity
         {
             Mode = GameMode.Practice;
             CurrentHint = "";
+            IsArchiveDay = false;
             LoadAndShow(seed);
         }
 
@@ -326,7 +365,7 @@ namespace PuttSeed.Unity
             _completionRecorded = false;
             if (Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0)
             {
-                _stats.RecordDailyAttempt(_todayDayNumber);
+                _stats.RecordDailyAttempt(_activeDayNumber);
             }
         }
 
@@ -348,9 +387,10 @@ namespace PuttSeed.Unity
                 }
 
                 _stats.RecordDailyCompletion(
-                    _todayDayNumber, sim.Strokes,
+                    _activeDayNumber, sim.Strokes,
                     Scoring.Stars(sim.Strokes, _runner.Generation!.Course.Par),
-                    ReplayCodec.Encode(_runner.Seed, shots));
+                    ReplayCodec.Encode(_runner.Seed, shots),
+                    countsForStreak: !IsArchiveDay);
 
                 // The next retry races the (possibly new) best run.
                 _runner.RemoveGhosts("best");
@@ -372,7 +412,7 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            var record = _stats.GetOrCreateDay(_todayDayNumber);
+            var record = _stats.GetOrCreateDay(_activeDayNumber);
             if (!record.completed || record.bestReplay.Length == 0)
             {
                 return;
@@ -387,5 +427,9 @@ namespace PuttSeed.Unity
         /// <summary>Days since 2020-01-01 UTC — the streak arithmetic unit.</summary>
         public static int DayNumber(DateTime utc)
             => (int)(utc.Date - new DateTime(2020, 1, 1)).TotalDays;
+
+        /// <summary>The UTC date of a day number (inverse of <see cref="DayNumber"/>).</summary>
+        public static DateTime DateOfDay(int dayNumber)
+            => new DateTime(2020, 1, 1).AddDays(dayNumber);
     }
 }

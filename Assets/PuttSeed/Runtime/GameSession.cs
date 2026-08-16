@@ -19,6 +19,9 @@ namespace PuttSeed.Unity
         /// <summary>Tutorial stage to start at.</summary>
         public static int TutorialIndex;
 
+        /// <summary>Archive pick: the past day number to play, -1 for today.</summary>
+        public static int ArchiveDayNumber = -1;
+
         /// <summary>Editor testing: load this exact seed instead of the mode.</summary>
         public static bool UseFixedSeed;
 

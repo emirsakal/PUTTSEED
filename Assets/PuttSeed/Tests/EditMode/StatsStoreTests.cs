@@ -106,6 +106,29 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void ArchiveCompletion_FillsRecordWithoutStreakCredit()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, 2, "today");
+            store.RecordDailyCompletion(99, 2, 3, "old", countsForStreak: false);
+
+            Assert.That(store.Data.streak, Is.EqualTo(1));
+            Assert.That(store.Data.lastCompletedDay, Is.EqualTo(100));
+            var archived = store.FindDay(99);
+            Assert.That(archived, Is.Not.Null);
+            Assert.That(archived.completed, Is.True);
+            Assert.That(archived.bestStrokes, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void FindDay_NeverCreatesRecords()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.FindDay(123), Is.Null);
+            Assert.That(store.Data.days, Is.Empty);
+        }
+
+        [Test]
         public void TutorialSeen_Persists()
         {
             var store = new StatsStore(_path);
