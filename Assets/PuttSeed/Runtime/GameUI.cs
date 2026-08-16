@@ -101,7 +101,7 @@ namespace PuttSeed.Unity
             if (statusText != null)
             {
                 // The fail state gets its own panel; the status line is for success.
-                statusText.text = sim.IsHoled ? SuccessLine(sim.Strokes, gen.Course.Par) : "";
+                statusText.text = sim.IsHoled ? GolfTerms.SuccessLine(sim.Strokes, gen.Course.Par) : "";
             }
 
             failPanel?.SetActive(sim.IsFailed);
@@ -133,11 +133,6 @@ namespace PuttSeed.Unity
                 }
             }
         }
-
-        private static string SuccessLine(int strokes, int par)
-            => strokes <= par - 1 ? "Under par — brilliant!"
-             : strokes == par ? "Par — well played!"
-             : "Holed!";
 
         private static void OnMenu()
         {
