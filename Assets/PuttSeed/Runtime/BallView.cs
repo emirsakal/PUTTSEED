@@ -13,6 +13,8 @@ namespace PuttSeed.Unity
         private TrailRenderer _trail = null!;
         private float _squash;
 
+        private MeshRenderer _renderer = null!;
+
         /// <summary>Creates the ball visuals and subscribes to run resets.</summary>
         public void Initialize(SimRunner runner)
         {
@@ -20,7 +22,11 @@ namespace PuttSeed.Unity
 
             var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, PaletteMaterials.Ball);
             gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
-            gameObject.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            _renderer = gameObject.AddComponent<MeshRenderer>();
+            _renderer.sharedMaterial = PaletteMaterials.Shared;
+            // Invisible until the first course is actually loaded — a ball
+            // floating over an empty field must never render.
+            _renderer.enabled = false;
 
             _trail = gameObject.AddComponent<TrailRenderer>();
             _trail.time = 0.6f;
@@ -31,7 +37,13 @@ namespace PuttSeed.Unity
             _trail.endColor = new Color(1f, 1f, 1f, 0f);
             _trail.sortingOrder = -1;
 
-            runner.RunReset += () => _trail.Clear();
+            _trail.enabled = false;
+            runner.RunReset += () =>
+            {
+                _renderer.enabled = true;
+                _trail.enabled = true;
+                _trail.Clear();
+            };
         }
 
         /// <summary>Impact juice: a brief squash pulse that eases back to round.</summary>

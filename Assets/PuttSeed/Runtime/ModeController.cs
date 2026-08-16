@@ -36,6 +36,7 @@ namespace PuttSeed.Unity
         private CourseRenderer _courseRenderer = null!;
         private Camera _camera = null!;
         private StatsStore _stats = null!;
+        private LoadingOverlay _overlay = null!;
 
         private ulong _dailySeed;
         private int _todayDayNumber;
@@ -59,12 +60,17 @@ namespace PuttSeed.Unity
         /// <summary>Raised when mode, hint or stats-visible state changes.</summary>
         public event Action? ModeChanged;
 
+        /// <summary>True while a course is being generated behind the overlay.</summary>
+        public bool IsLoading { get; private set; }
+
         /// <summary>Wires dependencies; statsPath is persistentDataPath-based in the app.</summary>
-        public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam, string statsPath)
+        public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam,
+            LoadingOverlay overlay, string statsPath)
         {
             _runner = runner;
             _courseRenderer = courseRenderer;
             _camera = cam;
+            _overlay = overlay;
             _stats = new StatsStore(statsPath);
             runner.StateChanged += OnStateChanged;
             runner.RunReset += OnRunReset;
@@ -176,17 +182,27 @@ namespace PuttSeed.Unity
             {
                 Mode = seed == _dailySeed ? GameMode.Daily : GameMode.Practice;
                 CurrentHint = "";
-                LoadAndShow(seed);
+                LoadAndShow(seed, ghostShots: shots); // ghost attaches after the load
+            }
+            else
+            {
+                _runner.AddGhost(shots, "import");
             }
 
-            _runner.AddGhost(shots, "import");
             return true;
         }
 
         private IEnumerator GeneratePracticeCourse()
         {
+            if (IsLoading)
+            {
+                yield break;
+            }
+
+            IsLoading = true;
+            _overlay.Show("Generating course");
             ModeChanged?.Invoke();
-            yield return null; // let the "generating" frame render first
+            yield return null; // let the overlay render first
 
             var entropy = new System.Random();
             var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
@@ -228,14 +244,43 @@ namespace PuttSeed.Unity
                 _runner.AdoptGeneration(bestSeed, best, config);
                 RebuildView();
                 _stats.RecordPracticePlayed();
-                ModeChanged?.Invoke();
             }
+
+            _overlay.Hide();
+            IsLoading = false;
+            ModeChanged?.Invoke();
         }
 
-        private void LoadAndShow(ulong seed)
+        private void LoadAndShow(ulong seed, ShotInput[]? ghostShots = null)
         {
+            StartCoroutine(LoadRoutine(seed, ghostShots));
+        }
+
+        /// <summary>
+        /// Every course load goes through here: cover the screen, render one
+        /// overlay frame, then do the blocking generate + rebuild behind it.
+        /// </summary>
+        private IEnumerator LoadRoutine(ulong seed, ShotInput[]? ghostShots)
+        {
+            if (IsLoading)
+            {
+                yield break;
+            }
+
+            IsLoading = true;
+            _overlay.Show("Generating course");
+            ModeChanged?.Invoke();
+            yield return null; // the overlay must be on screen before we block
+
             _runner.LoadSeed(seed);
             RebuildView();
+            if (ghostShots != null)
+            {
+                _runner.AddGhost(ghostShots, "import");
+            }
+
+            _overlay.Hide();
+            IsLoading = false;
             ModeChanged?.Invoke();
         }
 

@@ -59,9 +59,12 @@ namespace PuttSeed.Unity
             var devGo = new GameObject("DevReload");
             var devReload = devGo.AddComponent<DevReloadController>();
 
+            var overlayGo = new GameObject("LoadingOverlay");
+            var overlay = overlayGo.AddComponent<LoadingOverlay>();
+
             var modesGo = new GameObject("Modes");
             var modes = modesGo.AddComponent<ModeController>();
-            modes.Initialize(runner, courseRenderer, cam, MenuBootstrap.StatsPath());
+            modes.Initialize(runner, courseRenderer, cam, overlay, MenuBootstrap.StatsPath());
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);
