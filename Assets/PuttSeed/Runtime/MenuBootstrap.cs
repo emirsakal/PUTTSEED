@@ -38,6 +38,11 @@ namespace PuttSeed.Unity
         public Button? archiveNewerButton;
         public Button? archiveCloseButton;
         public Text? archivePageLabel;
+        public Button? statsButton;
+        public GameObject? statsPanel;
+        public Text? statsBlock;
+        public Text? achievementsBlock;
+        public Button? statsCloseButton;
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
@@ -125,6 +130,9 @@ namespace PuttSeed.Unity
                 archiveRowButtons[i]?.onClick.AddListener(() => LaunchArchiveRow(row));
             }
 
+            statsButton?.onClick.AddListener(OpenStats);
+            statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
+
             RefreshSettingsLabels(stats);
             soundButton?.onClick.AddListener(() =>
             {
@@ -164,6 +172,49 @@ namespace PuttSeed.Unity
             countdownText.text = remaining.TotalSeconds <= 0
                 ? "New hole is ready — restart to play!"
                 : $"next hole in {DailyCountdown.Format(remaining)}";
+        }
+
+        private void OpenStats()
+        {
+            var data = _stats.Data;
+            int s3 = 0, s2 = 0, s1 = 0, attempts = 0;
+            for (int i = 0; i < data.days.Count; i++)
+            {
+                var day = data.days[i];
+                attempts += day.attempts;
+                if (day.completed)
+                {
+                    if (day.bestStars >= 3) { s3++; }
+                    else if (day.bestStars == 2) { s2++; }
+                    else { s1++; }
+                }
+            }
+
+            if (statsBlock != null)
+            {
+                statsBlock.text =
+                    $"Streak {data.streak}  (best {data.bestStreak})\n" +
+                    $"Dailies completed  {Achievements.CompletedDailyCount(data)}\n" +
+                    $"3-star {s3}  ·  2-star {s2}  ·  1-star {s1}\n" +
+                    $"Daily attempts  {attempts}\n" +
+                    $"Practice courses  {data.practicePlayed}";
+            }
+
+            if (achievementsBlock != null)
+            {
+                var sb = new System.Text.StringBuilder();
+                foreach (var def in Achievements.All)
+                {
+                    bool unlocked = data.achievements.Contains(def.Id);
+                    sb.AppendLine(unlocked
+                        ? $"<color=#F8F4E6>{def.Title}</color> <color=#F8F4E699>— {def.Detail}</color>"
+                        : $"<color=#F8F4E64D>{def.Title} — {def.Detail}</color>");
+                }
+
+                achievementsBlock.text = sb.ToString();
+            }
+
+            statsPanel?.SetActive(true);
         }
 
         private void OpenArchive()

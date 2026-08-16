@@ -54,6 +54,7 @@ namespace PuttSeed.Unity
 
             runner.StateChanged += Refresh;
             modes.ModeChanged += Refresh;
+            modes.AchievementUnlocked += def => ShowToast($"Achievement — {def.Title}!");
             Refresh();
         }
 

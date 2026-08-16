@@ -23,9 +23,11 @@ namespace PuttSeed.Unity
     public sealed class SaveData
     {
         public int streak;
+        public int bestStreak;
         public int lastCompletedDay;
         public int practicePlayed;
         public bool tutorialSeen;
+        public List<string> achievements = new List<string>();
 
         // Settings ride in the same file. Field initializers double as the
         // defaults for saves written before the fields existed (JsonUtility
@@ -130,6 +132,10 @@ namespace PuttSeed.Unity
                     ? Data.streak + 1
                     : 1;
                 Data.lastCompletedDay = day;
+                if (Data.streak > Data.bestStreak)
+                {
+                    Data.bestStreak = Data.streak;
+                }
             }
 
             Save();
@@ -154,6 +160,19 @@ namespace PuttSeed.Unity
         {
             Data.hapticsEnabled = enabled;
             Save();
+        }
+
+        /// <summary>Adds an achievement id once; true when newly unlocked.</summary>
+        public bool Unlock(string id)
+        {
+            if (Data.achievements.Contains(id))
+            {
+                return false;
+            }
+
+            Data.achievements.Add(id);
+            Save();
+            return true;
         }
 
         /// <summary>Counts one practice course played.</summary>

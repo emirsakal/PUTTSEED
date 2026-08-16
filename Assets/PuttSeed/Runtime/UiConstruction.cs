@@ -85,6 +85,14 @@ namespace PuttSeed.Unity
                 new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), 30, TextAnchor.MiddleCenter);
             menu.footerText.color = UIStyle.CreamDim;
 
+            // Invisible hit area: tapping the stats chip opens the stats panel.
+            var footerHit = UIFactory.CreateRect(canvas.transform, "FooterHit",
+                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f));
+            var footerHitImage = footerHit.gameObject.AddComponent<Image>();
+            footerHitImage.color = Color.clear;
+            footerHitImage.raycastTarget = true;
+            menu.statsButton = footerHit.gameObject.AddComponent<Button>();
+
             // Settings chips: sound and haptics toggles, persisted in the
             // stats file. MenuBootstrap fills the labels and wires the clicks.
             menu.soundLabel = UIFactory.CreateButton(canvas.transform, "Sound: On",
@@ -95,6 +103,43 @@ namespace PuttSeed.Unity
             menu.hapticsButton = menu.hapticsLabel.GetComponentInParent<Button>();
 
             BuildArchivePanel(canvas.transform, menu);
+            BuildStatsPanel(canvas.transform, menu);
+        }
+
+        /// <summary>
+        /// The stats overlay: number lines from the save plus the achievement
+        /// catalog (rich-text lines, unlocked bright / locked dim).
+        /// </summary>
+        private static void BuildStatsPanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "StatsPanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true;
+            menu.statsPanel = dim.gameObject;
+
+            UIFactory.CreatePanel(dim, "Card",
+                new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Stats";
+
+            menu.statsBlock = UIFactory.CreateText(dim, "StatsBlock",
+                new Vector2(0.13f, 0.555f), new Vector2(0.87f, 0.75f), 30, TextAnchor.UpperLeft);
+
+            var achTitle = UIFactory.CreateText(dim, "AchTitle",
+                new Vector2(0.13f, 0.505f), new Vector2(0.87f, 0.55f), 36, TextAnchor.MiddleLeft);
+            achTitle.text = "Achievements";
+            achTitle.color = UIStyle.Hint;
+
+            menu.achievementsBlock = UIFactory.CreateText(dim, "AchBlock",
+                new Vector2(0.13f, 0.20f), new Vector2(0.87f, 0.50f), 26, TextAnchor.UpperLeft);
+
+            var close = UIFactory.CreateButton(dim, "Close",
+                new Vector2(0.3f, 0.135f), new Vector2(0.7f, 0.19f), NoOp, 30, primary: true);
+            menu.statsCloseButton = close.GetComponentInParent<Button>();
+
+            menu.statsPanel.SetActive(false);
         }
 
         /// <summary>

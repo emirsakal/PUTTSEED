@@ -69,6 +69,9 @@ namespace PuttSeed.Unity
         /// <summary>Raised when mode, hint or stats-visible state changes.</summary>
         public event Action? ModeChanged;
 
+        /// <summary>Raised once per newly unlocked achievement (toast hook).</summary>
+        public event Action<AchievementDef>? AchievementUnlocked;
+
         /// <summary>True while a course is being generated behind the overlay.</summary>
         public bool IsLoading { get; private set; }
 
@@ -403,6 +406,19 @@ namespace PuttSeed.Unity
                 // The next retry races the (possibly new) best run.
                 _runner.RemoveGhosts("best");
                 AttachBestGhostIfDaily();
+            }
+
+            // Achievements see the post-record save, so streak/day counts
+            // already include this run.
+            var earned = Achievements.EvaluateRun(_stats.Data, Mode, IsArchiveDay,
+                sim.Strokes, _runner.Generation!.Course.Par, sim.WallHitCount);
+            for (int i = 0; i < earned.Count; i++)
+            {
+                var def = Achievements.Find(earned[i]);
+                if (def != null && _stats.Unlock(def.Id))
+                {
+                    AchievementUnlocked?.Invoke(def);
+                }
             }
 
             ModeChanged?.Invoke();

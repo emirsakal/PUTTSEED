@@ -129,6 +129,28 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void Unlock_OncePersistsAndReportsNewness()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Unlock("ace"), Is.True);
+            Assert.That(store.Unlock("ace"), Is.False);
+            Assert.That(new StatsStore(_path).Data.achievements, Is.EquivalentTo(new[] { "ace" }));
+        }
+
+        [Test]
+        public void BestStreak_KeepsThePeakThroughAReset()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, 2, "a");
+            store.RecordDailyCompletion(101, 3, 2, "b");
+            store.RecordDailyCompletion(102, 3, 2, "c");
+            store.RecordDailyCompletion(110, 3, 2, "d"); // gap resets the live streak
+
+            Assert.That(store.Data.streak, Is.EqualTo(1));
+            Assert.That(store.Data.bestStreak, Is.EqualTo(3));
+        }
+
+        [Test]
         public void TutorialSeen_Persists()
         {
             var store = new StatsStore(_path);
