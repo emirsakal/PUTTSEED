@@ -241,6 +241,14 @@ namespace PuttSeed.Unity.Editor
             return true;
         }
 
+        /// <summary>Batch/menu entry: (re)generate and assign all app icons.</summary>
+        [MenuItem("PuttSeed/Configure Icons")]
+        public static void ConfigureIcons()
+        {
+            EnsureAppIcon();
+            AssetDatabase.SaveAssets();
+        }
+
         /// <summary>
         /// Generates the flat app icon once (felt green, ball, hole) and
         /// assigns it. Committed after first generation so builds are stable.
@@ -289,6 +297,95 @@ namespace PuttSeed.Unity.Editor
             if (icon != null)
             {
                 PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+            }
+
+            EnsureAdaptiveIcons(icon);
+        }
+
+        /// <summary>
+        /// Generates and assigns Android adaptive icon layers (felt background,
+        /// transparent ball+hole foreground kept inside the 66% safe zone);
+        /// round and legacy kinds reuse the flat icon.
+        /// </summary>
+        private static void EnsureAdaptiveIcons(Texture2D? legacy)
+        {
+            const string bgPath = "Assets/PuttSeed/Icon/adaptive-bg.png";
+            const string fgPath = "Assets/PuttSeed/Icon/adaptive-fg.png";
+            if (!File.Exists(bgPath) || !File.Exists(fgPath))
+            {
+                const int size = 432;
+                var felt = new Color(0.22f, 0.52f, 0.31f);
+                var ball = new Color(0.97f, 0.97f, 0.95f);
+                var hole = new Color(0.07f, 0.07f, 0.09f);
+                var ballCenter = new Vector2(size * 0.40f, size * 0.40f);
+                var holeCenter = new Vector2(size * 0.61f, size * 0.59f);
+
+                var bg = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                var fg = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        bg.SetPixel(x, y, felt);
+                        var p = new Vector2(x, y);
+                        Color c = Color.clear;
+                        if (Vector2.Distance(p, holeCenter) < size * 0.075f)
+                        {
+                            c = hole;
+                        }
+
+                        if (Vector2.Distance(p, ballCenter) < size * 0.11f)
+                        {
+                            c = ball;
+                        }
+
+                        fg.SetPixel(x, y, c);
+                    }
+                }
+
+                bg.Apply();
+                fg.Apply();
+                File.WriteAllBytes(bgPath, bg.EncodeToPNG());
+                File.WriteAllBytes(fgPath, fg.EncodeToPNG());
+                Object.DestroyImmediate(bg);
+                Object.DestroyImmediate(fg);
+                AssetDatabase.ImportAsset(bgPath);
+                AssetDatabase.ImportAsset(fgPath);
+            }
+
+            var bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>(bgPath);
+            var fgTex = AssetDatabase.LoadAssetAtPath<Texture2D>(fgPath);
+            if (bgTex == null || fgTex == null)
+            {
+                return;
+            }
+
+            var adaptive = PlayerSettings.GetPlatformIcons(
+                NamedBuildTarget.Android, UnityEditor.Android.AndroidPlatformIconKind.Adaptive);
+            foreach (var slot in adaptive)
+            {
+                slot.SetTextures(bgTex, fgTex); // layer 0 background, layer 1 foreground
+            }
+
+            PlayerSettings.SetPlatformIcons(
+                NamedBuildTarget.Android, UnityEditor.Android.AndroidPlatformIconKind.Adaptive, adaptive);
+
+            if (legacy != null)
+            {
+                foreach (var kind in new[]
+                {
+                    UnityEditor.Android.AndroidPlatformIconKind.Round,
+                    UnityEditor.Android.AndroidPlatformIconKind.Legacy,
+                })
+                {
+                    var slots = PlayerSettings.GetPlatformIcons(NamedBuildTarget.Android, kind);
+                    foreach (var slot in slots)
+                    {
+                        slot.SetTextures(legacy);
+                    }
+
+                    PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android, kind, slots);
+                }
             }
         }
 
