@@ -29,8 +29,15 @@ namespace PuttSeed.Unity.Editor
             Write("capture", Capture());
             Write("water", Water());
             Write("fail", Fail());
+            Write("roll", Roll(), fadeOut: false); // seamless loop — no tail fade
+            Write("sand", SandEntry());
+            Write("ice", IceEntry());
+            Write("click", UiClick());
+            Write("ready", ReadyPluck());
+            Write("star", StarNote());
+            Write("jingle", Jingle());
             AssetDatabase.Refresh();
-            Debug.Log($"PuttSeed: synthesized 6 SFX clips into {OutDir}.");
+            Debug.Log($"PuttSeed: synthesized 13 SFX clips into {OutDir}.");
         }
 
         // --- sound recipes -------------------------------------------------
@@ -147,6 +154,139 @@ namespace PuttSeed.Unity.Editor
             return s;
         }
 
+        /// <summary>
+        /// Rolling loop: one-pole low-passed noise with the tail crossfaded
+        /// into the head so the loop point is seamless. Pitch and volume are
+        /// driven live from ball speed.
+        /// </summary>
+        private static float[] Roll()
+        {
+            const float seconds = 0.6f;
+            var raw = new float[(int)(SampleRate * seconds)];
+            var rng = new System.Random(404);
+            float lp = 0f;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
+                lp = lp * 0.94f + white * 0.06f;
+                raw[i] = lp * 2.2f;
+            }
+
+            int fade = SampleRate * 60 / 1000;
+            var s = new float[raw.Length - fade];
+            for (int i = 0; i < s.Length; i++)
+            {
+                s[i] = raw[i];
+            }
+
+            for (int i = 0; i < fade; i++)
+            {
+                float w = (float)i / fade;
+                s[i] = s[i] * w + raw[raw.Length - fade + i] * (1f - w);
+            }
+
+            return s;
+        }
+
+        /// <summary>Sand entry: a soft low-passed "shh" of friction.</summary>
+        private static float[] SandEntry()
+        {
+            var s = NewBuffer(0.22f);
+            var rng = new System.Random(505);
+            float lp = 0f;
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
+                lp = lp * 0.85f + white * 0.15f;
+                s[i] = lp * Mathf.Exp(-t * 14f) * 1.4f;
+            }
+
+            return s;
+        }
+
+        /// <summary>Ice entry: a thin bright glide, glassy and quick.</summary>
+        private static float[] IceEntry()
+        {
+            var s = NewBuffer(0.3f);
+            float phase = 0f;
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float k = t / 0.3f;
+                float freq = Mathf.Lerp(1500f, 2300f, k) * (1f + 0.015f * Mathf.Sin(2f * Mathf.PI * 40f * t));
+                phase += 2f * Mathf.PI * freq / SampleRate;
+                s[i] = (Mathf.Sin(phase) * 0.2f + Mathf.Sin(2f * phase) * 0.06f) * Mathf.Exp(-t * 9f);
+            }
+
+            return s;
+        }
+
+        /// <summary>UI click: a barely-there 30 ms tick.</summary>
+        private static float[] UiClick()
+        {
+            var s = NewBuffer(0.03f);
+            var rng = new System.Random(606);
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float tone = Mathf.Sin(2f * Mathf.PI * 1900f * t) * Mathf.Exp(-t * 220f);
+                float noise = (float)(rng.NextDouble() * 2.0 - 1.0) * Mathf.Exp(-t * 500f);
+                s[i] = 0.5f * tone + 0.15f * noise;
+            }
+
+            return s;
+        }
+
+        /// <summary>Ready pluck: a soft "your turn" tone as the ball settles.</summary>
+        private static float[] ReadyPluck()
+        {
+            var s = NewBuffer(0.09f);
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float env = Mathf.Exp(-t * 42f);
+                s[i] = (Mathf.Sin(2f * Mathf.PI * 520f * t) * 0.4f
+                    + Mathf.Sin(2f * Mathf.PI * 1040f * t) * 0.1f) * env;
+            }
+
+            return s;
+        }
+
+        /// <summary>Star note: one bright ding — played re-pitched per star.</summary>
+        private static float[] StarNote()
+        {
+            var s = NewBuffer(0.35f);
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float env = Mathf.Exp(-t * 9f);
+                s[i] = (Mathf.Sin(2f * Mathf.PI * 660f * t) * 0.4f
+                    + Mathf.Sin(2f * Mathf.PI * 1320f * t) * 0.12f) * env;
+            }
+
+            return s;
+        }
+
+        /// <summary>Achievement jingle: a quick C-major arpeggio up to the octave.</summary>
+        private static float[] Jingle()
+        {
+            var s = NewBuffer(0.55f);
+            float[] freqs = { 523.25f, 659.25f, 783.99f, 1046.5f };
+            for (int n = 0; n < freqs.Length; n++)
+            {
+                float start = n * 0.11f;
+                int first = (int)(start * SampleRate);
+                for (int i = first; i < s.Length; i++)
+                {
+                    float dt = (float)(i - first) / SampleRate;
+                    s[i] += Mathf.Sin(2f * Mathf.PI * freqs[n] * dt) * Mathf.Exp(-dt * 10f) * 0.28f;
+                }
+            }
+
+            return s;
+        }
+
         /// <summary>A short high sine burst starting at <paramref name="start"/>.</summary>
         private static float Blip(float t, float start, float freq)
         {
@@ -166,10 +306,11 @@ namespace PuttSeed.Unity.Editor
             return new float[(int)(SampleRate * seconds)];
         }
 
-        /// <summary>Writes samples as a 16-bit mono PCM WAV with a 3 ms fade-out.</summary>
-        private static void Write(string name, float[] samples)
+        /// <summary>Writes samples as a 16-bit mono PCM WAV, fading the tail
+        /// over 3 ms unless the clip must loop seamlessly.</summary>
+        private static void Write(string name, float[] samples, bool fadeOut = true)
         {
-            int fade = Math.Min(samples.Length, SampleRate * 3 / 1000);
+            int fade = fadeOut ? Math.Min(samples.Length, SampleRate * 3 / 1000) : 0;
             for (int i = 0; i < fade; i++)
             {
                 samples[samples.Length - 1 - i] *= (float)i / fade;

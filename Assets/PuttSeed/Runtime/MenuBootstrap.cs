@@ -69,6 +69,7 @@ namespace PuttSeed.Unity
 
             var stats = new StatsStore(StatsPath());
             _stats = stats;
+            UiSounds.Enabled = stats.Data.soundEnabled;
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
@@ -140,6 +141,7 @@ namespace PuttSeed.Unity
             soundButton?.onClick.AddListener(() =>
             {
                 stats.SetSoundEnabled(!stats.Data.soundEnabled);
+                UiSounds.Enabled = stats.Data.soundEnabled;
                 RefreshSettingsLabels(stats);
             });
             hapticsButton?.onClick.AddListener(() =>

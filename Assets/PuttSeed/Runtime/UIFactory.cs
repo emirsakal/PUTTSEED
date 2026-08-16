@@ -209,6 +209,7 @@ namespace PuttSeed.Unity
             image.color = primary ? UIStyle.Accent : UIStyle.PanelDark;
 
             var button = rect.gameObject.AddComponent<Button>();
+            rect.gameObject.AddComponent<UiClickSound>();
             button.targetGraphic = image;
             var colors = button.colors;
             colors.highlightedColor = new Color(1f, 1f, 1f, 0.92f);

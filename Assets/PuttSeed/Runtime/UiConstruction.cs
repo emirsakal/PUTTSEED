@@ -92,6 +92,7 @@ namespace PuttSeed.Unity
             footerHitImage.color = Color.clear;
             footerHitImage.raycastTarget = true;
             menu.statsButton = footerHit.gameObject.AddComponent<Button>();
+            footerHit.gameObject.AddComponent<UiClickSound>();
 
             // Settings chips: sound and haptics toggles, persisted in the
             // stats file. MenuBootstrap fills the labels and wires the clicks.
