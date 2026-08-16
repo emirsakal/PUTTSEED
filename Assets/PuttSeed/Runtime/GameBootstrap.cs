@@ -19,6 +19,10 @@ namespace PuttSeed.Unity
         public bool useFixedSeed;
         public ulong fixedSeed = 1;
 
+        [Header("Scene-authored UI (assigned by PuttSeed → Rebuild Scenes)")]
+        public GameUI? gameUi;
+        public LoadingOverlay? loadingOverlay;
+
         private void Start()
         {
             if (feel == null)
@@ -53,14 +57,17 @@ namespace PuttSeed.Unity
             var inputGo = new GameObject("DragInput");
             inputGo.AddComponent<DragAimController>().Initialize(runner, cam);
 
-            var uiGo = new GameObject("UI");
-            var ui = uiGo.AddComponent<GameUI>();
+            // The HUD and loading cover are scene-authored; bind, don't build.
+            var ui = gameUi != null ? gameUi : FindFirstObjectByType<GameUI>();
+            var overlay = loadingOverlay != null ? loadingOverlay : FindFirstObjectByType<LoadingOverlay>();
+            if (ui == null)
+            {
+                Debug.LogError("PuttSeed: no scene-authored GameUI found — run PuttSeed → Rebuild Scenes.");
+                return;
+            }
 
             var devGo = new GameObject("DevReload");
             var devReload = devGo.AddComponent<DevReloadController>();
-
-            var overlayGo = new GameObject("LoadingOverlay");
-            var overlay = overlayGo.AddComponent<LoadingOverlay>();
 
             var modesGo = new GameObject("Modes");
             var modes = modesGo.AddComponent<ModeController>();

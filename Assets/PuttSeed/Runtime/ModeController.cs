@@ -36,7 +36,7 @@ namespace PuttSeed.Unity
         private CourseRenderer _courseRenderer = null!;
         private Camera _camera = null!;
         private StatsStore _stats = null!;
-        private LoadingOverlay _overlay = null!;
+        private LoadingOverlay? _overlay;
 
         private ulong _dailySeed;
         private int _todayDayNumber;
@@ -65,7 +65,7 @@ namespace PuttSeed.Unity
 
         /// <summary>Wires dependencies; statsPath is persistentDataPath-based in the app.</summary>
         public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam,
-            LoadingOverlay overlay, string statsPath)
+            LoadingOverlay? overlay, string statsPath)
         {
             _runner = runner;
             _courseRenderer = courseRenderer;
@@ -200,7 +200,7 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay.Show("Generating course");
+            _overlay?.Show("Generating course");
             ModeChanged?.Invoke();
             yield return null; // let the overlay render first
 
@@ -246,7 +246,7 @@ namespace PuttSeed.Unity
                 _stats.RecordPracticePlayed();
             }
 
-            _overlay.Hide();
+            _overlay?.Hide();
             IsLoading = false;
             ModeChanged?.Invoke();
         }
@@ -268,7 +268,7 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay.Show("Generating course");
+            _overlay?.Show("Generating course");
             ModeChanged?.Invoke();
             yield return null; // the overlay must be on screen before we block
 
@@ -279,7 +279,7 @@ namespace PuttSeed.Unity
                 _runner.AddGhost(ghostShots, "import");
             }
 
-            _overlay.Hide();
+            _overlay?.Hide();
             IsLoading = false;
             ModeChanged?.Invoke();
         }

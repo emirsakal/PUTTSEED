@@ -21,24 +21,42 @@ namespace PuttSeed.Unity.Editor
         private const string FeelConfigPath = "Assets/PuttSeed/Resources/FeelConfig.asset";
 
         /// <summary>
-        /// Creates the FeelConfig asset and both scenes: Menu (entry, index 0)
-        /// and Game. Each scene is a single bootstrap GameObject; everything
-        /// else is built in code at runtime.
+        /// Rebuilds both scenes WITH the full UI hierarchies baked in (Menu is
+        /// entry, index 0). The UI lives in the scenes as ordinary objects —
+        /// editable in the Inspector, reskinnable with art assets — and is not
+        /// reconstructed on Play. Sprites used by the UI are saved as real
+        /// assets under Assets/PuttSeed/UI first, so scene references survive.
         /// </summary>
-        [MenuItem("PuttSeed/Create Scenes")]
+        [MenuItem("PuttSeed/Rebuild Scenes")]
         public static void CreateScenes()
         {
             EnsureFeelConfig();
+            EnsureUiSprites();
             Directory.CreateDirectory("Assets/Scenes");
 
             var menuScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            new GameObject("Menu").AddComponent<MenuBootstrap>();
+            var menu = new GameObject("Menu").AddComponent<MenuBootstrap>();
+            UiConstruction.BuildMenu(menu);
+            var menuCam = Camera.main;
+            if (menuCam != null)
+            {
+                menuCam.clearFlags = CameraClearFlags.SolidColor;
+                menuCam.backgroundColor = PaletteMaterials.Felt;
+                menuCam.orthographic = true;
+            }
+
             EditorSceneManager.SaveScene(menuScene, MenuScenePath);
 
             var gameScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            var bootstrapGo = new GameObject("Bootstrap");
-            bootstrapGo.AddComponent<GameBootstrap>().feel =
-                AssetDatabase.LoadAssetAtPath<FeelConfig>(FeelConfigPath);
+            var bootstrap = new GameObject("Bootstrap").AddComponent<GameBootstrap>();
+            bootstrap.feel = AssetDatabase.LoadAssetAtPath<FeelConfig>(FeelConfigPath);
+
+            var gameUi = new GameObject("UI").AddComponent<GameUI>();
+            UiConstruction.BuildGameHud(gameUi);
+            var overlay = new GameObject("LoadingOverlay").AddComponent<LoadingOverlay>();
+            UiConstruction.BuildLoadingOverlay(overlay);
+            bootstrap.gameUi = gameUi;
+            bootstrap.loadingOverlay = overlay;
             EditorSceneManager.SaveScene(gameScene, GameScenePath);
 
             if (File.Exists(LegacyScenePath))
@@ -52,7 +70,47 @@ namespace PuttSeed.Unity.Editor
                 new EditorBuildSettingsScene(GameScenePath, true),
             };
             AssetDatabase.SaveAssets();
-            Debug.Log($"PuttSeed: created {MenuScenePath} and {GameScenePath}");
+            Debug.Log($"PuttSeed: rebuilt {MenuScenePath} and {GameScenePath} with baked UI");
+        }
+
+        /// <summary>
+        /// Saves the generated UI sprites as importable assets and points
+        /// UIFactory at them, so scene-baked Images reference real assets.
+        /// </summary>
+        private static void EnsureUiSprites()
+        {
+            const string dir = "Assets/PuttSeed/UI";
+            const string roundedPath = dir + "/rounded.png";
+            const string circlePath = dir + "/circle.png";
+            Directory.CreateDirectory(dir);
+
+            if (!File.Exists(roundedPath))
+            {
+                File.WriteAllBytes(roundedPath, UIFactory.RoundedSpritePng());
+                AssetDatabase.ImportAsset(roundedPath);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(roundedPath);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteBorder = new Vector4(24, 24, 24, 24);
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
+            if (!File.Exists(circlePath))
+            {
+                File.WriteAllBytes(circlePath, UIFactory.CircleSpritePng());
+                AssetDatabase.ImportAsset(circlePath);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(circlePath);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
+            var rounded = AssetDatabase.LoadAssetAtPath<Sprite>(roundedPath);
+            var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
+            if (rounded != null && circle != null)
+            {
+                UIFactory.UseSpriteAssets(rounded, circle);
+            }
         }
 
         /// <summary>

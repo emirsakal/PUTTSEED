@@ -40,10 +40,21 @@ namespace PuttSeed.Unity
         private static Sprite? _roundedSprite;
         private static Sprite? _circleSprite;
 
+        /// <summary>
+        /// Uses imported sprite ASSETS instead of transient generated sprites.
+        /// The editor scene builder calls this before baking UI into a scene,
+        /// so saved scenes reference real assets the user can swap or repaint.
+        /// </summary>
+        public static void UseSpriteAssets(Sprite rounded, Sprite circle)
+        {
+            _roundedSprite = rounded;
+            _circleSprite = circle;
+        }
+
         /// <summary>The built-in legacy font.</summary>
         public static Font Font() => Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-        /// <summary>A 9-sliced rounded-rectangle sprite (generated once).</summary>
+        /// <summary>A 9-sliced rounded-rectangle sprite (asset when set, else generated).</summary>
         public static Sprite RoundedSprite()
         {
             if (_roundedSprite == null)
@@ -54,7 +65,7 @@ namespace PuttSeed.Unity
             return _roundedSprite;
         }
 
-        /// <summary>An anti-aliased filled circle sprite (generated once).</summary>
+        /// <summary>An anti-aliased filled circle sprite (asset when set, else generated).</summary>
         public static Sprite CircleSprite()
         {
             if (_circleSprite == null)
@@ -63,6 +74,24 @@ namespace PuttSeed.Unity
             }
 
             return _circleSprite;
+        }
+
+        /// <summary>Generates the raw PNG bytes for the rounded-rect sprite asset.</summary>
+        public static byte[] RoundedSpritePng()
+        {
+            var tex = BuildRoundedTexture(64, 20);
+            var png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            return png;
+        }
+
+        /// <summary>Generates the raw PNG bytes for the circle sprite asset.</summary>
+        public static byte[] CircleSpritePng()
+        {
+            var tex = BuildCircleTexture(64);
+            var png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            return png;
         }
 
         /// <summary>Creates a screen-space canvas scaled for 1080x1920 portrait.</summary>
@@ -198,7 +227,7 @@ namespace PuttSeed.Unity
             }
         }
 
-        private static Sprite BuildRoundedSprite(int size, int radius)
+        private static Texture2D BuildRoundedTexture(int size, int radius)
         {
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             for (int y = 0; y < size; y++)
@@ -211,9 +240,15 @@ namespace PuttSeed.Unity
             }
 
             tex.Apply();
+            return tex;
+        }
+
+        private static Sprite BuildRoundedSprite(int size, int radius)
+        {
             int border = radius + 4;
-            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f),
-                100f, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+            return Sprite.Create(BuildRoundedTexture(size, radius), new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect,
+                new Vector4(border, border, border, border));
         }
 
         private static float RoundedRectAlpha(int x, int y, int size, int radius)
@@ -226,7 +261,7 @@ namespace PuttSeed.Unity
             return Mathf.Clamp01(radius - dist + 0.5f);
         }
 
-        private static Sprite BuildCircleSprite(int size)
+        private static Texture2D BuildCircleTexture(int size)
         {
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             float r = size * 0.5f - 1f;
@@ -241,7 +276,10 @@ namespace PuttSeed.Unity
             }
 
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            return tex;
         }
+
+        private static Sprite BuildCircleSprite(int size)
+            => Sprite.Create(BuildCircleTexture(size), new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 }
