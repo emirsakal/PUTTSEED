@@ -38,8 +38,12 @@ namespace PuttSeed.Unity
         public float swingSeconds = 0.28f;
         [Tooltip("While loading, the ball approaches but never passes this fraction of the distance.")]
         [Range(0.5f, 0.95f)] public float rollCapFraction = 0.85f;
-        [Tooltip("Seconds for the final roll into the cup once loading completes.")]
-        public float finishSeconds = 0.3f;
+        [Tooltip("Minimum seconds the whole putt vignette should be visible. Blocking " +
+            "loads render almost no frames, so the close-out stretches the remaining " +
+            "roll to fill this — the 'fake fill' that stops the ball teleporting.")]
+        public float minCinematicSeconds = 1.5f;
+        [Tooltip("Fastest allowed final roll into the cup (used when the roll already animated).")]
+        public float minFinishSeconds = 0.35f;
         [Tooltip("Seconds for the ball to sink out of sight in the cup.")]
         public float sinkSeconds = 0.15f;
 
@@ -47,9 +51,12 @@ namespace PuttSeed.Unity
         private float _dotTimer;
         private Phase _phase = Phase.Idle;
         private float _phaseTime;
+        private float _shownTime;
         private float _progress;
         private float _finishStartProgress;
         private float _finishStartClubAngle;
+        private float _finishSwingSeconds;
+        private float _finishRollSeconds;
         private Vector2 _ballStart;
         private Vector2 _holePosition;
         private bool _positionsCached;
@@ -82,6 +89,7 @@ namespace PuttSeed.Unity
                 ball.localScale = Vector3.one;
                 _progress = 0f;
                 _phaseTime = 0f;
+                _shownTime = 0f;
                 _phase = Phase.Swing;
                 if (club != null)
                 {
@@ -113,6 +121,15 @@ namespace PuttSeed.Unity
             {
                 _finishStartProgress = _progress;
                 _finishStartClubAngle = club != null ? SignedZ(club) : clubThroughAngle;
+
+                // Fake fill: if the vignette barely got to animate (blocking
+                // load starved the frames), stretch the close-out so the ball
+                // visibly ROLLS the whole way instead of teleporting.
+                bool swingPending = _phase == Phase.Swing;
+                _finishSwingSeconds = swingPending ? swingSeconds : 0f;
+                _finishRollSeconds = Mathf.Max(minFinishSeconds,
+                    minCinematicSeconds - _shownTime - _finishSwingSeconds - sinkSeconds);
+
                 _phaseTime = 0f;
                 _phase = Phase.Finishing;
             }
@@ -138,6 +155,7 @@ namespace PuttSeed.Unity
             }
 
             _phaseTime += Time.unscaledDeltaTime;
+            _shownTime += Time.unscaledDeltaTime;
             switch (_phase)
             {
                 case Phase.Swing:
@@ -165,18 +183,31 @@ namespace PuttSeed.Unity
                     break;
 
                 case Phase.Finishing:
-                    float finish = Mathf.Clamp01(_phaseTime / finishSeconds);
-                    // A Hide during the swing (blocking loads render few frames)
-                    // still completes the stroke on the way out.
-                    if (club != null)
+                    // Part 1: finish the stroke first (ball waits for contact).
+                    if (_phaseTime < _finishSwingSeconds)
                     {
-                        club.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(
-                            _finishStartClubAngle, clubThroughAngle, Mathf.Clamp01(finish * 2f)));
+                        if (club != null)
+                        {
+                            float s = _phaseTime / _finishSwingSeconds;
+                            club.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(
+                                _finishStartClubAngle, clubThroughAngle, s * s));
+                        }
+
+                        break;
                     }
 
-                    _progress = Mathf.Lerp(_finishStartProgress, 1f, finish * finish);
+                    if (club != null)
+                    {
+                        club.localEulerAngles = new Vector3(0f, 0f, clubThroughAngle);
+                    }
+
+                    // Part 2: roll the remaining distance smoothly — eased so
+                    // the ball glides and settles into the cup, never jumps.
+                    float u = Mathf.Clamp01((_phaseTime - _finishSwingSeconds) / _finishRollSeconds);
+                    float eased = u * u * (3f - 2f * u); // smoothstep
+                    _progress = Mathf.Lerp(_finishStartProgress, 1f, eased);
                     ball.anchoredPosition = Vector2.Lerp(_ballStart, _holePosition, _progress);
-                    if (finish >= 1f)
+                    if (u >= 1f)
                     {
                         _phase = Phase.Sinking;
                         _phaseTime = 0f;
