@@ -74,6 +74,15 @@ namespace PuttSeed.Unity
             menu.footerText = UIFactory.CreateText(canvas.transform, "Footer",
                 new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), 30, TextAnchor.MiddleCenter);
             menu.footerText.color = UIStyle.CreamDim;
+
+            // Settings chips: sound and haptics toggles, persisted in the
+            // stats file. MenuBootstrap fills the labels and wires the clicks.
+            menu.soundLabel = UIFactory.CreateButton(canvas.transform, "Sound: On",
+                new Vector2(0.14f, 0.145f), new Vector2(0.48f, 0.195f), NoOp, 28);
+            menu.soundButton = menu.soundLabel.GetComponentInParent<Button>();
+            menu.hapticsLabel = UIFactory.CreateButton(canvas.transform, "Haptics: On",
+                new Vector2(0.52f, 0.145f), new Vector2(0.86f, 0.195f), NoOp, 28);
+            menu.hapticsButton = menu.hapticsLabel.GetComponentInParent<Button>();
         }
 
         /// <summary>Builds the in-game HUD under the UI root and wires its references.</summary>

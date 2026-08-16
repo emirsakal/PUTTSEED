@@ -64,15 +64,15 @@ namespace PuttSeed.Unity
         /// <summary>True while a course is being generated behind the overlay.</summary>
         public bool IsLoading { get; private set; }
 
-        /// <summary>Wires dependencies; statsPath is persistentDataPath-based in the app.</summary>
+        /// <summary>Wires dependencies; the store is shared with FeedbackController.</summary>
         public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam,
-            LoadingOverlay? overlay, string statsPath)
+            LoadingOverlay? overlay, StatsStore stats)
         {
             _runner = runner;
             _courseRenderer = courseRenderer;
             _camera = cam;
             _overlay = overlay;
-            _stats = new StatsStore(statsPath);
+            _stats = stats;
             runner.StateChanged += OnStateChanged;
             runner.RunReset += OnRunReset;
         }
@@ -130,13 +130,6 @@ namespace PuttSeed.Unity
             Mode = GameMode.Practice;
             CurrentHint = "";
             StartCoroutine(GeneratePracticeCourse());
-        }
-
-        /// <summary>Cycles Easy → Normal → Hard and starts a matching course.</summary>
-        public void CyclePracticeDifficulty()
-        {
-            PracticeDifficulty = (Difficulty)(((int)PracticeDifficulty + 1) % 3);
-            StartPractice();
         }
 
         /// <summary>Loads a tutorial stage.</summary>

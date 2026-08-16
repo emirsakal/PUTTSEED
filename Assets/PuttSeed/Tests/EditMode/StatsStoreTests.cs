@@ -115,6 +115,31 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void SoundAndHaptics_DefaultOn_TogglesPersist()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.soundEnabled, Is.True);
+            Assert.That(store.Data.hapticsEnabled, Is.True);
+
+            store.SetSoundEnabled(false);
+            store.SetHapticsEnabled(false);
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.soundEnabled, Is.False);
+            Assert.That(reloaded.Data.hapticsEnabled, Is.False);
+        }
+
+        [Test]
+        public void LegacySave_WithoutSettingsFields_DefaultsToOn()
+        {
+            File.WriteAllText(_path, "{\"streak\":2,\"lastCompletedDay\":10}");
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.soundEnabled, Is.True);
+            Assert.That(store.Data.hapticsEnabled, Is.True);
+            Assert.That(store.Data.streak, Is.EqualTo(2));
+        }
+
+        [Test]
         public void PracticeCounter_Persists()
         {
             var store = new StatsStore(_path);

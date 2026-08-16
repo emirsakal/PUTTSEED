@@ -26,6 +26,13 @@ namespace PuttSeed.Unity
         public int lastCompletedDay;
         public int practicePlayed;
         public bool tutorialSeen;
+
+        // Settings ride in the same file. Field initializers double as the
+        // defaults for saves written before the fields existed (JsonUtility
+        // leaves absent fields at their initializer values).
+        public bool soundEnabled = true;
+        public bool hapticsEnabled = true;
+
         public List<DayRecord> days = new List<DayRecord>();
     }
 
@@ -115,6 +122,20 @@ namespace PuttSeed.Unity
         public void MarkTutorialSeen()
         {
             Data.tutorialSeen = true;
+            Save();
+        }
+
+        /// <summary>Persists the sound toggle.</summary>
+        public void SetSoundEnabled(bool enabled)
+        {
+            Data.soundEnabled = enabled;
+            Save();
+        }
+
+        /// <summary>Persists the haptics toggle.</summary>
+        public void SetHapticsEnabled(bool enabled)
+        {
+            Data.hapticsEnabled = enabled;
             Save();
         }
 

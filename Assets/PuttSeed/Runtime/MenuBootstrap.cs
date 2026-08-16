@@ -25,6 +25,10 @@ namespace PuttSeed.Unity
         public Button? tutorialButton;
         public Text? tutorialLabel;
         public Text? footerText;
+        public Button? soundButton;
+        public Text? soundLabel;
+        public Button? hapticsButton;
+        public Text? hapticsLabel;
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
         {
@@ -88,6 +92,33 @@ namespace PuttSeed.Unity
             practiceButton?.onClick.AddListener(() => Launch(GameMode.Practice));
             difficultyButton?.onClick.AddListener(CycleDifficulty);
             tutorialButton?.onClick.AddListener(() => Launch(GameMode.Tutorial));
+
+            RefreshSettingsLabels(stats);
+            soundButton?.onClick.AddListener(() =>
+            {
+                stats.SetSoundEnabled(!stats.Data.soundEnabled);
+                RefreshSettingsLabels(stats);
+            });
+            hapticsButton?.onClick.AddListener(() =>
+            {
+                stats.SetHapticsEnabled(!stats.Data.hapticsEnabled);
+                RefreshSettingsLabels(stats);
+            });
+        }
+
+        private void RefreshSettingsLabels(StatsStore stats)
+        {
+            if (soundLabel != null)
+            {
+                soundLabel.text = stats.Data.soundEnabled ? "Sound: On" : "Sound: Off";
+                soundLabel.color = stats.Data.soundEnabled ? UIStyle.Cream : UIStyle.CreamDim;
+            }
+
+            if (hapticsLabel != null)
+            {
+                hapticsLabel.text = stats.Data.hapticsEnabled ? "Haptics: On" : "Haptics: Off";
+                hapticsLabel.color = stats.Data.hapticsEnabled ? UIStyle.Cream : UIStyle.CreamDim;
+            }
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)

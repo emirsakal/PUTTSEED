@@ -29,6 +29,7 @@ namespace PuttSeed.Unity
         private SimRunner _runner = null!;
         private BallView _ballView = null!;
         private AudioSource _source = null!;
+        private StatsStore? _settings;
 
         private int _lastWallHits;
         private int _lastBumperHits;
@@ -50,6 +51,9 @@ namespace PuttSeed.Unity
             if (waterClip == null) { waterClip = Resources.Load<AudioClip>("Sfx/water"); }
             if (failClip == null) { failClip = Resources.Load<AudioClip>("Sfx/fail"); }
         }
+
+        /// <summary>The settings source (menu toggles); null means everything on.</summary>
+        public void SetSettings(StatsStore settings) => _settings = settings;
 
         /// <summary>Wires dependencies (called by the bootstrap).</summary>
         public void Initialize(SimRunner runner, BallView ballView)
@@ -101,19 +105,19 @@ namespace PuttSeed.Unity
             if (sim.BumperHitCount > _lastBumperHits)
             {
                 OnBounce(bumperClip);
-                HapticsPlayer.Tap();
+                Tap();
             }
 
             if (sim.WaterEntryCount > _lastWaterEntries)
             {
                 Play(waterClip, 1f);
-                HapticsPlayer.Tap();
+                Tap();
             }
 
             if (sim.IsHoled && !_lastHoled)
             {
                 Play(captureClip, 1f);
-                HapticsPlayer.Tap();
+                Tap();
                 StartCoroutine(CelebrationRing(FixView.ToVector2(_runner.Generation!.Course.HolePosition)));
             }
 
@@ -141,10 +145,18 @@ namespace PuttSeed.Unity
 
         private void Play(AudioClip? clip, float gain)
         {
-            if (clip != null)
+            if (clip != null && (_settings == null || _settings.Data.soundEnabled))
             {
                 _source.pitch = Random.Range(0.96f, 1.04f);
                 _source.PlayOneShot(clip, volume * gain);
+            }
+        }
+
+        private void Tap()
+        {
+            if (_settings == null || _settings.Data.hapticsEnabled)
+            {
+                HapticsPlayer.Tap();
             }
         }
 

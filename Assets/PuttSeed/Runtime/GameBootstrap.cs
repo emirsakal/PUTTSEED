@@ -48,9 +48,13 @@ namespace PuttSeed.Unity
             var ballView = ballGo.AddComponent<BallView>();
             ballView.Initialize(runner);
 
+            // One store instance serves gameplay stats and the settings toggles.
+            var stats = new StatsStore(MenuBootstrap.StatsPath());
+
             var feedbackGo = new GameObject("Feedback");
             var feedback = feedbackGo.AddComponent<FeedbackController>();
             feedback.LoadDefaultClips();
+            feedback.SetSettings(stats);
             feedback.Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");
@@ -73,7 +77,7 @@ namespace PuttSeed.Unity
 
             var modesGo = new GameObject("Modes");
             var modes = modesGo.AddComponent<ModeController>();
-            modes.Initialize(runner, courseRenderer, cam, overlay, MenuBootstrap.StatsPath());
+            modes.Initialize(runner, courseRenderer, cam, overlay, stats);
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);
