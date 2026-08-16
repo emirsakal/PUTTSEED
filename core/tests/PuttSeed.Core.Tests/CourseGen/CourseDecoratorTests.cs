@@ -246,6 +246,91 @@ namespace PuttSeed.Core.Tests.CourseGen
             }
         }
 
+        /// <summary>Index of the centerline segment nearest to a zone's centroid.</summary>
+        private static int NearestSegmentIndex(Corridor corridor, ZonePolygon zone)
+        {
+            var centroid = Vec2Fix.Zero;
+            foreach (var v in zone.Vertices)
+            {
+                centroid += v;
+            }
+
+            centroid = centroid / Fix64.FromInt(zone.Vertices.Length);
+
+            int bestSeg = 0;
+            var bestD = Fix64.MaxValue;
+            var c = corridor.Centerline;
+            for (int i = 0; i < c.Length - 1; i++)
+            {
+                var a = c[i];
+                var ab = c[i + 1] - a;
+                var t = Fix64.Clamp(Vec2Fix.Dot(centroid - a, ab) / ab.LengthSq(), Fix64.Zero, Fix64.One);
+                var d = (centroid - (a + ab * t)).Length();
+                if (d < bestD)
+                {
+                    bestD = d;
+                    bestSeg = i;
+                }
+            }
+
+            return bestSeg;
+        }
+
+        [Test]
+        public void Ice_KeepsClearOfStartPad()
+        {
+            for (ulong seed = 1; seed <= 60; seed++)
+            {
+                if (!BuildDecorated(seed, out var corridor, out _, out _, out _, out var ice))
+                {
+                    continue;
+                }
+
+                var start = CorridorBuilder.StartPosition(corridor);
+                foreach (var zone in ice)
+                {
+                    Assert.That(zone.Contains(start), Is.False, $"seed {seed}: ice on start");
+                    Assert.That(NearestSegmentIndex(corridor, zone), Is.GreaterThan(0),
+                        $"seed {seed}: ice band on the start pad segment");
+                }
+            }
+        }
+
+        [Test]
+        public void Water_NeverOnHoleSegment_IceMayFinishThere()
+        {
+            // The deliberate asymmetry: water is excluded from the last segment
+            // (a forced penalty at the cup is unfair), ice is allowed there (a
+            // slide toward the hole is a fun finish). The RNG is deterministic,
+            // so the existence half of the claim is a stable assertion.
+            bool sawIceOnHoleSegment = false;
+            for (ulong seed = 1; seed <= 80; seed++)
+            {
+                if (!BuildDecorated(seed, out var corridor, out _, out _, out var water, out var ice))
+                {
+                    continue;
+                }
+
+                int lastSeg = corridor.Centerline.Length - 2;
+                foreach (var zone in water)
+                {
+                    Assert.That(NearestSegmentIndex(corridor, zone), Is.LessThan(lastSeg),
+                        $"seed {seed}: water band on the hole segment");
+                }
+
+                foreach (var zone in ice)
+                {
+                    if (NearestSegmentIndex(corridor, zone) == lastSeg)
+                    {
+                        sawIceOnHoleSegment = true;
+                    }
+                }
+            }
+
+            Assert.That(sawIceOnHoleSegment, Is.True,
+                "expected at least one seed in 1..80 to place ice on the hole segment");
+        }
+
         [Test]
         public void SameSeed_SameDecorations()
         {

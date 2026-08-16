@@ -18,12 +18,14 @@ namespace PuttSeed.Core.Tests.Sim
         /// Committed golden hash. Regenerate ONLY for an intentional sim change:
         /// run this test, read the actual value from the failure message, update
         /// the constant, and call the change out in the commit message.
+        /// Re-frozen 2026-08-16 when an ice zone joined the fixture, so the
+        /// flagship regression hash covers all six elements.
         /// </summary>
-        private const ulong GoldenHash10K = 531089411828813883UL;
+        private const ulong GoldenHash10K = 12853565983001025895UL;
 
         private static Vec2Fix V(int x, int y) => new Vec2Fix(Fix64.FromInt(x), Fix64.FromInt(y));
 
-        /// <summary>Fixture course: box walls, bumper, sand, water, far hole.</summary>
+        /// <summary>Fixture course: box walls, bumpers, sand, ice, water, far hole.</summary>
         // Par 10 keeps the stroke limit (par + 3) above anything the 8-shot
         // script plus water penalties can reach, so no shot is ever refused and
         // the golden hash predates the stroke-limit rule unchanged.
@@ -50,6 +52,12 @@ namespace PuttSeed.Core.Tests.Sim
             waterZones: new[]
             {
                 new ZonePolygon(new[] { V(8, -4), V(10, -4), V(10, -2), V(8, -2) }),
+            },
+            iceZones: new[]
+            {
+                // Straddles the start→bumper line so the very first scripted
+                // shot glides across it — ice physics is in the hash for sure.
+                new ZonePolygon(new[] { V(2, -1), V(4, -1), V(4, 1), V(2, 1) }),
             });
 
         private static readonly ShotInput[] ShotScript =

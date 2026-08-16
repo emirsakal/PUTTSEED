@@ -6,6 +6,22 @@ namespace PuttSeed.Core.Tests.CourseGen
     [TestFixture]
     public class DifficultyRaterTests
     {
+        /// <summary>
+        /// Pins the 2026-08-16 threshold recalibration (ice joined the hazard
+        /// pool): score = tightness + turns + 2*hazards, Easy ≤ 12 &lt; Normal
+        /// ≤ 16 &lt; Hard. A silent cut change re-shuffles every practice
+        /// bucket, so the exact boundaries are asserted.
+        /// </summary>
+        [TestCase(0, 6, Difficulty.Easy, Description = "score 12 — top of Easy")]
+        [TestCase(1, 6, Difficulty.Normal, Description = "score 13 — bottom of Normal")]
+        [TestCase(4, 6, Difficulty.Normal, Description = "score 16 — top of Normal")]
+        [TestCase(5, 6, Difficulty.Hard, Description = "score 17 — bottom of Hard")]
+        public void BucketBoundaries_ArePinned(int turns, int hazards, Difficulty expected)
+        {
+            // captureShots == sampledShots → tightness 0; score is turns + 2*hazards.
+            Assert.That(DifficultyRater.Rate(16, 16, turns, hazards), Is.EqualTo(expected));
+        }
+
         [Test]
         public void ForgivingCourse_IsEasy()
         {
