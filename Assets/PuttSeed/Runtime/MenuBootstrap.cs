@@ -16,7 +16,16 @@ namespace PuttSeed.Unity
     /// </summary>
     public sealed class MenuBootstrap : MonoBehaviour
     {
+        private static readonly Color FlagRed = new Color(0.86f, 0.24f, 0.19f);
+
         private Text _difficultyLabel = null!;
+
+        private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
+        {
+            Difficulty.Easy => new Color(0.45f, 0.85f, 0.45f),
+            Difficulty.Hard => new Color(0.95f, 0.36f, 0.3f),
+            _ => new Color(0.99f, 0.85f, 0.35f),
+        };
 
         private void Start()
         {
@@ -53,9 +62,16 @@ namespace PuttSeed.Unity
             poleImage.color = UIStyle.Cream;
             poleImage.raycastTarget = false;
             UIFactory.CreatePanel(canvas.transform, "EmblemFlag",
-                new Vector2(0.504f, 0.915f), new Vector2(0.585f, 0.952f), UIStyle.Accent);
-            UIFactory.CreateCircle(canvas.transform, "EmblemBall",
-                new Vector2(0.415f, 0.868f), new Vector2(0.445f, 0.885f), UIStyle.Cream);
+                new Vector2(0.504f, 0.915f), new Vector2(0.63f, 0.952f), FlagRed);
+
+            // Fixed square size + circle sprite = perfectly round on any aspect.
+            var ballRect = UIFactory.CreateRect(canvas.transform, "EmblemBall",
+                new Vector2(0.425f, 0.8765f), new Vector2(0.425f, 0.8765f));
+            ballRect.sizeDelta = new Vector2(48f, 48f);
+            var ballImage = ballRect.gameObject.AddComponent<UnityEngine.UI.Image>();
+            ballImage.sprite = UIFactory.CircleSprite();
+            ballImage.color = UIStyle.Cream;
+            ballImage.raycastTarget = false;
 
             var title = UIFactory.CreateText(canvas.transform, "Title",
                 new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), 124, TextAnchor.MiddleCenter, shadow: true);
@@ -85,7 +101,7 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.43f), new Vector2(0.6f, 0.52f), () => Launch(GameMode.Practice), 44);
             _difficultyLabel = UIFactory.CreateButton(canvas.transform, GameSession.PracticeDifficulty.ToString(),
                 new Vector2(0.62f, 0.43f), new Vector2(0.9f, 0.52f), CycleDifficulty, 36);
-            _difficultyLabel.color = UIStyle.Hint;
+            _difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
 
             var tutorialLabel = firstLaunch ? "Tutorial  ·  start here" : "Tutorial";
             UIFactory.CreateButton(canvas.transform, tutorialLabel,
@@ -104,8 +120,8 @@ namespace PuttSeed.Unity
         private static string BuildStatsLine(StatsStore stats, DayRecord today)
         {
             string streak = stats.Data.streak > 0 ? $"Streak {stats.Data.streak}" : "No streak yet";
-            string attempts = today.attempts > 0 ? $" · today: {today.attempts} attempt(s)" : "";
-            string practice = stats.Data.practicePlayed > 0 ? $" · practice: {stats.Data.practicePlayed}" : "";
+            string attempts = today.attempts > 0 ? $" · Today: {today.attempts} attempt(s)" : "";
+            string practice = stats.Data.practicePlayed > 0 ? $" · Practice: {stats.Data.practicePlayed}" : "";
             return streak + attempts + practice;
         }
 
@@ -113,6 +129,7 @@ namespace PuttSeed.Unity
         {
             GameSession.PracticeDifficulty = (Difficulty)(((int)GameSession.PracticeDifficulty + 1) % 3);
             _difficultyLabel.text = GameSession.PracticeDifficulty.ToString();
+            _difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
         }
 
         private static void Launch(GameMode mode)
