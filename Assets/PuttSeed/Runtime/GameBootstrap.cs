@@ -70,6 +70,9 @@ namespace PuttSeed.Unity
             var dragInput = inputGo.AddComponent<DragAimController>();
             dragInput.Initialize(runner, cam);
 
+            var readyGo = new GameObject("ReadyIndicator");
+            readyGo.AddComponent<ReadyIndicator>().Initialize(runner, dragInput);
+
             // The HUD and loading cover are scene-authored; bind, don't build.
             var ui = gameUi != null ? gameUi : FindFirstObjectByType<GameUI>();
             var overlay = loadingOverlay != null ? loadingOverlay : FindFirstObjectByType<LoadingOverlay>();

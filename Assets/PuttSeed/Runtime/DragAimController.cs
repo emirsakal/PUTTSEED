@@ -22,6 +22,9 @@ namespace PuttSeed.Unity
         /// <summary>Preview policy hook (wired by the bootstrap); null = never.</summary>
         public System.Func<bool>? previewAllowed;
 
+        /// <summary>True while the player is mid-drag (ready halo yields).</summary>
+        public bool IsDragging => _dragging;
+
         private SimRunner _runner = null!;
         private Camera _camera = null!;
         private LineRenderer _line = null!;
