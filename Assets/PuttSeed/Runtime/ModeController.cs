@@ -209,6 +209,7 @@ namespace PuttSeed.Unity
             var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
             GenerationResult? best = null;
             ulong bestSeed = 0;
+            int bestDistance = int.MaxValue;
 
             for (int t = 0; t < PracticeCandidateTries; t++)
             {
@@ -232,13 +233,18 @@ namespace PuttSeed.Unity
                 }
 
                 var candidate = task.Result;
-                if (best == null || candidate.Difficulty == PracticeDifficulty)
+                // Keep the candidate whose rated bucket is CLOSEST to the
+                // requested one (exact match ends the search) — never an
+                // arbitrary first course when the bucket is unlucky.
+                int distance = Math.Abs((int)candidate.Difficulty - (int)PracticeDifficulty);
+                if (distance < bestDistance)
                 {
                     best = candidate;
                     bestSeed = seed;
+                    bestDistance = distance;
                 }
 
-                if (candidate.Difficulty == PracticeDifficulty)
+                if (distance == 0)
                 {
                     break;
                 }

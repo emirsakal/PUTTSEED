@@ -45,13 +45,17 @@ namespace PuttSeed.Core.CourseGen
                 tightness = 4;
             }
 
+            // Thresholds recalibrated 2026-08-16 after ice zones joined the
+            // hazard pool (average score rose by ~8): a 300-seed scan under the
+            // old cuts rated 1/39/260 Easy/Normal/Hard. These cuts target
+            // roughly even thirds so every practice bucket actually generates.
             int score = tightness + turnCount + 2 * hazardCount;
-            if (score <= 5)
+            if (score <= 12)
             {
                 return Difficulty.Easy;
             }
 
-            return score <= 9 ? Difficulty.Normal : Difficulty.Hard;
+            return score <= 16 ? Difficulty.Normal : Difficulty.Hard;
         }
     }
 }

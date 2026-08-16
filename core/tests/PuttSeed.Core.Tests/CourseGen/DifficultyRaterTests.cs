@@ -7,24 +7,24 @@ namespace PuttSeed.Core.Tests.CourseGen
     public class DifficultyRaterTests
     {
         [Test]
-        public void ForgivingShortCourse_IsEasy()
+        public void ForgivingCourse_IsEasy()
         {
-            // 64 of 512 sampled shots capture, 3 turns, no hazards.
-            Assert.That(DifficultyRater.Rate(64, 512, 3, 0), Is.EqualTo(Difficulty.Easy));
+            // Loose capture (1/8), 4 turns, 2 hazards: 0 + 4 + 4 = 8 <= 12.
+            Assert.That(DifficultyRater.Rate(64, 512, 4, 2), Is.EqualTo(Difficulty.Easy));
         }
 
         [Test]
         public void MidCourse_IsNormal()
         {
-            // 1/32 capture ratio, 5 turns, 1 hazard.
-            Assert.That(DifficultyRater.Rate(16, 512, 5, 1), Is.EqualTo(Difficulty.Normal));
+            // 1/32 capture ratio, 6 turns, 3 hazards: 2 + 6 + 6 = 14 <= 16.
+            Assert.That(DifficultyRater.Rate(16, 512, 6, 3), Is.EqualTo(Difficulty.Normal));
         }
 
         [Test]
         public void TightWindingHazardousCourse_IsHard()
         {
-            // 1/128 capture ratio, 7 turns, 3 hazards.
-            Assert.That(DifficultyRater.Rate(4, 512, 7, 3), Is.EqualTo(Difficulty.Hard));
+            // 1/128 capture ratio, 7 turns, 5 hazards: 4 + 7 + 10 = 21 > 16.
+            Assert.That(DifficultyRater.Rate(4, 512, 7, 5), Is.EqualTo(Difficulty.Hard));
         }
 
         [Test]
