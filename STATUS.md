@@ -1,6 +1,51 @@
-# PUTTSEED — Status (end of Week 2)
+# PUTTSEED — Status (end of Week 3)
 
-Date: 2026-08-16. Scope executed so far: ROADMAP Weeks 1–2. Unity untouched.
+Date: 2026-08-16. Scope executed so far: ROADMAP Weeks 1–3.
+
+## Week 3 — Unity layer
+
+```
+unity/                              Unity 6000.3.22f1 (Android module), built-in pipeline
+  Assets/PuttSeedCore/              PuttSeed.Core.asmdef (noEngineReferences: true)
+    src -> junction to core/src/PuttSeed.Core (git-ignored; sources tracked once)
+  Assets/PuttSeed/Runtime/          PuttSeed.Unity asmdef —
+    SimRunner                       fixed 120 Hz stepping + ghost lockstep + snapshots
+    FixedStepper                    accumulator logic as a plain testable class
+    InputQuantizer                  drag -> ShotInput; THE input quantization boundary
+    FixView                         Fix64 -> float, render-side only, one-way
+    DragAimController               slingshot drag, aim line = power bar
+    CourseRenderer/MeshFactory      flat-color runtime meshes (walls/zones/discs)
+    BallView (trail), GhostViewManager, CameraFramer, GameUI, GameBootstrap
+    FeelConfig                      ScriptableObject: ALL feel knobs; quantizes to
+                                    Fix64 on a 1/10000 grid at the boundary
+  Assets/PuttSeed/Editor/BuildTools scene creation + Android build entry points
+  Assets/PuttSeed/Tests/EditMode/   19 tests: stepper, quantizer, FeelConfig
+  Assets/Scenes/Main.unity          single scene: one Bootstrap GameObject
+scripts/unity-tests.bat             batch EditMode run (artifacts/editmode-results.xml)
+scripts/build-android.bat           batch build; default .aab, "apk" arg for APK
+artifacts/PuttSeed.apk              35.5 MB IL2CPP ARM64+ARMv7 build — SUCCEEDED
+```
+
+Core additions this week (both TDD, 154 dotnet tests green):
+- `SimConfig.Create(...)` public factory (FeelConfig's target).
+- **Stroke limit rule in core** (game rules never live in Unity): `Shoot`
+  refuses beyond par+3, `GolfSim.IsFailed` exposed. The determinism
+  fixture's par was raised so its golden hash predates the rule unchanged.
+
+Week 3 notes / deviations:
+- Unity writes `.meta` files into `core/src` via the junction; they are
+  committed (stable GUIDs) and harmless to `dotnet build` and the purity grep.
+- Bare built-in render pipeline (no URP): flat-color vertex meshes on a single
+  Sprites/Default material; the build script pins it in Always Included Shaders.
+- UI is legacy uGUI built in code (no TMP, no scene-authored prefabs) so the
+  whole game bootstraps from one GameObject and diffs stay reviewable.
+- Editor 6000.3.22f1 chosen over 6000.4.7f1 because only it has the Android
+  module installed.
+- The GDD "feel pass" itself is yours: tune `Assets/PuttSeed/Resources/
+  FeelConfig.asset` on device; every knob (friction, power curve, restitution,
+  capture threshold, rest detection) is there. Defaults mirror SimConfig.Default.
+- Not yet done (Week 4 per roadmap): signed .aab, daily/practice mode split,
+  stats/streak, tutorials, audio/haptics.
 
 ## What exists
 
@@ -86,7 +131,8 @@ averages ~0.9 s (Release), worst observed ~2 s.
 
 .NET SDK 8.0.424 installed via winget in the Week-1 session.
 
-## Next (Week 3, not started)
+## Next (Week 4, not started)
 
-Unity 6 project, SimRunner + interpolation, drag input quantization,
-course rendering, ghost playback, minimal UI, on-device feel pass.
+Daily/practice mode split, local stats + streak, tutorial courses, audio,
+haptics, signing + .aab on the Play internal testing track, README.
+Precondition per roadmap: your on-device feel verdict on the Week 3 build.
