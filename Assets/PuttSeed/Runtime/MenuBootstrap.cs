@@ -38,41 +38,66 @@ namespace PuttSeed.Unity
 
             var canvas = UIFactory.CreateCanvas(transform);
 
+            // Decorative backdrop: two huge soft circles drifting off-canvas.
+            UIFactory.CreateCircle(canvas.transform, "Deco1",
+                new Vector2(-0.25f, 0.62f), new Vector2(0.35f, 0.96f), new Color(1f, 1f, 1f, 0.05f));
+            UIFactory.CreateCircle(canvas.transform, "Deco2",
+                new Vector2(0.7f, -0.12f), new Vector2(1.35f, 0.25f), new Color(1f, 1f, 1f, 0.05f));
+
+            // Emblem above the title: cup + flag pole + amber pennant + ball.
+            UIFactory.CreateCircle(canvas.transform, "EmblemHole",
+                new Vector2(0.44f, 0.855f), new Vector2(0.56f, 0.885f), new Color(0.05f, 0.09f, 0.06f, 0.9f));
+            var pole = UIFactory.CreateRect(canvas.transform, "EmblemPole",
+                new Vector2(0.496f, 0.87f), new Vector2(0.504f, 0.955f));
+            var poleImage = pole.gameObject.AddComponent<UnityEngine.UI.Image>();
+            poleImage.color = UIStyle.Cream;
+            poleImage.raycastTarget = false;
+            UIFactory.CreatePanel(canvas.transform, "EmblemFlag",
+                new Vector2(0.504f, 0.915f), new Vector2(0.585f, 0.952f), UIStyle.Accent);
+            UIFactory.CreateCircle(canvas.transform, "EmblemBall",
+                new Vector2(0.415f, 0.868f), new Vector2(0.445f, 0.885f), UIStyle.Cream);
+
             var title = UIFactory.CreateText(canvas.transform, "Title",
-                new Vector2(0.05f, 0.78f), new Vector2(0.95f, 0.92f), 120, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), 124, TextAnchor.MiddleCenter, shadow: true);
             title.text = "PUTTSEED";
 
             var tagline = UIFactory.CreateText(canvas.transform, "Tagline",
-                new Vector2(0.05f, 0.73f), new Vector2(0.95f, 0.78f), 34, TextAnchor.MiddleCenter);
-            tagline.text = "one hole a day, same for everyone";
-            tagline.color = new Color(1f, 1f, 1f, 0.7f);
+                new Vector2(0.05f, 0.705f), new Vector2(0.95f, 0.745f), 33, TextAnchor.MiddleCenter);
+            tagline.text = "one hole a day · same for everyone";
+            tagline.color = UIStyle.CreamDim;
 
             var utc = DateTime.UtcNow;
             int today = ModeController.DayNumber(utc);
             var todayRecord = stats.GetOrCreateDay(today);
 
-            // Daily.
+            // Mode card.
+            UIFactory.CreatePanel(canvas.transform, "Card",
+                new Vector2(0.06f, 0.27f), new Vector2(0.94f, 0.67f), UIStyle.PanelSoft);
+
             string dailyLabel = todayRecord.completed
                 ? $"Daily {utc:MMM d} — done in {todayRecord.bestStrokes}"
-                : $"Daily {utc:MMM d}";
+                : $"Play today's hole · {utc:MMM d}";
             UIFactory.CreateButton(canvas.transform, dailyLabel,
-                new Vector2(0.1f, 0.56f), new Vector2(0.9f, 0.65f), () => Launch(GameMode.Daily), 44);
+                new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), () => Launch(GameMode.Daily), 44,
+                primary: !todayRecord.completed);
 
-            // Practice + difficulty.
             UIFactory.CreateButton(canvas.transform, "Practice",
-                new Vector2(0.1f, 0.44f), new Vector2(0.62f, 0.53f), () => Launch(GameMode.Practice), 44);
+                new Vector2(0.1f, 0.43f), new Vector2(0.6f, 0.52f), () => Launch(GameMode.Practice), 44);
             _difficultyLabel = UIFactory.CreateButton(canvas.transform, GameSession.PracticeDifficulty.ToString(),
-                new Vector2(0.64f, 0.44f), new Vector2(0.9f, 0.53f), CycleDifficulty, 38);
+                new Vector2(0.62f, 0.43f), new Vector2(0.9f, 0.52f), CycleDifficulty, 36);
+            _difficultyLabel.color = UIStyle.Hint;
 
-            // Tutorial.
-            var tutorialLabel = firstLaunch ? "Tutorial  ←  start here" : "Tutorial";
+            var tutorialLabel = firstLaunch ? "Tutorial  ·  start here" : "Tutorial";
             UIFactory.CreateButton(canvas.transform, tutorialLabel,
-                new Vector2(0.1f, 0.32f), new Vector2(0.9f, 0.41f), () => Launch(GameMode.Tutorial), 44);
+                new Vector2(0.1f, 0.315f), new Vector2(0.9f, 0.405f), () => Launch(GameMode.Tutorial), 44,
+                primary: firstLaunch);
 
-            // Stats footer.
+            // Stats chip.
+            UIFactory.CreatePanel(canvas.transform, "FooterChip",
+                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), UIStyle.PanelSoft);
             var footer = UIFactory.CreateText(canvas.transform, "Footer",
-                new Vector2(0.05f, 0.2f), new Vector2(0.95f, 0.28f), 32, TextAnchor.MiddleCenter);
-            footer.color = new Color(1f, 1f, 1f, 0.75f);
+                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), 30, TextAnchor.MiddleCenter);
+            footer.color = UIStyle.CreamDim;
             footer.text = BuildStatsLine(stats, todayRecord);
         }
 
