@@ -224,6 +224,7 @@ namespace PuttSeed.Core.Tests.CourseGen
                 foreach (var b in bumpers)
                 {
                     Assert.That((b.Center - start).Length() >= clear, Is.True, $"seed {seed}: bumper near start");
+                    Assert.That((b.Center - hole).Length() >= clear, Is.True, $"seed {seed}: bumper near hole");
                 }
 
                 foreach (var zone in water)

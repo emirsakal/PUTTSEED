@@ -74,8 +74,8 @@ namespace PuttSeed.Core.CourseGen
         public static GeneratorConfig Default { get; } = new GeneratorConfig(
             minSegments: 4,
             maxSegments: 8,
-            minSegmentLength: Fix64.FromInt(2),
-            maxSegmentLength: Fix64.FromInt(4),
+            minSegmentLength: Fix64.FromFraction(5, 4),
+            maxSegmentLength: Fix64.FromFraction(5, 2),
             minTurnSteps: 64,   // 22.5 degrees
             maxTurnSteps: 192,  // 67.5 degrees
             halfWidth: Fix64.One,

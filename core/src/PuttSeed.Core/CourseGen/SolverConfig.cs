@@ -51,14 +51,14 @@ namespace PuttSeed.Core.CourseGen
             DedupeCell = dedupeCell;
         }
 
-        /// <summary>The tuned default configuration (64 angles x 8 powers).</summary>
+        /// <summary>The tuned default configuration (32 angles x 8 powers).</summary>
         public static SolverConfig Default { get; } = new SolverConfig(
-            angleStride: 16,
+            angleStride: 32,
             powerStride: 32,
             tickCapPerShot: 700,
-            maxExpandedStates: 32,
-            maxTotalSimTicks: 800_000,
-            maxDepth: 4,
+            maxExpandedStates: 16,
+            maxTotalSimTicks: 400_000,
+            maxDepth: 5,
             maxPar: 5,
             dedupeCell: Fix64.Half);
     }

@@ -15,6 +15,7 @@ namespace PuttSeed.Core.CourseGen
         private static readonly Fix64 BumperRadius = Fix64.FromFraction(3, 10);
         private static readonly Fix64 BumperMaxLateral = Fix64.FromFraction(35, 100);
         private static readonly Fix64 BumperMinSpacing = Fix64.FromFraction(8, 10);
+        private static readonly Fix64 EndClearance = Fix64.FromFraction(12, 10);
         private static readonly Fix64 SandBandWidth = Fix64.FromFraction(12, 10);
         private static readonly Fix64 WaterBandWidth = Fix64.One;
         private const int PlacementTries = 8;
@@ -35,6 +36,8 @@ namespace PuttSeed.Core.CourseGen
             out ZonePolygon[] water)
         {
             int segments = corridor.SegmentAngles.Length;
+            var start = CorridorBuilder.StartPosition(corridor);
+            var hole = CorridorBuilder.HolePosition(corridor);
 
             int bumperCount = rng.NextInt(0, maxBumpers + 1);
             int sandCount = rng.NextInt(0, maxSand + 1);
@@ -55,6 +58,14 @@ namespace PuttSeed.Core.CourseGen
                     var along = Fix64.FromFraction(rng.NextInt(25, 76), 100);
                     var lateral = Fix64.FromFraction(rng.NextInt(-35, 36), 100);
                     var center = PointInSegmentFrame(corridor, seg, along, lateral);
+
+                    // Keep clear of the start pad and — critically — the hole:
+                    // a bumper overlapping the cup makes the course unsolvable.
+                    if ((center - start).LengthSq() < EndClearance * EndClearance
+                        || (center - hole).LengthSq() < EndClearance * EndClearance)
+                    {
+                        continue;
+                    }
 
                     if (!IsClearOfBumpers(placedBumpers, center))
                     {
