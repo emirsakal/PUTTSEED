@@ -83,6 +83,7 @@ namespace PuttSeed.Core.Tests.Sim
                 maxShotSpeed: Fix64.FromInt(9),
                 rollDamping: Fix64.FromFraction(99, 100),
                 sandDamping: Fix64.FromFraction(9, 10),
+                iceDamping: Fix64.FromFraction(995, 1000),
                 wallRestitution: Fix64.FromFraction(3, 4),
                 maxTravelPerSubStep: Fix64.FromFraction(1, 20),
                 bumperRestitution: Fix64.FromFraction(13, 10),
@@ -104,8 +105,9 @@ namespace PuttSeed.Core.Tests.Sim
         {
             var d = SimConfig.Default;
             var c = SimConfig.Create(d.Dt, d.BallRadius, d.MaxShotSpeed, d.RollDamping, d.SandDamping,
-                d.WallRestitution, d.MaxTravelPerSubStep, d.BumperRestitution, d.BumperMaxExitSpeed,
-                d.HoleRadius, d.HoleCaptureSpeedSq, d.RimRestitution, d.RestSpeedEpsSq, d.RestTicksRequired);
+                d.IceDamping, d.WallRestitution, d.MaxTravelPerSubStep, d.BumperRestitution,
+                d.BumperMaxExitSpeed, d.HoleRadius, d.HoleCaptureSpeedSq, d.RimRestitution,
+                d.RestSpeedEpsSq, d.RestTicksRequired);
 
             var course = new CourseData(Vec2Fix.Zero, V(3, 0), par: 2,
                 walls: System.Array.Empty<WallSegment>());

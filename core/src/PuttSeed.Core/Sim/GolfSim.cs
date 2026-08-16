@@ -120,7 +120,11 @@ namespace PuttSeed.Core.Sim
                 return;
             }
 
-            _velocity *= IsInSand() ? _config.SandDamping : _config.RollDamping;
+            // Surface friction priority: sand beats ice beats bare ground
+            // (deterministic tie-break when generated zones overlap).
+            _velocity *= IsInSand() ? _config.SandDamping
+                : IsInIce() ? _config.IceDamping
+                : _config.RollDamping;
 
             // Split the tick so no sub-step moves farther than the anti-tunneling
             // limit (a fraction of the ball radius). Integer sub-step count keeps
@@ -287,6 +291,21 @@ namespace PuttSeed.Core.Sim
         private bool IsInSand()
         {
             var zones = _course.SandZones;
+            for (int i = 0; i < zones.Length; i++)
+            {
+                if (zones[i].Contains(_position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>True when the ball center is inside any ice polygon.</summary>
+        private bool IsInIce()
+        {
+            var zones = _course.IceZones;
             for (int i = 0; i < zones.Length; i++)
             {
                 if (zones[i].Contains(_position))

@@ -25,6 +25,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Per-tick damping while the ball center is inside sand (much stronger).</summary>
         public Fix64 SandDamping { get; }
 
+        /// <summary>Per-tick damping on ice (barely below 1: the ball slides on).</summary>
+        public Fix64 IceDamping { get; }
+
         /// <summary>Wall bounce restitution (normal component scale, &lt; 1).</summary>
         public Fix64 WallRestitution { get; }
 
@@ -61,6 +64,7 @@ namespace PuttSeed.Core.Sim
             Fix64 maxShotSpeed,
             Fix64 rollDamping,
             Fix64 sandDamping,
+            Fix64 iceDamping,
             Fix64 wallRestitution,
             Fix64 maxTravelPerSubStep,
             Fix64 bumperRestitution,
@@ -76,6 +80,7 @@ namespace PuttSeed.Core.Sim
             MaxShotSpeed = maxShotSpeed;
             RollDamping = rollDamping;
             SandDamping = sandDamping;
+            IceDamping = iceDamping;
             WallRestitution = wallRestitution;
             MaxTravelPerSubStep = maxTravelPerSubStep;
             BumperRestitution = bumperRestitution;
@@ -98,6 +103,7 @@ namespace PuttSeed.Core.Sim
             Fix64 maxShotSpeed,
             Fix64 rollDamping,
             Fix64 sandDamping,
+            Fix64 iceDamping,
             Fix64 wallRestitution,
             Fix64 maxTravelPerSubStep,
             Fix64 bumperRestitution,
@@ -107,7 +113,7 @@ namespace PuttSeed.Core.Sim
             Fix64 rimRestitution,
             Fix64 restSpeedEpsSq,
             int restTicksRequired)
-            => new SimConfig(dt, ballRadius, maxShotSpeed, rollDamping, sandDamping,
+            => new SimConfig(dt, ballRadius, maxShotSpeed, rollDamping, sandDamping, iceDamping,
                 wallRestitution, maxTravelPerSubStep, bumperRestitution, bumperMaxExitSpeed,
                 holeRadius, holeCaptureSpeedSq, rimRestitution, restSpeedEpsSq, restTicksRequired);
 
@@ -118,6 +124,7 @@ namespace PuttSeed.Core.Sim
             maxShotSpeed: Fix64.FromInt(8),
             rollDamping: Fix64.FromFraction(988, 1000),
             sandDamping: Fix64.FromFraction(94, 100),
+            iceDamping: Fix64.FromFraction(997, 1000),
             wallRestitution: Fix64.FromFraction(8, 10),
             maxTravelPerSubStep: Fix64.FromFraction(1, 20), // half the ball radius
             bumperRestitution: Fix64.FromFraction(12, 10),
