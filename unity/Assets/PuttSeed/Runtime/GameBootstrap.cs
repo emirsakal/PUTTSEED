@@ -54,11 +54,15 @@ namespace PuttSeed.Unity
             var uiGo = new GameObject("UI");
             var ui = uiGo.AddComponent<GameUI>();
 
+            var devGo = new GameObject("DevReload");
+            var devReload = devGo.AddComponent<DevReloadController>();
+
             ulong seed = useFixedSeed ? fixedSeed : TodaySeed();
             runner.LoadSeed(seed);
             courseRenderer.Rebuild(runner.Generation!.Course);
             CameraFramer.Frame(cam, runner.Generation.Course);
             ui.Initialize(runner, courseRenderer, cam);
+            devReload.Initialize(runner, courseRenderer, cam);
 
             Application.targetFrameRate = 120;
         }

@@ -6,6 +6,16 @@ artifacts/
 *.user
 .vs/
 
+# Root-level Unity junk: created if the REPO ROOT is opened as a Unity
+# project by mistake (the real project lives in unity/). Root-anchored so
+# unity/'s own tracked Packages/ProjectSettings stay unaffected.
+/Library/
+/Logs/
+/Packages/
+/ProjectSettings/
+/UserSettings/
+/Temp/
+
 # Junction into core sources (tracked once under core/src; the junction
 # path must not duplicate them). The .meta files Unity writes inside the
 # junction are tracked via the core/src path.
