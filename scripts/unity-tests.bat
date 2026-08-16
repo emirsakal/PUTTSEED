@@ -3,9 +3,10 @@ rem Unity EditMode tests in batch mode. Run from anywhere.
 setlocal
 cd /d "%~dp0.."
 
-set UNITY_EXE=C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Unity.exe
+rem Override with a UNITY_EXE env var when your editor lives elsewhere.
+if not defined UNITY_EXE set UNITY_EXE=C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Unity.exe
 if not exist "%UNITY_EXE%" (
-    echo Unity editor not found at %UNITY_EXE%
+    echo Unity editor not found at %UNITY_EXE% - set the UNITY_EXE env var.
     exit /b 1
 )
 
