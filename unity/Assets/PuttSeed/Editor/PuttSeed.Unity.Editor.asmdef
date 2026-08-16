@@ -1,0 +1,19 @@
+{
+    "name": "PuttSeed.Unity.Editor",
+    "rootNamespace": "PuttSeed.Unity.Editor",
+    "references": [
+        "PuttSeed.Unity",
+        "PuttSeed.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

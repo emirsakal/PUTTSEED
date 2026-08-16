@@ -1,0 +1,16 @@
+{
+    "name": "PuttSeed.Unity",
+    "rootNamespace": "PuttSeed.Unity",
+    "references": [
+        "PuttSeed.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

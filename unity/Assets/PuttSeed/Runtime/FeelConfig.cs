@@ -1,0 +1,70 @@
+using PuttSeed.Core.FixedMath;
+using PuttSeed.Core.Sim;
+using UnityEngine;
+
+namespace PuttSeed.Unity
+{
+    /// <summary>
+    /// Every feel knob in one asset for on-device tuning. Floats live only in
+    /// the inspector; <see cref="BuildSimConfig"/> quantizes them onto a fixed
+    /// 1/10000 grid at the boundary, so identical asset values produce a
+    /// bit-identical simulation on every device. This asset ships with the
+    /// build — changing it changes the daily course for everyone equally.
+    /// </summary>
+    [CreateAssetMenu(fileName = "FeelConfig", menuName = "PuttSeed/Feel Config")]
+    public sealed class FeelConfig : ScriptableObject
+    {
+        [Header("Friction (per-tick damping factors)")]
+        [Range(0.9f, 0.999f)] public float rollDamping = 0.988f;
+        [Range(0.8f, 0.99f)] public float sandDamping = 0.94f;
+
+        [Header("Shot")]
+        [Range(2f, 16f)] public float maxShotSpeed = 8f;
+        [Tooltip("Drag distance in world units for full power.")]
+        [Range(0.5f, 6f)] public float maxDragLength = 2.5f;
+        [Tooltip("Power curve exponent: >1 gives fine control at low power.")]
+        [Range(0.5f, 3f)] public float powerCurveExponent = 1.35f;
+        [Tooltip("Drags shorter than this cancel the shot instead of firing.")]
+        [Range(0.05f, 0.5f)] public float minDragLength = 0.15f;
+
+        [Header("Walls & bumpers")]
+        [Range(0.3f, 1f)] public float wallRestitution = 0.8f;
+        [Range(1f, 2f)] public float bumperRestitution = 1.2f;
+        [Range(2f, 16f)] public float bumperMaxExitSpeed = 8f;
+
+        [Header("Hole")]
+        [Range(0.1f, 0.3f)] public float holeRadius = 0.15f;
+        [Tooltip("Ball is captured when overlapping the cup below this speed.")]
+        [Range(0.4f, 3f)] public float captureSpeed = 1.2f;
+
+        [Header("Rest detection")]
+        [Range(0.005f, 0.1f)] public float restSpeed = 0.02f;
+        [Range(2, 20)] public int restTicksRequired = 6;
+
+        /// <summary>Quantizes a feel float onto the fixed 1/10000 grid (the determinism boundary).</summary>
+        public static Fix64 Quantize(float value)
+            => Fix64.FromFraction(Mathf.RoundToInt(value * 10000f), 10000);
+
+        /// <summary>Builds the deterministic sim config from the current knob values.</summary>
+        public SimConfig BuildSimConfig()
+        {
+            var capture = Quantize(captureSpeed);
+            var rest = Quantize(restSpeed);
+            return SimConfig.Create(
+                dt: Fix64.FromFraction(1, 120),
+                ballRadius: Fix64.FromFraction(1, 10),
+                maxShotSpeed: Quantize(maxShotSpeed),
+                rollDamping: Quantize(rollDamping),
+                sandDamping: Quantize(sandDamping),
+                wallRestitution: Quantize(wallRestitution),
+                maxTravelPerSubStep: Fix64.FromFraction(1, 20),
+                bumperRestitution: Quantize(bumperRestitution),
+                bumperMaxExitSpeed: Quantize(bumperMaxExitSpeed),
+                holeRadius: Quantize(holeRadius),
+                holeCaptureSpeedSq: capture * capture,
+                rimRestitution: Fix64.FromFraction(4, 10),
+                restSpeedEpsSq: rest * rest,
+                restTicksRequired: restTicksRequired);
+        }
+    }
+}
