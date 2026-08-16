@@ -116,7 +116,11 @@ namespace PuttSeed.Unity
             return png;
         }
 
-        /// <summary>Creates a screen-space canvas scaled for 1080x1920 portrait.</summary>
+        /// <summary>
+        /// Creates a screen-space canvas scaled for 1080x1920 portrait and
+        /// returns its safe-area root — build all UI under that, so notches
+        /// and punch-holes never cover controls.
+        /// </summary>
         public static GameObject CreateCanvas(Transform parent)
         {
             var canvasGo = new GameObject("Canvas");
@@ -129,7 +133,10 @@ namespace PuttSeed.Unity
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
             EnsureEventSystem();
-            return canvasGo;
+
+            var safeRoot = CreateRect(canvasGo.transform, "SafeArea", Vector2.zero, Vector2.one);
+            safeRoot.gameObject.AddComponent<SafeAreaInsetter>();
+            return safeRoot.gameObject;
         }
 
         /// <summary>Creates an anchored empty rect.</summary>

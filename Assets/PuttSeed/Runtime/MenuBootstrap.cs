@@ -43,6 +43,8 @@ namespace PuttSeed.Unity
         public Text? statsBlock;
         public Text? achievementsBlock;
         public Button? statsCloseButton;
+        public Button? shareBestButton;
+        public Text? shareBestLabel;
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
@@ -132,6 +134,7 @@ namespace PuttSeed.Unity
 
             statsButton?.onClick.AddListener(OpenStats);
             statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
+            shareBestButton?.onClick.AddListener(ShareTodaysBest);
 
             RefreshSettingsLabels(stats);
             soundButton?.onClick.AddListener(() =>
@@ -163,6 +166,23 @@ namespace PuttSeed.Unity
 
         private void Update()
         {
+            // Android back button (Escape): close an open panel, else quit.
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (archivePanel != null && archivePanel.activeSelf)
+                {
+                    archivePanel.SetActive(false);
+                }
+                else if (statsPanel != null && statsPanel.activeSelf)
+                {
+                    statsPanel.SetActive(false);
+                }
+                else
+                {
+                    Application.Quit();
+                }
+            }
+
             if (!_showCountdown || countdownText == null)
             {
                 return;
@@ -214,7 +234,34 @@ namespace PuttSeed.Unity
                 achievementsBlock.text = sb.ToString();
             }
 
+            // Share is only offered once today's best actually exists.
+            var todayBest = _stats.FindDay(ModeController.DayNumber(DateTime.UtcNow));
+            shareBestButton?.gameObject.SetActive(
+                todayBest != null && todayBest.completed && todayBest.bestReplay.Length > 0);
+            if (shareBestLabel != null)
+            {
+                shareBestLabel.text = "Share today's best";
+            }
+
             statsPanel?.SetActive(true);
+        }
+
+        private void ShareTodaysBest()
+        {
+            int today = ModeController.DayNumber(DateTime.UtcNow);
+            var record = _stats.FindDay(today);
+            if (record == null || !record.completed || record.bestReplay.Length == 0)
+            {
+                return;
+            }
+
+            string text = $"PUTTSEED day {today} — {record.bestStrokes} strokes. Watch: {record.bestReplay}";
+            GUIUtility.systemCopyBuffer = text;
+            bool sheet = NativeShare.Share(text);
+            if (shareBestLabel != null)
+            {
+                shareBestLabel.text = sheet ? "Sharing…" : "Copied!";
+            }
         }
 
         private void OpenArchive()
@@ -244,6 +291,7 @@ namespace PuttSeed.Unity
                 var record = _stats.FindDay(day);
                 archiveRowLabels[i].text = record != null && record.completed
                     ? $"{date:MMM d}  ·  best {record.bestStrokes}"
+                      + (record.bestStars > 0 ? $"  ·  {record.bestStars}-star" : "")
                     : $"{date:MMM d}  ·  not played";
                 archiveRowLabels[i].color = record != null && record.completed
                     ? UIStyle.Cream

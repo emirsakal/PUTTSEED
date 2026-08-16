@@ -64,6 +64,12 @@ namespace PuttSeed.Unity
             {
                 toastChip.SetActive(false);
             }
+
+            // Android back button (Escape) returns to the menu.
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                OnMenu();
+            }
         }
 
         private void Refresh()
@@ -178,7 +184,7 @@ namespace PuttSeed.Unity
             else
             {
                 _runner.AddAuthorGhost();
-                ShowToast("Author ghost on.");
+                ShowToast("Author ghost on (amber).");
             }
         }
 
@@ -191,7 +197,7 @@ namespace PuttSeed.Unity
 
             if (_modes.ImportReplay(importField.text.Trim()))
             {
-                ShowToast("Ghost playing.");
+                ShowToast("Ghost playing (pink).");
             }
             else
             {

@@ -276,7 +276,7 @@ namespace PuttSeed.Unity
             if (sim.IsHoled && !_lastHoled)
             {
                 Play(captureClip, 1f);
-                Tap();
+                Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);
                 StartCoroutine(CelebrationRing(hole));
                 _cameraJuice?.CelebrateZoom(hole);
@@ -361,11 +361,18 @@ namespace PuttSeed.Unity
             }
         }
 
-        private void Tap()
+        private void Tap(bool strong = false)
         {
             if (_settings == null || _settings.Data.hapticsEnabled)
             {
-                HapticsPlayer.Tap();
+                if (strong)
+                {
+                    HapticsPlayer.Thump();
+                }
+                else
+                {
+                    HapticsPlayer.Tap();
+                }
             }
         }
 
@@ -463,15 +470,69 @@ namespace PuttSeed.Unity
         }
     }
 
-    /// <summary>Coarse device haptics; no-op in the editor and on non-Android.</summary>
+    /// <summary>
+    /// Device haptics with amplitude control: VibrationEffect over JNI on
+    /// API 26+, legacy vibrate below, Handheld.Vibrate as the last resort.
+    /// No-op in the editor and on non-Android platforms.
+    /// </summary>
     public static class HapticsPlayer
     {
-        /// <summary>A short tap on impact/capture events.</summary>
-        public static void Tap()
-        {
+        /// <summary>A light tick (bumper hit, water entry).</summary>
+        public static void Tap() => Vibrate(20, 110);
+
+        /// <summary>A firm thump (hole capture).</summary>
+        public static void Thump() => Vibrate(40, 220);
+
 #if UNITY_ANDROID && !UNITY_EDITOR
-            Handheld.Vibrate();
-#endif
+        private static AndroidJavaObject? _vibrator;
+
+        private static void Vibrate(long milliseconds, int amplitude)
+        {
+            try
+            {
+                if (_vibrator == null)
+                {
+                    using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                    using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                    {
+                        _vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+                    }
+                }
+
+                if (_vibrator == null)
+                {
+                    Handheld.Vibrate();
+                    return;
+                }
+
+                using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
+                {
+                    if (version.GetStatic<int>("SDK_INT") >= 26)
+                    {
+                        using (var effectClass = new AndroidJavaClass("android.os.VibrationEffect"))
+                        using (var effect = effectClass.CallStatic<AndroidJavaObject>(
+                            "createOneShot", milliseconds, amplitude))
+                        {
+                            _vibrator.Call("vibrate", effect);
+                        }
+                    }
+                    else
+                    {
+                        _vibrator.Call("vibrate", milliseconds);
+                    }
+                }
+            }
+            catch (System.Exception)
+            {
+                Handheld.Vibrate();
+            }
         }
+#else
+        private static void Vibrate(long milliseconds, int amplitude)
+        {
+            _ = milliseconds;
+            _ = amplitude;
+        }
+#endif
     }
 }

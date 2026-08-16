@@ -135,8 +135,12 @@ namespace PuttSeed.Unity
             menu.achievementsBlock = UIFactory.CreateText(dim, "AchBlock",
                 new Vector2(0.13f, 0.20f), new Vector2(0.87f, 0.50f), 26, TextAnchor.UpperLeft);
 
+            menu.shareBestLabel = UIFactory.CreateButton(dim, "Share today's best",
+                new Vector2(0.12f, 0.135f), new Vector2(0.52f, 0.19f), NoOp, 26);
+            menu.shareBestButton = menu.shareBestLabel.GetComponentInParent<Button>();
+
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.135f), new Vector2(0.7f, 0.19f), NoOp, 30, primary: true);
+                new Vector2(0.56f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
             menu.statsCloseButton = close.GetComponentInParent<Button>();
 
             menu.statsPanel.SetActive(false);
