@@ -24,7 +24,7 @@ namespace PuttSeed.Core.CourseGen
         /// Rates a course. <paramref name="captureShots"/> /
         /// <paramref name="sampledShots"/> is the solver's tightness ratio;
         /// <paramref name="turnCount"/> is corridor joints;
-        /// <paramref name="hazardCount"/> is bumpers + sand + water.
+        /// <paramref name="hazardCount"/> is bumpers + sand + ice + water.
         /// </summary>
         public static Difficulty Rate(int captureShots, int sampledShots, int turnCount, int hazardCount)
         {

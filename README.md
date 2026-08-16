@@ -10,7 +10,7 @@ compresses to a ~30-character code that replays the exact same shots on any
 device — no backend, no accounts, no uploads.
 
 ```
-PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAkD_AyB8Ag
+PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
 ```
 
 ## A course, as the debug viewer prints it
@@ -18,32 +18,32 @@ PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAkD_AyB8Ag
 ```
        #                    seed        3
       ###                   par         2   difficulty Hard
-     ##  #                  walls       16
-    ##    #                 bumpers 2 · sand 2 · water 1
+     ##  #                  walls       10
+    ##    #                 bumpers 2 · sand 2 · ice 2 · water 1
    #       #
-  #   S     #               S ball start
+  #   S    ##               S ball start
   #         ##              H hole
-   #         #              # wall      o bumper
-   ##         #             : sand      ~ water
+   #         ##             # wall      o bumper
+   ##         #             : sand      * ice     ~ water
     ##        #
-     ##    oo~#
-      ##   oo~##
-      ##   oo~~#
-       #   ~~~~#
-       #       ##
-       #       ###
-       ##     :o:#
+     ##   *oo~#
+      #****oo~##
+      ##***oo~~#
+       #***~~~~#
+       #*****  ##
+       #**     :##
+        #     :o:##
         #    :oo::#
         ##   :oo:::#
-         ##   ::::#######
-          #    ::::###  #
-           #    ::      #
-            #           #
-            ##      :H: #
+         ##   ::::::#####
+          ##   :::: *** #
+           #    ::  *** #
+            #       *** #
+             #      :H: #
              ##     ::: #
               ##    ::: #
-               ##   ::: #
-                 ########
+               #    ::: #
+                #########
 ```
 
 `dotnet run --project tools/CourseViewer -c Release -- <seed|yyyy-mm-dd>`
@@ -66,8 +66,8 @@ PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAkD_AyB8Ag
 |  FixedMath   Fix64 (Q32.32) · Vec2Fix · xorshift128 RNG ·    |
 |              committed 1024-entry sine table                 |
 |  Sim         GolfSim: 120 Hz fixed tick, circle-segment      |
-|              walls with sub-stepping, bumpers, sand, water,  |
-|              hole capture, rest detection, FNV-1a StateHash  |
+|              walls with sub-stepping, bumpers, sand, ice,    |
+|              water, hole capture, rest, FNV-1a StateHash     |
 |  CourseGen   corridor growth -> hazard decoration ->         |
 |              SolvabilityChecker (bounded BFS over the        |
 |              quantized shot space) -> DifficultyRater        |
@@ -92,9 +92,11 @@ mechanically, not by care:
   `long`, with 128-bit multiply intermediates and Newton square root. Trig is
   a committed 1024-entry table; angles only ever exist as table indices.
 - **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
-  exercising every element runs a scripted 8-shot, 10,000-tick session twice
-  in-process, and the final FNV-1a state hash must equal a committed
-  constant: `531089411828813883`. Any accidental change to sim math fails it.
+  exercising walls, bumpers, sand and water runs a scripted 8-shot,
+  10,000-tick session twice in-process, and the final FNV-1a state hash must
+  equal a committed constant: `531089411828813883`. Any accidental change to
+  sim math fails it. (Ice, the newest element, is pinned by its own unit
+  tests and the golden replay fixtures.)
 - **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
   end-to-end — generate, replay the author solution — against frozen final
   hashes and frozen `PUTT-` codes.
@@ -111,7 +113,7 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (160 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Core test suite (166 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
 | Unity EditMode tests | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
@@ -148,8 +150,21 @@ stroke. Walls bounce, bumpers boost, sand drags, ice slides, water costs a
 stroke and a reset. Capture needs a slow ball over the cup — fast attempts
 rim out.
 Stroke limit is par + 3. Daily mode tracks local stats and a streak;
-practice mode serves unlimited courses by difficulty; three fixed tutorial
+practice mode serves unlimited courses by difficulty; four fixed tutorial
 courses teach the elements. Feel tuning lives in one ScriptableObject
 (`Assets/PuttSeed/Resources/FeelConfig.asset`).
 
 Out-of-scope ideas live in [LATER.md](LATER.md) — deliberately.
+
+## Workflow note
+
+This repo was built with an AI-assisted workflow (Claude Code); the phase
+prompts that drove each week's work are committed verbatim in
+[prompts/PROMPTS.md](prompts/PROMPTS.md). The guardrails those prompts
+enforce — TDD for the core, the purity grep, committed golden hashes — are
+exactly what makes an AI-assisted codebase auditable: correctness is proven
+by machine-checked tests, not by trust in the author, human or otherwise.
+
+## License
+
+[MIT](LICENSE).
