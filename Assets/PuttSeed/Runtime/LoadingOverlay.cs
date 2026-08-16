@@ -30,10 +30,10 @@ namespace PuttSeed.Unity
         public RectTransform? hole;
 
         [Header("Animation tuning")]
-        [Tooltip("Club wind-up angle (degrees) at the start of the swing.")]
-        public float clubWindUpAngle = 40f;
-        [Tooltip("Club follow-through angle (degrees) at the end of the swing.")]
-        public float clubThroughAngle = -25f;
+        [Tooltip("Club wind-up angle (degrees): negative = head pulled BACK behind the ball.")]
+        public float clubWindUpAngle = -42f;
+        [Tooltip("Club angle at contact/follow-through (degrees): slightly past vertical.")]
+        public float clubThroughAngle = 12f;
         [Tooltip("Seconds of club swing before the ball launches.")]
         public float swingSeconds = 0.28f;
         [Tooltip("While loading, the ball approaches but never passes this fraction of the distance.")]

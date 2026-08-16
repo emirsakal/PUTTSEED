@@ -194,7 +194,7 @@ namespace PuttSeed.Unity
             headImage.color = new Color(0.32f, 0.3f, 0.34f);
             headImage.raycastTarget = false;
 
-            clubRoot.localEulerAngles = new Vector3(0f, 0f, 40f); // baked wind-up pose
+            clubRoot.localEulerAngles = new Vector3(0f, 0f, -42f); // baked wind-up: head behind the ball
 
             overlay.label = UIFactory.CreateText(cover, "Label",
                 new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f), 52, TextAnchor.MiddleCenter, shadow: true);
