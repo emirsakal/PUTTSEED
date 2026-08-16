@@ -34,8 +34,11 @@ namespace PuttSeed.Unity
 
         [Header("Hole")]
         [Range(0.1f, 0.3f)] public float holeRadius = 0.15f;
-        [Tooltip("Ball is captured when overlapping the cup below this speed.")]
-        [Range(0.4f, 3f)] public float captureSpeed = 1.2f;
+        [Tooltip("Ball is captured when overlapping the cup below this speed. " +
+            "Raised from the core default 1.2 so medium-pace putts drop (2026-08-16 feel pass).")]
+        [Range(0.4f, 3f)] public float captureSpeed = 1.5f;
+        [Tooltip("How lively a too-fast ball bounces off the rim (lower = dies at the lip).")]
+        [Range(0.1f, 1f)] public float rimRestitution = 0.4f;
 
         [Header("Rest detection")]
         [Range(0.005f, 0.1f)] public float restSpeed = 0.02f;
@@ -62,7 +65,7 @@ namespace PuttSeed.Unity
                 bumperMaxExitSpeed: Quantize(bumperMaxExitSpeed),
                 holeRadius: Quantize(holeRadius),
                 holeCaptureSpeedSq: capture * capture,
-                rimRestitution: Fix64.FromFraction(4, 10),
+                rimRestitution: Quantize(rimRestitution),
                 restSpeedEpsSq: rest * rest,
                 restTicksRequired: restTicksRequired);
         }

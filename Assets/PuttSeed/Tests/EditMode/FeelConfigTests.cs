@@ -57,8 +57,15 @@ namespace PuttSeed.Unity.Tests
             Assert.That(built.HoleRadius.Raw, Is.EqualTo(core.HoleRadius.Raw));
             // Squared fields are built by squaring the quantized knob, which can
             // land an ulp or two off core's exact fraction — inconsequential.
-            Assert.That(built.HoleCaptureSpeedSq.Raw, Is.EqualTo(core.HoleCaptureSpeedSq.Raw).Within(2));
             Assert.That(built.RestSpeedEpsSq.Raw, Is.EqualTo(core.RestSpeedEpsSq.Raw).Within(2));
+            Assert.That(built.RimRestitution.Raw, Is.EqualTo(core.RimRestitution.Raw).Within(2));
+
+            // Intentional divergence from core defaults (2026-08-16 feel pass):
+            // capture threshold raised to 1.5 so medium-pace putts drop. Core's
+            // Default (1.2) remains the frozen test-fixture baseline.
+            var expectedCapture = FeelConfig.Quantize(1.5f);
+            Assert.That(built.HoleCaptureSpeedSq.Raw,
+                Is.EqualTo((expectedCapture * expectedCapture).Raw).Within(2));
             Assert.That(built.RestTicksRequired, Is.EqualTo(core.RestTicksRequired));
 
             Object.DestroyImmediate(feel);
