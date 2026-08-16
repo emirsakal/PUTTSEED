@@ -79,6 +79,9 @@ PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
 The Unity project sits at the repo root; core sources are linked into
 `Assets/PuttSeedCore/src` via a directory junction under an asmdef with
 `noEngineReferences: true`, so the compiler itself enforces the layering.
+(Unity writes `.meta` files into `core/src` through that junction; they are
+committed for stable asset GUIDs and are inert to `dotnet build` and the
+purity grep — the C# sources themselves stay UnityEngine-free.)
 
 ## The determinism proof
 
@@ -92,11 +95,10 @@ mechanically, not by care:
   `long`, with 128-bit multiply intermediates and Newton square root. Trig is
   a committed 1024-entry table; angles only ever exist as table indices.
 - **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
-  exercising walls, bumpers, sand and water runs a scripted 8-shot,
-  10,000-tick session twice in-process, and the final FNV-1a state hash must
-  equal a committed constant: `531089411828813883`. Any accidental change to
-  sim math fails it. (Ice, the newest element, is pinned by its own unit
-  tests and the golden replay fixtures.)
+  exercising every element — walls, bumpers, sand, ice, water — runs a
+  scripted 8-shot, 10,000-tick session twice in-process, and the final
+  FNV-1a state hash must equal a committed constant:
+  `12853565983001025895`. Any accidental change to sim math fails it.
 - **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
   end-to-end — generate, replay the author solution — against frozen final
   hashes and frozen `PUTT-` codes.
@@ -113,7 +115,7 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (166 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Core test suite (178 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
 | Unity EditMode tests | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
