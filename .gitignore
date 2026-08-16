@@ -14,6 +14,8 @@ artifacts/
 # Unity (unity/ project — populated in Week 3)
 unity/Library/
 unity/Temp/
+unity/.utmp/
+unity/.gradle/
 unity/Obj/
 unity/Build/
 unity/Builds/
