@@ -63,6 +63,12 @@ namespace PuttSeed.Unity
         /// <summary>The live sim, if a course is loaded.</summary>
         public GolfSim? Sim => _sim;
 
+        /// <summary>
+        /// The exact config the player sim runs under (post difficulty
+        /// relaxation) — preview sims must use this, or their physics lies.
+        /// </summary>
+        public SimConfig PlayConfig => _simConfig;
+
         /// <summary>Ghost list (read-only view).</summary>
         public IReadOnlyList<Ghost> Ghosts => _ghosts;
 

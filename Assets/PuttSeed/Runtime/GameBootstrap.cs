@@ -61,7 +61,8 @@ namespace PuttSeed.Unity
             ghostsGo.AddComponent<GhostViewManager>().Initialize(runner);
 
             var inputGo = new GameObject("DragInput");
-            inputGo.AddComponent<DragAimController>().Initialize(runner, cam);
+            var dragInput = inputGo.AddComponent<DragAimController>();
+            dragInput.Initialize(runner, cam);
 
             // The HUD and loading cover are scene-authored; bind, don't build.
             var ui = gameUi != null ? gameUi : FindFirstObjectByType<GameUI>();
@@ -81,6 +82,7 @@ namespace PuttSeed.Unity
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);
+            dragInput.previewAllowed = () => modes.AimPreviewAllowed;
 
             // The menu wrote the session; the inspector override wins in the
             // editor when the Game scene is played directly with a fixed seed.

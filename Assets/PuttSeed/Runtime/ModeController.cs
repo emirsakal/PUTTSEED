@@ -72,6 +72,14 @@ namespace PuttSeed.Unity
         /// <summary>True while a course is being generated behind the overlay.</summary>
         public bool IsLoading { get; private set; }
 
+        /// <summary>
+        /// Aim-preview policy: teaching contexts only. The daily and harder
+        /// practice buckets keep the GDD's read-the-green skill intact.
+        /// </summary>
+        public bool AimPreviewAllowed =>
+            Mode == GameMode.Tutorial
+            || (Mode == GameMode.Practice && _runner.Generation?.Difficulty == Difficulty.Easy);
+
         /// <summary>Wires dependencies; the store is shared with FeedbackController.</summary>
         public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam,
             LoadingOverlay? overlay, StatsStore stats)
