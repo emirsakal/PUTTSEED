@@ -123,9 +123,10 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// The journey level select: a 5x5 grid per page (two pages for 50
-        /// levels) — number on top, three tiny stars underneath; locked cells
-        /// sit dim and dead until the previous level is completed.
+        /// The journey level select: a 5x5 grid per page (25 levels each; the
+        /// pager steps through as many pages as the campaign needs) — number on
+        /// top, three tiny stars underneath; locked cells sit dim and dead
+        /// until the previous level is completed.
         /// </summary>
         private static void BuildJourneyPanel(Transform canvas, MenuBootstrap menu)
         {
@@ -176,14 +177,16 @@ namespace PuttSeed.Unity
                 }
             }
 
-            var older = UIFactory.CreateButton(dim, "1–25",
-                new Vector2(0.12f, 0.235f), new Vector2(0.34f, 0.288f), NoOp, 26);
+            // Pager arrows are language-free; MenuBootstrap fills the center
+            // label with the visible range and the star total.
+            var older = UIFactory.CreateButton(dim, "‹",
+                new Vector2(0.12f, 0.235f), new Vector2(0.28f, 0.288f), NoOp, 30);
             menu.journeyPrevButton = older.GetComponentInParent<Button>();
             menu.journeyPageLabel = UIFactory.CreateText(dim, "Page",
-                new Vector2(0.35f, 0.235f), new Vector2(0.65f, 0.288f), 26, TextAnchor.MiddleCenter);
+                new Vector2(0.29f, 0.235f), new Vector2(0.71f, 0.288f), 26, TextAnchor.MiddleCenter);
             menu.journeyPageLabel.color = UIStyle.CreamDim;
-            var newer = UIFactory.CreateButton(dim, "26–50",
-                new Vector2(0.66f, 0.235f), new Vector2(0.88f, 0.288f), NoOp, 26);
+            var newer = UIFactory.CreateButton(dim, "›",
+                new Vector2(0.72f, 0.235f), new Vector2(0.88f, 0.288f), NoOp, 30);
             menu.journeyNextButton = newer.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",

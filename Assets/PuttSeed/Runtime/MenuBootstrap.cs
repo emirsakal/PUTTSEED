@@ -168,8 +168,16 @@ namespace PuttSeed.Unity
 
             journeyButton?.onClick.AddListener(OpenJourney);
             journeyCloseButton?.onClick.AddListener(() => journeyPanel?.SetActive(false));
-            journeyPrevButton?.onClick.AddListener(() => { _journeyPage = 0; RefreshJourney(); });
-            journeyNextButton?.onClick.AddListener(() => { _journeyPage = 1; RefreshJourney(); });
+            journeyPrevButton?.onClick.AddListener(() =>
+            {
+                _journeyPage = Mathf.Max(0, _journeyPage - 1);
+                RefreshJourney();
+            });
+            journeyNextButton?.onClick.AddListener(() =>
+            {
+                _journeyPage = Mathf.Min(JourneyPageCount - 1, _journeyPage + 1);
+                RefreshJourney();
+            });
             for (int i = 0; i < journeyCellButtons.Length; i++)
             {
                 int cell = i; // capture per cell
@@ -612,10 +620,17 @@ namespace PuttSeed.Unity
             }
         }
 
+        /// <summary>Levels shown per journey page (a 5x5 grid).</summary>
+        private const int JourneyPageSize = 25;
+
+        private static int JourneyPageCount
+            => (JourneyConfig.Seeds.Length + JourneyPageSize - 1) / JourneyPageSize;
+
         private void OpenJourney()
         {
             // Land on the page holding the next level to play.
-            _journeyPage = _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) > 25 ? 1 : 0;
+            int frontier = _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) - 1;
+            _journeyPage = Mathf.Clamp(frontier / JourneyPageSize, 0, JourneyPageCount - 1);
             RefreshJourney();
             if (journeyPanel != null)
             {
@@ -629,7 +644,7 @@ namespace PuttSeed.Unity
             int unlocked = _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length);
             for (int i = 0; i < journeyCellButtons.Length; i++)
             {
-                int level = _journeyPage * 25 + i;
+                int level = _journeyPage * JourneyPageSize + i;
                 bool exists = level < JourneyConfig.Seeds.Length;
                 journeyCellButtons[i]?.gameObject.SetActive(exists);
                 if (!exists)
@@ -674,13 +689,26 @@ namespace PuttSeed.Unity
                     total += s;
                 }
 
-                journeyPageLabel.text = string.Format(Loc.Tr("{0} stars"), total);
+                int first = _journeyPage * JourneyPageSize + 1;
+                int last = Mathf.Min(first + JourneyPageSize - 1, JourneyConfig.Seeds.Length);
+                journeyPageLabel.text = $"{first}–{last}  ·  "
+                    + string.Format(Loc.Tr("{0} stars"), total);
+            }
+
+            if (journeyPrevButton != null)
+            {
+                journeyPrevButton.interactable = _journeyPage > 0;
+            }
+
+            if (journeyNextButton != null)
+            {
+                journeyNextButton.interactable = _journeyPage < JourneyPageCount - 1;
             }
         }
 
         private void LaunchJourneyCell(int cell)
         {
-            int level = _journeyPage * 25 + cell;
+            int level = _journeyPage * JourneyPageSize + cell;
             if (level >= _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length))
             {
                 return;
