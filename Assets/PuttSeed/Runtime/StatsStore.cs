@@ -45,6 +45,10 @@ namespace PuttSeed.Unity
         public int bestPracticeNormal;
         public int bestPracticeHard;
 
+        // Journey progress: index = level, value = best stars (1-3). A level
+        // is unlocked when its index <= journeyStars.Count.
+        public List<int> journeyStars = new List<int>();
+
         public List<DayRecord> days = new List<DayRecord>();
     }
 
@@ -226,6 +230,49 @@ namespace PuttSeed.Unity
             else { Data.bestPracticeHard = strokes; }
             Save();
             return true;
+        }
+
+        /// <summary>
+        /// Records a journey level result, keeping the best stars; completing
+        /// the newest level unlocks the next. True when anything improved.
+        /// </summary>
+        public bool RecordJourneyResult(int level, int stars)
+        {
+            bool changed = false;
+            while (Data.journeyStars.Count <= level)
+            {
+                Data.journeyStars.Add(0);
+                changed = true;
+            }
+
+            if (stars > Data.journeyStars[level])
+            {
+                Data.journeyStars[level] = stars;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                Save();
+            }
+
+            return changed;
+        }
+
+        /// <summary>How many journey levels are playable (completed + 1).</summary>
+        public int UnlockedJourneyLevels(int totalLevels)
+            => Math.Min(Data.journeyStars.Count + 1, totalLevels);
+
+        /// <summary>Total journey stars earned (skin gating currency).</summary>
+        public int TotalJourneyStars()
+        {
+            int total = 0;
+            for (int i = 0; i < Data.journeyStars.Count; i++)
+            {
+                total += Data.journeyStars[i];
+            }
+
+            return total;
         }
 
         /// <summary>Replaces the whole save (import); persists immediately.</summary>

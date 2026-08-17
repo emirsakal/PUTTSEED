@@ -175,6 +175,35 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void Journey_ProgressUnlocksAndKeepsBestStars()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.UnlockedJourneyLevels(50), Is.EqualTo(1), "only level 1 at first");
+
+            Assert.That(store.RecordJourneyResult(0, 2), Is.True);
+            Assert.That(store.UnlockedJourneyLevels(50), Is.EqualTo(2), "completing 1 unlocks 2");
+
+            Assert.That(store.RecordJourneyResult(0, 1), Is.False, "worse stars never downgrade");
+            Assert.That(store.RecordJourneyResult(0, 3), Is.True, "better stars record");
+            Assert.That(store.TotalJourneyStars(), Is.EqualTo(3));
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.journeyStars[0], Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Journey_UnlockCapsAtTotalLevels()
+        {
+            var store = new StatsStore(_path);
+            for (int level = 0; level < 50; level++)
+            {
+                store.RecordJourneyResult(level, 1);
+            }
+
+            Assert.That(store.UnlockedJourneyLevels(50), Is.EqualTo(50));
+        }
+
+        [Test]
         public void ColorblindAndBattery_Persist()
         {
             var store = new StatsStore(_path);

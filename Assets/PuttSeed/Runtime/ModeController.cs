@@ -21,6 +21,9 @@ namespace PuttSeed.Unity
 
         /// <summary>Three fixed-seed teaching courses with hint lines.</summary>
         Tutorial,
+
+        /// <summary>The 50 curated fixed-seed levels, unlocked in order.</summary>
+        Journey,
     }
 
     /// <summary>
@@ -131,6 +134,9 @@ namespace PuttSeed.Unity
                 case GameMode.Tutorial:
                     StartTutorial(GameSession.TutorialIndex);
                     break;
+                case GameMode.Journey:
+                    StartJourney(GameSession.JourneyLevel);
+                    break;
                 default:
                     if (GameSession.ArchiveDayNumber >= 0)
                     {
@@ -152,6 +158,7 @@ namespace PuttSeed.Unity
             Mode = GameMode.Daily;
             CurrentHint = "";
             IsArchiveDay = false;
+            JourneyLevel = -1;
             var utc = DateTime.UtcNow;
             _activeDayNumber = DayNumber(utc);
             _activeDayDate = utc.Date;
@@ -169,6 +176,7 @@ namespace PuttSeed.Unity
             Mode = GameMode.Daily;
             CurrentHint = "";
             IsArchiveDay = true;
+            JourneyLevel = -1;
             _activeDayNumber = dayNumber;
             _activeDayDate = DateOfDay(dayNumber);
             _dailySeed = DailySeed.FromUtcDate(
@@ -182,6 +190,7 @@ namespace PuttSeed.Unity
             Mode = GameMode.Practice;
             CurrentHint = "";
             IsArchiveDay = false;
+            JourneyLevel = -1;
             StartCoroutine(GeneratePracticeCourse());
         }
 
@@ -190,6 +199,7 @@ namespace PuttSeed.Unity
         {
             Mode = GameMode.Tutorial;
             IsArchiveDay = false;
+            JourneyLevel = -1;
             TutorialIndex = ((index % TutorialConfig.Stages.Length) + TutorialConfig.Stages.Length)
                 % TutorialConfig.Stages.Length;
             var stage = TutorialConfig.Stages[TutorialIndex];
@@ -200,12 +210,40 @@ namespace PuttSeed.Unity
         /// <summary>Advances to the next tutorial stage (wraps).</summary>
         public void NextTutorial() => StartTutorial(TutorialIndex + 1);
 
+        /// <summary>The active journey level (0-based; -1 outside the mode).</summary>
+        public int JourneyLevel { get; private set; } = -1;
+
+        /// <summary>Loads a journey level (clamped to the unlocked range).</summary>
+        public void StartJourney(int level)
+        {
+            Mode = GameMode.Journey;
+            CurrentHint = "";
+            IsArchiveDay = false;
+            JourneyLevel = Mathf.Clamp(level, 0, _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) - 1);
+            LoadAndShow(JourneyConfig.Seeds[JourneyLevel]);
+        }
+
+        /// <summary>True when a next journey level exists and is unlocked.</summary>
+        public bool HasNextJourneyLevel =>
+            Mode == GameMode.Journey
+            && JourneyLevel + 1 < _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length);
+
+        /// <summary>Advances to the next unlocked journey level.</summary>
+        public void NextJourneyLevel()
+        {
+            if (HasNextJourneyLevel)
+            {
+                StartJourney(JourneyLevel + 1);
+            }
+        }
+
         /// <summary>Bootstrap testing hook: load a specific seed, practice-style.</summary>
         public void StartFixedSeed(ulong seed)
         {
             Mode = GameMode.Practice;
             CurrentHint = "";
             IsArchiveDay = false;
+            JourneyLevel = -1;
             LoadAndShow(seed);
         }
 
@@ -417,6 +455,11 @@ namespace PuttSeed.Unity
                 && _stats.RecordPracticeBest((int)_runner.Generation.Difficulty, sim.Strokes))
             {
                 PracticeBestImproved?.Invoke(sim.Strokes);
+            }
+            else if (Mode == GameMode.Journey && JourneyLevel >= 0 && _runner.Generation != null)
+            {
+                _stats.RecordJourneyResult(JourneyLevel,
+                    Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par));
             }
 
             // Achievements see the post-record save, so streak/day counts

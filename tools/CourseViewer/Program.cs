@@ -12,7 +12,35 @@ using PuttSeed.Core.Sim;
 if (args.Length < 1)
 {
     Console.WriteLine("usage: CourseViewer <seed|yyyy-mm-dd> [--stats]");
+    Console.WriteLine("       CourseViewer --scan <count>   (CSV of seed stats, for curation)");
     return 1;
+}
+
+// Curation support: sweep seeds 1..N and emit one CSV row per generatable
+// course — the Journey level list is picked from this output.
+if (args[0] == "--scan")
+{
+    int count = args.Length > 1 && int.TryParse(args[1], out int n) ? n : 1000;
+    Console.WriteLine("seed,par,difficulty,walls,bumpers,sand,ice,water,hazards,authorStrokes,attempts");
+    for (ulong s = 1; s <= (ulong)count; s++)
+    {
+        GenerationResult r;
+        try
+        {
+            r = CourseGenerator.Generate(s, GeneratorConfig.Default, SimConfig.Default, SolverConfig.Default);
+        }
+        catch (InvalidOperationException)
+        {
+            continue;
+        }
+
+        var c = r.Course;
+        int hazards = c.Bumpers.Length + c.SandZones.Length + c.IceZones.Length + c.WaterZones.Length;
+        Console.WriteLine($"{s},{c.Par},{r.Difficulty},{c.Walls.Length},{c.Bumpers.Length}," +
+            $"{c.SandZones.Length},{c.IceZones.Length},{c.WaterZones.Length},{hazards},{r.AuthorStrokes},{r.Attempts}");
+    }
+
+    return 0;
 }
 
 ulong seed;

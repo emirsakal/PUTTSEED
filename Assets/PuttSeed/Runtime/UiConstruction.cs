@@ -55,7 +55,7 @@ namespace PuttSeed.Unity
             menu.taglineText = tagline;
 
             UIFactory.CreatePanel(canvas.transform, "Card",
-                new Vector2(0.06f, 0.27f), new Vector2(0.94f, 0.67f), UIStyle.PanelSoft);
+                new Vector2(0.06f, 0.25f), new Vector2(0.94f, 0.67f), UIStyle.PanelSoft);
 
             menu.dailyLabel = UIFactory.CreateButton(canvas.transform, "Play today's hole",
                 new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), NoOp, 44, primary: true);
@@ -67,20 +67,24 @@ namespace PuttSeed.Unity
             menu.countdownText.color = UIStyle.CreamDim;
             menu.countdownText.gameObject.SetActive(false);
 
+            menu.journeyLabel = UIFactory.CreateButton(canvas.transform, "Journey",
+                new Vector2(0.1f, 0.435f), new Vector2(0.9f, 0.508f), NoOp, 38);
+            menu.journeyButton = menu.journeyLabel.GetComponentInParent<Button>();
+
             var practiceLabel = UIFactory.CreateButton(canvas.transform, "Practice",
-                new Vector2(0.1f, 0.43f), new Vector2(0.6f, 0.52f), NoOp, 44);
+                new Vector2(0.1f, 0.35f), new Vector2(0.6f, 0.425f), NoOp, 38);
             menu.practiceButton = practiceLabel.GetComponentInParent<Button>();
 
             menu.difficultyLabel = UIFactory.CreateButton(canvas.transform, "Normal",
-                new Vector2(0.62f, 0.43f), new Vector2(0.9f, 0.52f), NoOp, 36);
+                new Vector2(0.62f, 0.35f), new Vector2(0.9f, 0.425f), NoOp, 32);
             menu.difficultyButton = menu.difficultyLabel.GetComponentInParent<Button>();
 
             menu.tutorialLabel = UIFactory.CreateButton(canvas.transform, "Tutorial",
-                new Vector2(0.1f, 0.315f), new Vector2(0.6f, 0.405f), NoOp, 40);
+                new Vector2(0.1f, 0.267f), new Vector2(0.6f, 0.34f), NoOp, 36);
             menu.tutorialButton = menu.tutorialLabel.GetComponentInParent<Button>();
 
             var archiveLabel = UIFactory.CreateButton(canvas.transform, "Archive",
-                new Vector2(0.62f, 0.315f), new Vector2(0.9f, 0.405f), NoOp, 36);
+                new Vector2(0.62f, 0.267f), new Vector2(0.9f, 0.34f), NoOp, 32);
             menu.archiveButton = archiveLabel.GetComponentInParent<Button>();
 
             UIFactory.CreatePanel(canvas.transform, "FooterChip",
@@ -115,6 +119,79 @@ namespace PuttSeed.Unity
             BuildStatsPanel(canvasRoot, menu);
             BuildSettingsPanel(canvasRoot, menu);
             BuildCollectionPanel(canvasRoot, menu);
+            BuildJourneyPanel(canvasRoot, menu);
+        }
+
+        /// <summary>
+        /// The journey level select: a 5x5 grid per page (two pages for 50
+        /// levels) — number on top, three tiny stars underneath; locked cells
+        /// sit dim and dead until the previous level is completed.
+        /// </summary>
+        private static void BuildJourneyPanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "JourneyPanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true;
+            menu.journeyPanel = dim.gameObject;
+
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.07f, 0.13f), new Vector2(0.93f, 0.80f));
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.725f), new Vector2(0.9f, 0.785f), 52, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Journey";
+
+            const int columns = 5;
+            const int rows = 5;
+            menu.journeyCellButtons = new Button[columns * rows];
+            menu.journeyCellLabels = new Text[columns * rows];
+            menu.journeyCellStars = new Image[columns * rows * 3];
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < columns; c++)
+                {
+                    int cell = r * columns + c;
+                    float x0 = 0.12f + c * 0.1565f;
+                    float yMax = 0.695f - r * 0.089f;
+                    var cellLabel = UIFactory.CreateButton(dim, "—",
+                        new Vector2(x0, yMax - 0.074f), new Vector2(x0 + 0.134f, yMax), NoOp, 30);
+                    var labelRect = cellLabel.rectTransform;
+                    labelRect.anchorMin = new Vector2(0f, 0.38f);
+                    labelRect.anchorMax = new Vector2(1f, 1f);
+                    menu.journeyCellLabels[cell] = cellLabel;
+                    menu.journeyCellButtons[cell] = cellLabel.GetComponentInParent<Button>();
+
+                    for (int s = 0; s < 3; s++)
+                    {
+                        var starRect = UIFactory.CreateRect(menu.journeyCellButtons[cell].transform,
+                            $"Star{s + 1}",
+                            new Vector2(0.16f + s * 0.26f, 0.08f),
+                            new Vector2(0.36f + s * 0.26f, 0.36f));
+                        var starImage = starRect.gameObject.AddComponent<Image>();
+                        starImage.sprite = UIFactory.StarSprite();
+                        starImage.preserveAspect = true;
+                        starImage.raycastTarget = false;
+                        menu.journeyCellStars[cell * 3 + s] = starImage;
+                    }
+                }
+            }
+
+            var older = UIFactory.CreateButton(dim, "1–25",
+                new Vector2(0.12f, 0.225f), new Vector2(0.34f, 0.28f), NoOp, 26);
+            menu.journeyPrevButton = older.GetComponentInParent<Button>();
+            menu.journeyPageLabel = UIFactory.CreateText(dim, "Page",
+                new Vector2(0.35f, 0.225f), new Vector2(0.65f, 0.28f), 26, TextAnchor.MiddleCenter);
+            menu.journeyPageLabel.color = UIStyle.CreamDim;
+            var newer = UIFactory.CreateButton(dim, "26–50",
+                new Vector2(0.66f, 0.225f), new Vector2(0.88f, 0.28f), NoOp, 26);
+            menu.journeyNextButton = newer.GetComponentInParent<Button>();
+
+            var close = UIFactory.CreateButton(dim, "Close",
+                new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, 30, primary: true);
+            menu.journeyCloseButton = close.GetComponentInParent<Button>();
+            menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
+
+            menu.journeyPanel.SetActive(false);
         }
 
         /// <summary>The settings overlay: every toggle chip in one place.</summary>

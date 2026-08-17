@@ -57,7 +57,17 @@ namespace PuttSeed.Unity
             _modes = modes;
 
             menuButton?.onClick.AddListener(OnMenu);
-            nextLessonButton?.onClick.AddListener(() => _modes.NextTutorial());
+            nextLessonButton?.onClick.AddListener(() =>
+            {
+                if (_modes.Mode == GameMode.Journey)
+                {
+                    _modes.NextJourneyLevel();
+                }
+                else
+                {
+                    _modes.NextTutorial();
+                }
+            });
             watchButton?.onClick.AddListener(OnImport);
             retryButton?.onClick.AddListener(() => _runner.Retry());
             failRetryButton?.onClick.AddListener(() => _runner.Retry());
@@ -98,10 +108,25 @@ namespace PuttSeed.Unity
             }
 
             hintChip?.SetActive(_modes.CurrentHint.Length > 0);
-            nextLessonButton?.gameObject.SetActive(_modes.Mode == GameMode.Tutorial);
-            // The mulligan is a teaching tool — never on the daily. The bar
-            // reflows so five buttons share the row evenly when Undo is gone.
-            bool showUndo = _modes.Mode != GameMode.Daily;
+
+            // One advance button, two modes: every tutorial stage offers the
+            // next lesson; a journey level offers the next level once holed.
+            bool showNext = _modes.Mode == GameMode.Tutorial
+                || (_modes.Mode == GameMode.Journey && sim != null && sim.IsHoled
+                    && _modes.HasNextJourneyLevel);
+            nextLessonButton?.gameObject.SetActive(showNext);
+            if (showNext && nextLessonButton != null)
+            {
+                var label = nextLessonButton.GetComponentInChildren<Text>();
+                if (label != null)
+                {
+                    label.text = Loc.Tr(_modes.Mode == GameMode.Journey ? "Next level" : "Next lesson");
+                }
+            }
+
+            // The mulligan is a teaching tool — practice and tutorial only;
+            // the bar reflows so five buttons share the row when Undo is gone.
+            bool showUndo = _modes.Mode == GameMode.Practice || _modes.Mode == GameMode.Tutorial;
             undoButton?.gameObject.SetActive(showUndo);
             if (_undoLaidOut != showUndo)
             {
@@ -124,6 +149,8 @@ namespace PuttSeed.Unity
             {
                 GameMode.Daily => _modes.DailyModeLabel,
                 GameMode.Practice => string.Format(Loc.Tr("Practice · {0}"), Loc.Tr(gen.Difficulty.ToString())),
+                GameMode.Journey => string.Format(Loc.Tr("Level {0}/{1}"),
+                    _modes.JourneyLevel + 1, JourneyConfig.Seeds.Length),
                 _ => string.Format(Loc.Tr("Tutorial {0}/{1}"), _modes.TutorialIndex + 1, TutorialConfig.Stages.Length),
             };
 

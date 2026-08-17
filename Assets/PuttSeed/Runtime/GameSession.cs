@@ -22,6 +22,9 @@ namespace PuttSeed.Unity
         /// <summary>Archive pick: the past day number to play, -1 for today.</summary>
         public static int ArchiveDayNumber = -1;
 
+        /// <summary>Journey level to start at (0-based).</summary>
+        public static int JourneyLevel;
+
         /// <summary>Editor testing: load this exact seed instead of the mode.</summary>
         public static bool UseFixedSeed;
 

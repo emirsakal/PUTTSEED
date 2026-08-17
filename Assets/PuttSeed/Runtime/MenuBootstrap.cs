@@ -53,6 +53,18 @@ namespace PuttSeed.Unity
         public Image[] archiveRowStars = new Image[0];
         public Button? archiveRandomButton;
         public Text? histogramBlock;
+        public Button? journeyButton;
+        public Text? journeyLabel;
+        public GameObject? journeyPanel;
+        public Button? journeyCloseButton;
+        public Button? journeyPrevButton;
+        public Button? journeyNextButton;
+        public Text? journeyPageLabel;
+        public Button[] journeyCellButtons = new Button[0];
+        public Text[] journeyCellLabels = new Text[0];
+        public Image[] journeyCellStars = new Image[0];
+
+        private int _journeyPage;
         public Button? settingsButton;
         public GameObject? settingsPanel;
         public Button? settingsCloseButton;
@@ -136,6 +148,14 @@ namespace PuttSeed.Unity
                 difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
             }
 
+            if (journeyLabel != null)
+            {
+                int done = stats.Data.journeyStars.Count;
+                journeyLabel.text = done > 0
+                    ? string.Format(Loc.Tr("Journey · {0}/{1}"), done, JourneyConfig.Seeds.Length)
+                    : Loc.Tr("Journey");
+            }
+
             if (footerText != null)
             {
                 footerText.text = BuildStatsLine(stats, todayRecord);
@@ -145,6 +165,16 @@ namespace PuttSeed.Unity
             practiceButton?.onClick.AddListener(() => Launch(GameMode.Practice));
             difficultyButton?.onClick.AddListener(CycleDifficulty);
             tutorialButton?.onClick.AddListener(() => Launch(GameMode.Tutorial));
+
+            journeyButton?.onClick.AddListener(OpenJourney);
+            journeyCloseButton?.onClick.AddListener(() => journeyPanel?.SetActive(false));
+            journeyPrevButton?.onClick.AddListener(() => { _journeyPage = 0; RefreshJourney(); });
+            journeyNextButton?.onClick.AddListener(() => { _journeyPage = 1; RefreshJourney(); });
+            for (int i = 0; i < journeyCellButtons.Length; i++)
+            {
+                int cell = i; // capture per cell
+                journeyCellButtons[i]?.onClick.AddListener(() => LaunchJourneyCell(cell));
+            }
 
             archiveButton?.onClick.AddListener(OpenArchive);
             archiveRandomButton?.onClick.AddListener(PlayRandomUnplayedDay);
@@ -324,6 +354,11 @@ namespace PuttSeed.Unity
                 {
                     UiSounds.ClickDown();
                     collectionPanel.SetActive(false);
+                }
+                else if (journeyPanel != null && journeyPanel.activeSelf)
+                {
+                    UiSounds.ClickDown();
+                    journeyPanel.SetActive(false);
                 }
                 else
                 {
@@ -577,6 +612,87 @@ namespace PuttSeed.Unity
                 _stats.SetBallSkin(skin.Id);
                 RefreshCollection();
             }
+        }
+
+        private void OpenJourney()
+        {
+            // Land on the page holding the next level to play.
+            _journeyPage = _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) > 25 ? 1 : 0;
+            RefreshJourney();
+            if (journeyPanel != null)
+            {
+                UiFx.PopIn(this, journeyPanel);
+            }
+        }
+
+        private void RefreshJourney()
+        {
+            var stars = _stats.Data.journeyStars;
+            int unlocked = _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length);
+            for (int i = 0; i < journeyCellButtons.Length; i++)
+            {
+                int level = _journeyPage * 25 + i;
+                bool exists = level < JourneyConfig.Seeds.Length;
+                journeyCellButtons[i]?.gameObject.SetActive(exists);
+                if (!exists)
+                {
+                    continue;
+                }
+
+                bool isUnlocked = level < unlocked;
+                int earned = level < stars.Count ? stars[level] : 0;
+                if (journeyCellLabels[i] != null)
+                {
+                    journeyCellLabels[i].text = (level + 1).ToString();
+                    journeyCellLabels[i].color = isUnlocked ? UIStyle.Cream : new Color(1f, 1f, 1f, 0.25f);
+                }
+
+                if (journeyCellButtons[i] != null)
+                {
+                    journeyCellButtons[i].interactable = isUnlocked;
+                }
+
+                for (int s = 0; s < 3; s++)
+                {
+                    var star = journeyCellStars[i * 3 + s];
+                    if (star == null)
+                    {
+                        continue;
+                    }
+
+                    star.gameObject.SetActive(isUnlocked);
+                    if (isUnlocked)
+                    {
+                        star.color = s < earned ? UIStyle.Accent : new Color(1f, 1f, 1f, 0.14f);
+                    }
+                }
+            }
+
+            if (journeyPageLabel != null)
+            {
+                int total = 0;
+                foreach (int s in stars)
+                {
+                    total += s;
+                }
+
+                journeyPageLabel.text = string.Format(Loc.Tr("{0} stars"), total);
+            }
+        }
+
+        private void LaunchJourneyCell(int cell)
+        {
+            int level = _journeyPage * 25 + cell;
+            if (level >= _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length))
+            {
+                return;
+            }
+
+            GameSession.Mode = GameMode.Journey;
+            GameSession.JourneyLevel = level;
+            GameSession.ArchiveDayNumber = -1;
+            GameSession.UseFixedSeed = false;
+            SceneFader.LoadScene("Game");
         }
 
         private void OpenArchive()
