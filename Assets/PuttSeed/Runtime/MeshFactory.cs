@@ -141,6 +141,101 @@ namespace PuttSeed.Unity
             return Build(vertices, triangles, colors);
         }
 
+        /// <summary>An annulus (tee marker, rims).</summary>
+        public static Mesh Ring(Vector2 center, float innerRadius, float outerRadius, Color color, int segments = 32)
+        {
+            var vertices = new List<Vector3>(segments * 2);
+            var colors = new List<Color>(segments * 2);
+            var triangles = new List<int>(segments * 6);
+            for (int i = 0; i < segments; i++)
+            {
+                float angle = i * 2f * Mathf.PI / segments;
+                var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                vertices.Add(center + dir * innerRadius);
+                vertices.Add(center + dir * outerRadius);
+                colors.Add(color);
+                colors.Add(color);
+                int j = (i + 1) % segments;
+                triangles.AddRange(new[]
+                {
+                    i * 2, j * 2, i * 2 + 1,
+                    i * 2 + 1, j * 2, j * 2 + 1,
+                });
+            }
+
+            return Build(vertices, triangles, colors);
+        }
+
+        /// <summary>
+        /// A polygon outline (closed) or stroke (open): one thin quad per edge
+        /// plus a joint disc per vertex, so corners stay filled at any angle.
+        /// </summary>
+        public static Mesh Outline(Vector2[] points, float width, Color color, bool closed = true)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var colors = new List<Color>();
+            float half = width * 0.5f;
+
+            int edges = closed ? points.Length : points.Length - 1;
+            for (int i = 0; i < edges; i++)
+            {
+                var a = points[i];
+                var b = points[(i + 1) % points.Length];
+                var dir = (b - a).normalized;
+                var n = new Vector2(-dir.y, dir.x) * half;
+                int baseIndex = vertices.Count;
+                vertices.Add(a + n);
+                vertices.Add(b + n);
+                vertices.Add(b - n);
+                vertices.Add(a - n);
+                triangles.AddRange(new[] { baseIndex, baseIndex + 1, baseIndex + 2, baseIndex, baseIndex + 2, baseIndex + 3 });
+                for (int c = 0; c < 4; c++)
+                {
+                    colors.Add(color);
+                }
+
+                AppendDisc(vertices, triangles, colors, a, half, color, 10);
+            }
+
+            if (!closed && points.Length > 0)
+            {
+                AppendDisc(vertices, triangles, colors, points[points.Length - 1], half, color, 10);
+            }
+
+            return Build(vertices, triangles, colors);
+        }
+
+        /// <summary>Half-disc caps at every wall endpoint — smooth vector ends.</summary>
+        public static Mesh WallCaps(WallSegment[] walls, float radius, Color color)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            var colors = new List<Color>();
+            foreach (var wall in walls)
+            {
+                AppendDisc(vertices, triangles, colors, FixView.ToVector2(wall.A), radius, color, 12);
+                AppendDisc(vertices, triangles, colors, FixView.ToVector2(wall.B), radius, color, 12);
+            }
+
+            return Build(vertices, triangles, colors);
+        }
+
+        private static void AppendDisc(List<Vector3> vertices, List<int> triangles, List<Color> colors,
+            Vector2 center, float radius, Color color, int segments)
+        {
+            int baseIndex = vertices.Count;
+            vertices.Add(center);
+            colors.Add(color);
+            for (int i = 0; i < segments; i++)
+            {
+                float angle = i * 2f * Mathf.PI / segments;
+                vertices.Add(center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius);
+                colors.Add(color);
+                triangles.AddRange(new[] { baseIndex, baseIndex + 1 + i, baseIndex + 1 + (i + 1) % segments });
+            }
+        }
+
         private static Mesh Build(List<Vector3> vertices, List<int> triangles, List<Color> colors)
         {
             var mesh = new Mesh();

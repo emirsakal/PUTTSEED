@@ -60,6 +60,15 @@ namespace PuttSeed.Unity
                 dotGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
             }
 
+            // A fixed up-left highlight completes the sphere read (it stays
+            // put while the dimples spin underneath it).
+            var highlightGo = new GameObject("Highlight");
+            highlightGo.transform.SetParent(transform, false);
+            highlightGo.transform.localPosition = new Vector3(-0.032f, 0.032f, -0.006f);
+            highlightGo.AddComponent<MeshFilter>().sharedMesh =
+                MeshFactory.Disc(Vector2.zero, 0.028f, new Color(1f, 1f, 1f, 0.75f));
+            highlightGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+
             // Soft drop shadow trailing the ball down-right, one layer behind.
             var shadowGo = new GameObject("BallShadow");
             shadowGo.transform.SetParent(transform, false);
