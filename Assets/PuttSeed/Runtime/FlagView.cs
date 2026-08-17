@@ -14,6 +14,9 @@ namespace PuttSeed.Unity
         private const float RaiseHeight = 0.55f;
         private const float RaiseSpeed = 7f;
 
+        /// <summary>When set, the grow-in entrance waits for the cover to lift.</summary>
+        public LoadingOverlay? overlay;
+
         private SimRunner _runner = null!;
         private GameObject? _flagRoot;
         private LineRenderer? _holePulse;
@@ -121,6 +124,35 @@ namespace PuttSeed.Unity
                 _holePulse.material = PaletteMaterials.Shared;
                 _holePulse.sortingOrder = 5;
                 _holePulse.enabled = false;
+            }
+
+            StartCoroutine(GrowIn(_flagRoot));
+        }
+
+        /// <summary>The flag pops up last, after the course has faded in.</summary>
+        private System.Collections.IEnumerator GrowIn(GameObject flagRoot)
+        {
+            flagRoot.transform.localScale = Vector3.zero;
+            while (overlay != null && overlay.IsShown)
+            {
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(0.3f);
+            const float grow = 0.22f;
+            for (float t = 0f; t < grow && flagRoot != null; t += Time.deltaTime)
+            {
+                float k = t / grow;
+                float scale = k < 0.75f
+                    ? Mathf.SmoothStep(0f, 1.08f, k / 0.75f)  // slight overshoot
+                    : Mathf.Lerp(1.08f, 1f, (k - 0.75f) / 0.25f);
+                flagRoot.transform.localScale = Vector3.one * scale;
+                yield return null;
+            }
+
+            if (flagRoot != null)
+            {
+                flagRoot.transform.localScale = Vector3.one;
             }
         }
     }

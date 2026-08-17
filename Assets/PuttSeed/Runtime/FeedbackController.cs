@@ -53,6 +53,7 @@ namespace PuttSeed.Unity
         private Coroutine? _swingRoutine;
         private Coroutine? _slowMoRoutine;
         private GameObject? _slowMoBall;
+        private GameObject? _letterbox;
 
         private bool _wasInIce;
         private bool _wasReady;
@@ -192,6 +193,12 @@ namespace PuttSeed.Unity
             {
                 Destroy(_slowMoBall);
                 _slowMoBall = null;
+            }
+
+            if (_letterbox != null)
+            {
+                Destroy(_letterbox);
+                _letterbox = null;
             }
         }
 
@@ -542,6 +549,8 @@ namespace PuttSeed.Unity
                     startColor = ConfettiColors[i % ConfettiColors.Length],
                     startSize = Random.Range(0.06f, 0.13f),
                     startLifetime = Random.Range(0.8f, 1.4f),
+                    rotation = Random.Range(0f, 360f),
+                    angularVelocity = Random.Range(-260f, 260f), // tumbling squares
                 }, 1);
             }
         }
@@ -602,6 +611,46 @@ namespace PuttSeed.Unity
                 yield break;
             }
 
+            // Cinematic letterbox: two dark bars slide in for the replay.
+            var cam = Camera.main;
+            Transform? topBar = null, bottomBar = null;
+            Mesh? barMesh = null;
+            if (cam != null)
+            {
+                barMesh = MeshFactory.Quad(new Vector2(-50f, -0.5f), new Vector2(50f, 0.5f),
+                    new Color(0.02f, 0.04f, 0.03f, 0.85f));
+                _letterbox = new GameObject("Letterbox");
+                topBar = CreateBar(barMesh, "Top");
+                bottomBar = CreateBar(barMesh, "Bottom");
+            }
+
+            float slide = 0f;
+            void PlaceBars()
+            {
+                if (cam == null || topBar == null || bottomBar == null)
+                {
+                    return;
+                }
+
+                float h = cam.orthographicSize;
+                float barH = h * 0.16f;
+                var c = cam.transform.position;
+                topBar.localScale = new Vector3(1f, barH, 1f);
+                bottomBar.localScale = new Vector3(1f, barH, 1f);
+                float inset = barH * (slide - 0.5f); // -0.5: fully off, +0.5: flush
+                topBar.position = new Vector3(c.x, c.y + h - inset, -0.87f);
+                bottomBar.position = new Vector3(c.x, c.y - h + inset, -0.87f);
+            }
+
+            for (float t = 0f; t < 0.2f; t += Time.deltaTime)
+            {
+                slide = Mathf.SmoothStep(0f, 1f, t / 0.2f);
+                PlaceBars();
+                yield return null;
+            }
+
+            slide = 1f;
+
             var replay = new PuttSeed.Core.Sim.GolfSim(gen.Course, _runner.PlayConfig);
             replay.RestoreRest(_runner.LastShotOrigin, Mathf.Max(0, finalStrokes - 1));
             replay.Shoot(_runner.LastShot);
@@ -631,6 +680,7 @@ namespace PuttSeed.Unity
 
                 var p = FixView.ToVector2(replay.Ball.Position);
                 _slowMoBall.transform.position = new Vector3(p.x, p.y, -0.058f);
+                PlaceBars(); // follow any camera zoom
                 yield return null;
             }
 
@@ -638,12 +688,41 @@ namespace PuttSeed.Unity
             for (float t = 0f; t < 0.25f; t += Time.deltaTime)
             {
                 _slowMoBall.transform.localScale = Vector3.one * (1f - t / 0.25f);
+                PlaceBars();
                 yield return null;
             }
 
             Destroy(_slowMoBall);
             _slowMoBall = null;
+
+            for (float t = 0f; t < 0.2f; t += Time.deltaTime)
+            {
+                slide = Mathf.SmoothStep(1f, 0f, t / 0.2f);
+                PlaceBars();
+                yield return null;
+            }
+
+            if (barMesh != null)
+            {
+                Destroy(barMesh);
+            }
+
+            if (_letterbox != null)
+            {
+                Destroy(_letterbox);
+                _letterbox = null;
+            }
+
             _slowMoRoutine = null;
+        }
+
+        private Transform CreateBar(Mesh barMesh, string name)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_letterbox!.transform, false);
+            go.AddComponent<MeshFilter>().sharedMesh = barMesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            return go.transform;
         }
 
         /// <summary>Flat expanding ring at the hole, fading out over ~0.8 s.</summary>

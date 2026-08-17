@@ -38,6 +38,11 @@ namespace PuttSeed.Unity
         private ShotInput _lastPreviewShot;
         private bool _previewValid;
 
+        private const int MaxAimDashes = 14;
+        private GameObject[] _aimDashes = System.Array.Empty<GameObject>();
+        private MeshRenderer[] _aimDashRenderers = System.Array.Empty<MeshRenderer>();
+        private readonly MaterialPropertyBlock _tintBlock = new MaterialPropertyBlock();
+
         private static readonly Color LowPower = new Color(0.55f, 0.9f, 0.55f);
         private static readonly Color HighPower = new Color(0.95f, 0.35f, 0.3f);
 
@@ -46,13 +51,25 @@ namespace PuttSeed.Unity
         {
             _runner = runner;
             _camera = cam;
+            // The line renderer now draws only the arrowhead (a 3-point V);
+            // the shaft is a run of dashes so the aim reads as designed intent.
             _line = gameObject.AddComponent<LineRenderer>();
-            _line.positionCount = 2;
-            _line.startWidth = 0.07f;
-            _line.endWidth = 0.02f;
+            _line.positionCount = 3;
+            _line.startWidth = 0.06f;
+            _line.endWidth = 0.06f;
             _line.material = PaletteMaterials.Shared;
             _line.sortingOrder = 10;
             _line.enabled = false;
+
+            var dashMesh = MeshFactory.Disc(Vector2.zero, 0.04f, Color.white);
+            _aimDashes = new GameObject[MaxAimDashes];
+            _aimDashRenderers = new MeshRenderer[MaxAimDashes];
+            for (int i = 0; i < MaxAimDashes; i++)
+            {
+                _aimDashes[i] = MeshFactory.CreateMeshObject(transform, $"AimDash{i}", dashMesh, -0.5f);
+                _aimDashRenderers[i] = _aimDashes[i].GetComponent<MeshRenderer>();
+                _aimDashes[i].SetActive(false);
+            }
 
             var dotMesh = MeshFactory.Disc(Vector2.zero, 0.055f, new Color(0.97f, 0.96f, 0.90f, 0.55f));
             _dots = new GameObject[MaxDots];
@@ -90,6 +107,7 @@ namespace PuttSeed.Unity
             {
                 _dragging = false;
                 _line.enabled = false;
+                HideAimDashes();
                 HidePreview();
                 var feel = _runner.feel;
                 float maxDrag = feel != null ? feel.maxDragLength : 2.5f;
@@ -105,6 +123,7 @@ namespace PuttSeed.Unity
             {
                 _dragging = false;
                 _line.enabled = false;
+                HideAimDashes();
                 HidePreview();
             }
         }
@@ -212,13 +231,43 @@ namespace PuttSeed.Unity
             var ball = _runner.BallRenderPosition;
             var dir = _aim.sqrMagnitude > 0.0001f ? _aim.normalized : Vector2.right;
             float length = 0.4f + power * 1.8f;
-
-            _line.enabled = true;
-            _line.SetPosition(0, new Vector3(ball.x, ball.y, -0.5f));
-            _line.SetPosition(1, new Vector3(ball.x + dir.x * length, ball.y + dir.y * length, -0.5f));
             var color = Color.Lerp(LowPower, HighPower, power);
+            var tip = ball + dir * length;
+
+            // Dashed shaft: evenly spaced dots from the ball to just short of
+            // the arrowhead, tinted by power.
+            _tintBlock.SetColor("_Color", color);
+            int dashes = Mathf.Clamp(Mathf.FloorToInt((length - 0.25f) / 0.16f), 2, MaxAimDashes);
+            for (int i = 0; i < _aimDashes.Length; i++)
+            {
+                bool on = i < dashes;
+                _aimDashes[i].SetActive(on);
+                if (on)
+                {
+                    float d = 0.22f + i * 0.16f;
+                    _aimDashes[i].transform.position = new Vector3(
+                        ball.x + dir.x * d, ball.y + dir.y * d, -0.5f);
+                    _aimDashRenderers[i].SetPropertyBlock(_tintBlock);
+                }
+            }
+
+            // Arrowhead: a V at the tip pointing along the aim.
+            var perp = new Vector2(-dir.y, dir.x);
+            var back = tip - dir * 0.2f;
+            _line.enabled = true;
+            _line.SetPosition(0, new Vector3(back.x + perp.x * 0.13f, back.y + perp.y * 0.13f, -0.5f));
+            _line.SetPosition(1, new Vector3(tip.x, tip.y, -0.5f));
+            _line.SetPosition(2, new Vector3(back.x - perp.x * 0.13f, back.y - perp.y * 0.13f, -0.5f));
             _line.startColor = color;
             _line.endColor = color;
+        }
+
+        private void HideAimDashes()
+        {
+            for (int i = 0; i < _aimDashes.Length; i++)
+            {
+                _aimDashes[i].SetActive(false);
+            }
         }
 
         private Vector2 PointerWorld()

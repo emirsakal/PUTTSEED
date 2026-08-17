@@ -39,15 +39,22 @@ namespace PuttSeed.Unity
 
             var cameraJuice = cam.gameObject.AddComponent<CameraJuice>();
 
+            // The loading cover is scene-authored; resolve it early so the
+            // course/flag intro reveals can wait for it to lift.
+            var overlay = loadingOverlay != null ? loadingOverlay : FindFirstObjectByType<LoadingOverlay>();
+
             var runnerGo = new GameObject("SimRunner");
             var runner = runnerGo.AddComponent<SimRunner>();
             runner.feel = feel;
 
             var courseGo = new GameObject("CourseView");
             var courseRenderer = courseGo.AddComponent<CourseRenderer>();
+            courseRenderer.overlay = overlay;
 
             var flagGo = new GameObject("Flag");
-            flagGo.AddComponent<FlagView>().Initialize(runner);
+            var flagView = flagGo.AddComponent<FlagView>();
+            flagView.overlay = overlay;
+            flagView.Initialize(runner);
 
             var ballGo = new GameObject("Ball");
             var ballView = ballGo.AddComponent<BallView>();
@@ -74,9 +81,8 @@ namespace PuttSeed.Unity
             var readyGo = new GameObject("ReadyIndicator");
             readyGo.AddComponent<ReadyIndicator>().Initialize(runner, dragInput);
 
-            // The HUD and loading cover are scene-authored; bind, don't build.
+            // The HUD is scene-authored; bind, don't build.
             var ui = gameUi != null ? gameUi : FindFirstObjectByType<GameUI>();
-            var overlay = loadingOverlay != null ? loadingOverlay : FindFirstObjectByType<LoadingOverlay>();
             if (ui == null)
             {
                 Debug.LogError("PuttSeed: no scene-authored GameUI found — run PuttSeed → Rebuild Scenes.");

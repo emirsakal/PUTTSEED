@@ -13,9 +13,20 @@ namespace PuttSeed.Unity
     {
         private const float WallHalfThickness = 0.06f;
 
+        [Tooltip("When set, the build-in reveal waits for the cover to lift.")]
+        public LoadingOverlay? overlay;
+
+        private Coroutine? _intro;
+
         /// <summary>Clears and rebuilds all course meshes.</summary>
         public void Rebuild(CourseData course)
         {
+            if (_intro != null)
+            {
+                StopCoroutine(_intro);
+                _intro = null;
+            }
+
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 Destroy(transform.GetChild(i).gameObject);
@@ -93,6 +104,87 @@ namespace PuttSeed.Unity
                 MeshFactory.Walls(course.Walls, WallHalfThickness, PaletteMaterials.Wall), -0.05f);
             MeshFactory.CreateMeshObject(transform, "WallCaps",
                 MeshFactory.WallCaps(course.Walls, WallHalfThickness, PaletteMaterials.Wall), -0.05f);
+
+            _intro = StartCoroutine(IntroReveal());
+        }
+
+        /// <summary>
+        /// Build-in reveal: once the loading cover lifts, elements fade in as
+        /// a little stage entrance — ground first, then walls, bumpers, and
+        /// the cup/tee last. Alpha rides a MaterialPropertyBlock so meshes
+        /// stay untouched.
+        /// </summary>
+        private System.Collections.IEnumerator IntroReveal()
+        {
+            var renderers = GetComponentsInChildren<MeshRenderer>();
+            var delays = new float[renderers.Length];
+            var block = new MaterialPropertyBlock();
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                delays[i] = GroupDelay(renderers[i].gameObject.name);
+                block.SetColor("_Color", new Color(1f, 1f, 1f, 0f));
+                renderers[i].SetPropertyBlock(block);
+            }
+
+            while (overlay != null && overlay.IsShown)
+            {
+                yield return null;
+            }
+
+            const float fade = 0.25f;
+            const float total = 0.24f + fade;
+            for (float t = 0f; t < total; t += Time.deltaTime)
+            {
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    if (renderers[i] == null)
+                    {
+                        continue; // a rebuild mid-reveal destroys children
+                    }
+
+                    float a = Mathf.Clamp01((t - delays[i]) / fade);
+                    block.SetColor("_Color", new Color(1f, 1f, 1f, a));
+                    renderers[i].SetPropertyBlock(block);
+                }
+
+                yield return null;
+            }
+
+            block.SetColor("_Color", Color.white);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null)
+                {
+                    renderers[i].SetPropertyBlock(block);
+                }
+            }
+
+            _intro = null;
+        }
+
+        private static float GroupDelay(string name)
+        {
+            if (name == "Stripes")
+            {
+                return 0f; // the ground is simply there
+            }
+
+            if (name.StartsWith("Wall", System.StringComparison.Ordinal))
+            {
+                return 0.08f;
+            }
+
+            if (name.StartsWith("Bumper", System.StringComparison.Ordinal))
+            {
+                return 0.16f;
+            }
+
+            if (name.StartsWith("Hole", System.StringComparison.Ordinal) || name == "Tee")
+            {
+                return 0.24f;
+            }
+
+            return 0.02f; // zones and their dressing
         }
 
         private enum ZoneKind
