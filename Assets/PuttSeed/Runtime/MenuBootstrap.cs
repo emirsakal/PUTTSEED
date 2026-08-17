@@ -53,6 +53,8 @@ namespace PuttSeed.Unity
         public Image[] archiveRowStars = new Image[0];
         public Button? archiveRandomButton;
         public Text? histogramBlock;
+        public Button? dailyHardButton;
+        public Text? dailyHardLabel;
         public Button? journeyButton;
         public Text? journeyLabel;
         public GameObject? journeyPanel;
@@ -135,6 +137,16 @@ namespace PuttSeed.Unity
                     : string.Format(Loc.Tr("Play today's hole · {0}"), Loc.ShortDate(utc));
             }
 
+            if (dailyHardLabel != null)
+            {
+                // Earned once, the medal replaces the invitation.
+                bool medal = todayRecord.hardCompleted;
+                dailyHardLabel.text = medal
+                    ? string.Format(Loc.Tr("★ Hard {0}"), todayRecord.hardBestStrokes)
+                    : Loc.Tr("Hard");
+                dailyHardLabel.color = medal ? UIStyle.Accent : UIStyle.CreamDim;
+            }
+
             // Today's hole is done — the loop's next beat is the countdown.
             _showCountdown = todayRecord.completed;
             countdownText?.gameObject.SetActive(_showCountdown);
@@ -164,6 +176,7 @@ namespace PuttSeed.Unity
             }
 
             dailyButton?.onClick.AddListener(() => Launch(GameMode.Daily));
+            dailyHardButton?.onClick.AddListener(() => Launch(GameMode.Daily, dailyHard: true));
             practiceButton?.onClick.AddListener(() => Launch(GameMode.Practice));
             difficultyButton?.onClick.AddListener(CycleDifficulty);
             tutorialButton?.onClick.AddListener(() => Launch(GameMode.Tutorial));
@@ -735,6 +748,7 @@ namespace PuttSeed.Unity
             GameSession.JourneyLevel = level;
             GameSession.ArchiveDayNumber = -1;
             GameSession.UseFixedSeed = false;
+            GameSession.DailyHardMode = false;
             SceneFader.LoadScene("Game");
         }
 
@@ -835,6 +849,7 @@ namespace PuttSeed.Unity
             GameSession.Mode = GameMode.Daily;
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
+            GameSession.DailyHardMode = false; // archive days play by GDD rules
             SceneFader.LoadScene("Game");
         }
 
@@ -849,6 +864,7 @@ namespace PuttSeed.Unity
             GameSession.Mode = GameMode.Daily;
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
+            GameSession.DailyHardMode = false; // archive days play by GDD rules
             SceneFader.LoadScene("Game");
         }
 
@@ -876,12 +892,13 @@ namespace PuttSeed.Unity
             }
         }
 
-        private static void Launch(GameMode mode)
+        private static void Launch(GameMode mode, bool dailyHard = false)
         {
             GameSession.Mode = mode;
             GameSession.TutorialIndex = 0;
             GameSession.ArchiveDayNumber = -1;
             GameSession.UseFixedSeed = false;
+            GameSession.DailyHardMode = dailyHard;
             SceneFader.LoadScene("Game");
         }
 

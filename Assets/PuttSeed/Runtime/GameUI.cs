@@ -22,6 +22,7 @@ namespace PuttSeed.Unity
         public GameObject? starsRow;
         public Image[] starImages = new Image[0];
         public GameObject? failPanel;
+        public Text? failSubtitle;
         public Button? failRetryButton;
         public GameObject? toastChip;
         public Text? toastText;
@@ -179,6 +180,13 @@ namespace PuttSeed.Unity
             {
                 if (sim.IsFailed)
                 {
+                    if (failSubtitle != null)
+                    {
+                        failSubtitle.text = string.Format(
+                            Loc.Tr("The limit is par + {0} — line up and go again."),
+                            sim.StrokeAllowance);
+                    }
+
                     UiFx.PopIn(this, failPanel);
                 }
                 else

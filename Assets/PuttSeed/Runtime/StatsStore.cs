@@ -16,6 +16,11 @@ namespace PuttSeed.Unity
         public int attempts;
         public bool completed;
         public string bestReplay = "";
+
+        // Hard mode: the same day's seed under a tighter stroke limit, kept
+        // apart so it can never dilute the normal record or the streak.
+        public bool hardCompleted;
+        public int hardBestStrokes;
     }
 
     /// <summary>Everything persisted locally (no backend, no accounts).</summary>
@@ -152,6 +157,24 @@ namespace PuttSeed.Unity
                 }
             }
 
+            Save();
+        }
+
+        /// <summary>
+        /// Records holing out a daily under HARD rules (par + 1). Keeps its own
+        /// best and medal; deliberately never advances the streak — the streak
+        /// belongs to the once-a-day loop, and a second, harder run at the same
+        /// course would double-count it.
+        /// </summary>
+        public void RecordDailyHardCompletion(int day, int strokes)
+        {
+            var record = GetOrCreateDay(day);
+            if (!record.hardCompleted || strokes < record.hardBestStrokes)
+            {
+                record.hardBestStrokes = strokes;
+            }
+
+            record.hardCompleted = true;
             Save();
         }
 

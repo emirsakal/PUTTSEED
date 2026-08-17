@@ -53,8 +53,15 @@ namespace PuttSeed.Core.Sim
         /// <summary>True once the ball has dropped into the hole; the sim is finished.</summary>
         public bool IsHoled { get; private set; }
 
-        /// <summary>GDD stroke limit: par + 3. Shots beyond it are refused.</summary>
-        public int StrokeLimit => _course.Par + 3;
+        /// <summary>
+        /// Strokes allowed over par before the run fails. The GDD default is
+        /// 3; daily hard mode plays the same seed at 1. A rule, not a force —
+        /// it never touches the physics, only whether a shot is accepted.
+        /// </summary>
+        public int StrokeAllowance { get; }
+
+        /// <summary>Stroke limit: par + allowance. Shots beyond it are refused.</summary>
+        public int StrokeLimit => _course.Par + StrokeAllowance;
 
         /// <summary>
         /// True when the run is over without a capture: the stroke limit is
@@ -85,10 +92,11 @@ namespace PuttSeed.Core.Sim
         public int WindmillHitCount { get; private set; }
 
         /// <summary>Creates a simulation for one course.</summary>
-        public GolfSim(CourseData course, SimConfig config)
+        public GolfSim(CourseData course, SimConfig config, int strokeAllowance = 3)
         {
             _course = course;
             _config = config;
+            StrokeAllowance = strokeAllowance;
             _position = course.StartPosition;
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = course.StartPosition;

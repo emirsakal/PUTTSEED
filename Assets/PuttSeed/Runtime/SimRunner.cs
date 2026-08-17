@@ -45,6 +45,13 @@ namespace PuttSeed.Unity
             new List<(Vec2Fix, int)>();
 
         private SimConfig _simConfig = SimConfig.Default;
+
+        /// <summary>
+        /// Strokes allowed over par (GDD default 3; daily hard mode uses 1).
+        /// Set before the course loads — it applies from the next run reset.
+        /// </summary>
+        public int StrokeAllowance { get; set; } = 3;
+
         private GenerationResult? _generation;
         private GolfSim? _sim;
         private BallState _prev;
@@ -161,7 +168,7 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            _sim = new GolfSim(_generation.Course, _simConfig);
+            _sim = new GolfSim(_generation.Course, _simConfig, StrokeAllowance);
             _prev = _curr = _sim.Ball;
             _playedShots.Clear();
             _shotOrigins.Clear();
