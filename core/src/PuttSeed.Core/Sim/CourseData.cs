@@ -39,6 +39,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Sloped zones accelerating the ball while inside (may be empty).</summary>
         public RampZone[] Ramps { get; }
 
+        /// <summary>Teleport discs (paired by the generator; may be empty).</summary>
+        public Portal[] Portals { get; }
+
         /// <summary>Creates a course. Arrays are stored as-is (caller must not mutate).</summary>
         public CourseData(
             Vec2Fix startPosition,
@@ -50,7 +53,8 @@ namespace PuttSeed.Core.Sim
             ZonePolygon[]? waterZones = null,
             ZonePolygon[]? iceZones = null,
             OneWayGate[]? gates = null,
-            RampZone[]? ramps = null)
+            RampZone[]? ramps = null,
+            Portal[]? portals = null)
         {
             StartPosition = startPosition;
             HolePosition = holePosition;
@@ -62,6 +66,7 @@ namespace PuttSeed.Core.Sim
             IceZones = iceZones ?? System.Array.Empty<ZonePolygon>();
             Gates = gates ?? System.Array.Empty<OneWayGate>();
             Ramps = ramps ?? System.Array.Empty<RampZone>();
+            Portals = portals ?? System.Array.Empty<Portal>();
         }
     }
 }

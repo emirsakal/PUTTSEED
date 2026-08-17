@@ -63,6 +63,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>One-way gate blocks so far (see <see cref="WallHitCount"/> caveat).</summary>
         public int GateHitCount { get; private set; }
 
+        /// <summary>Portal transits so far (see <see cref="WallHitCount"/> caveat).</summary>
+        public int PortalTransitCount { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -150,6 +153,7 @@ namespace PuttSeed.Core.Sim
                 ResolveBumperCollisions();
                 ResolveWallCollisions();
                 ResolveGateCollisions();
+                ResolvePortalTransits();
                 if (CheckWaterHazard() || CheckHoleCapture())
                 {
                     break; // ball was reset or captured; the rest of the tick is void
@@ -293,6 +297,34 @@ namespace PuttSeed.Core.Sim
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Teleports the ball through the first portal whose trigger disc holds
+        /// its center: it reappears just outside the exit along its velocity
+        /// direction (radius + ball radius), velocity untouched. The offset
+        /// clears the twin portal's disc, so one pass triggers exactly once.
+        /// </summary>
+        private void ResolvePortalTransits()
+        {
+            var portals = _course.Portals;
+            for (int i = 0; i < portals.Length; i++)
+            {
+                var delta = _position - portals[i].Entry;
+                var radius = portals[i].Radius;
+                if (delta.LengthSq() >= radius * radius)
+                {
+                    continue;
+                }
+
+                var speedSq = _velocity.LengthSq();
+                var dir = speedSq > Fix64.Zero
+                    ? _velocity / Fix64.Sqrt(speedSq)
+                    : new Vec2Fix(Fix64.One, Fix64.Zero);
+                _position = portals[i].Exit + dir * (radius + _config.BallRadius);
+                PortalTransitCount++;
+                return; // one transit per sub-step: the ball is elsewhere now
+            }
         }
 
         /// <summary>Adds every containing ramp's acceleration for one tick.</summary>
