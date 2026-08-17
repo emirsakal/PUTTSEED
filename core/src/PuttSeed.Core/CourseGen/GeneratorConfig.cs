@@ -48,6 +48,18 @@ namespace PuttSeed.Core.CourseGen
         /// <summary>Max ice zones to place (0..2).</summary>
         public int MaxIce { get; }
 
+        /// <summary>Max one-way gates to place (0 in v1).</summary>
+        public int MaxGates { get; }
+
+        /// <summary>Max ramp zones to place (0 in v1).</summary>
+        public int MaxRamps { get; }
+
+        /// <summary>Max portal pairs to place (0 in v1).</summary>
+        public int MaxPortals { get; }
+
+        /// <summary>Max windmills to place (0 in v1).</summary>
+        public int MaxWindmills { get; }
+
         /// <summary>Generation attempts per relaxation level before decorations are reduced.</summary>
         public int AttemptsPerLevel { get; }
 
@@ -56,7 +68,8 @@ namespace PuttSeed.Core.CourseGen
             Fix64 minSegmentLength, Fix64 maxSegmentLength,
             int minTurnSteps, int maxTurnSteps,
             Fix64 halfWidth, Vec2Fix boundsMin, Vec2Fix boundsMax,
-            int maxBumpers, int maxSand, int maxWater, int maxIce, int attemptsPerLevel)
+            int maxBumpers, int maxSand, int maxWater, int maxIce, int attemptsPerLevel,
+            int maxGates = 0, int maxRamps = 0, int maxPortals = 0, int maxWindmills = 0)
         {
             MinSegments = minSegments;
             MaxSegments = maxSegments;
@@ -72,9 +85,17 @@ namespace PuttSeed.Core.CourseGen
             MaxWater = maxWater;
             MaxIce = maxIce;
             AttemptsPerLevel = attemptsPerLevel;
+            MaxGates = maxGates;
+            MaxRamps = maxRamps;
+            MaxPortals = maxPortals;
+            MaxWindmills = maxWindmills;
         }
 
-        /// <summary>The tuned default configuration.</summary>
+        /// <summary>
+        /// The frozen v1 configuration (five elements). Journey levels and
+        /// version-1 replay codes regenerate with this FOREVER — never retune
+        /// it; new content goes into <see cref="V2"/> and beyond.
+        /// </summary>
         public static GeneratorConfig Default { get; } = new GeneratorConfig(
             minSegments: 4,
             maxSegments: 8,
@@ -90,5 +111,42 @@ namespace PuttSeed.Core.CourseGen
             maxWater: 1,
             maxIce: 2,
             attemptsPerLevel: 12);
+
+        /// <summary>Alias of <see cref="Default"/>: the frozen v1.</summary>
+        public static GeneratorConfig V1 => Default;
+
+        /// <summary>
+        /// v2: the 2026-08 element wave (gates, ramps, portals, windmills) on
+        /// top of unchanged v1 budgets. Dailies from
+        /// <see cref="GeneratorSchedule.V2FromDay"/> and practice use this.
+        /// </summary>
+        public static GeneratorConfig V2 { get; } = new GeneratorConfig(
+            minSegments: 4,
+            maxSegments: 8,
+            minSegmentLength: Fix64.FromFraction(5, 4),
+            maxSegmentLength: Fix64.FromFraction(5, 2),
+            minTurnSteps: 64,
+            maxTurnSteps: 192,
+            halfWidth: Fix64.One,
+            boundsMin: new Vec2Fix(Fix64.FromInt(-14), Fix64.FromInt(-14)),
+            boundsMax: new Vec2Fix(Fix64.FromInt(14), Fix64.FromInt(14)),
+            maxBumpers: 3,
+            maxSand: 2,
+            maxWater: 1,
+            maxIce: 2,
+            attemptsPerLevel: 12,
+            maxGates: 1,
+            maxRamps: 1,
+            maxPortals: 1,
+            maxWindmills: 1);
+
+        /// <summary>The config a generator version number maps to.</summary>
+        /// <exception cref="System.ArgumentException">Unknown version.</exception>
+        public static GeneratorConfig ForVersion(int version) => version switch
+        {
+            1 => V1,
+            2 => V2,
+            _ => throw new System.ArgumentException($"Unknown generator version {version}.", nameof(version)),
+        };
     }
 }

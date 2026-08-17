@@ -141,5 +141,42 @@ namespace PuttSeed.Core.Tests.Replay
             Assert.That(code, Is.EqualTo("PUTT-ASoAAAAAAAAAAwD8AwACAv8DAA"),
                 $"actual: {code}");
         }
+
+        [Test]
+        public void V2RoundTrip_CarriesConfigVersion()
+        {
+            var shots = new[] { new ShotInput(300, 77) };
+            var code = ReplayCodec.Encode(42UL, shots, configVersion: 2);
+
+            Assert.That(ReplayCodec.TryDecode(code, out var seed, out var decoded, out int version), Is.True);
+            Assert.That(version, Is.EqualTo(2));
+            Assert.That(seed, Is.EqualTo(42UL));
+            Assert.That(decoded.Length, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void V1Codes_DecodeAsConfigVersion1()
+        {
+            var code = ReplayCodec.Encode(42UL, System.Array.Empty<ShotInput>());
+            Assert.That(ReplayCodec.TryDecode(code, out _, out _, out int version), Is.True);
+            Assert.That(version, Is.EqualTo(1), "legacy codes are generator v1 by definition");
+        }
+
+        [Test]
+        public void TwoArgTryDecode_AcceptsV2Codes()
+        {
+            // The version-blind overload keeps old call sites compiling and
+            // must not reject the new wire version.
+            var code = ReplayCodec.Encode(9UL, System.Array.Empty<ShotInput>(), configVersion: 2);
+            Assert.That(ReplayCodec.TryDecode(code, out var seed, out _), Is.True);
+            Assert.That(seed, Is.EqualTo(9UL));
+        }
+
+        [Test]
+        public void Encode_RejectsUnknownConfigVersion()
+        {
+            Assert.Throws<System.ArgumentException>(
+                () => ReplayCodec.Encode(1UL, System.Array.Empty<ShotInput>(), configVersion: 3));
+        }
     }
 }

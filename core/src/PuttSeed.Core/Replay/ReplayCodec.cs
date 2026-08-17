@@ -11,27 +11,42 @@ namespace PuttSeed.Core.Replay
     /// <c>PUTT-</c> + unpadded base64url. Because the sim is deterministic,
     /// replaying the decoded shots on the seed's course reproduces the exact
     /// run; a desync is a determinism bug by definition.
+    ///
+    /// The version byte doubles as the GENERATOR config version: a version-N
+    /// code regenerates its course with <c>GeneratorConfig.ForVersion(N)</c>.
+    /// The byte layout is identical across versions; only the regeneration
+    /// config differs (v2 = the 2026-08 element wave).
     /// </summary>
     public static class ReplayCodec
     {
-        /// <summary>Wire format version; bump on any format change.</summary>
-        public const byte Version = 1;
+        /// <summary>Newest wire/config version this codec emits and accepts.</summary>
+        public const byte Version = 2;
 
         private const string Prefix = "PUTT-";
         private const int HeaderBytes = 10; // version 1 + seed 8 + count 1
         private const int BytesPerShot = 3;
 
-        /// <summary>Encodes a seed and shot list into a shareable code.</summary>
-        /// <exception cref="ArgumentException">More than 255 shots.</exception>
-        public static string Encode(ulong seed, ShotInput[] shots)
+        /// <summary>
+        /// Encodes a seed and shot list into a shareable code.
+        /// <paramref name="configVersion"/> is the generator config the course
+        /// was played under; it defaults to 1 so legacy call sites keep
+        /// producing codes that decode identically everywhere.
+        /// </summary>
+        /// <exception cref="ArgumentException">More than 255 shots, or an unknown config version.</exception>
+        public static string Encode(ulong seed, ShotInput[] shots, int configVersion = 1)
         {
             if (shots.Length > 255)
             {
                 throw new ArgumentException("A replay holds at most 255 shots.", nameof(shots));
             }
 
+            if (configVersion < 1 || configVersion > Version)
+            {
+                throw new ArgumentException($"Unknown config version {configVersion}.", nameof(configVersion));
+            }
+
             var payload = new byte[HeaderBytes + shots.Length * BytesPerShot];
-            payload[0] = Version;
+            payload[0] = (byte)configVersion;
             for (int i = 0; i < 8; i++)
             {
                 payload[1 + i] = (byte)(seed >> (i * 8));
@@ -50,15 +65,22 @@ namespace PuttSeed.Core.Replay
             return Prefix + ToBase64Url(payload);
         }
 
-        /// <summary>
-        /// Decodes a code produced by <see cref="Encode"/>. Returns false on any
-        /// malformed input (wrong prefix, bad base64, wrong version, truncated
-        /// or oversized payload) without throwing.
-        /// </summary>
+        /// <summary>Version-blind decode for call sites that regenerate v1-only content.</summary>
         public static bool TryDecode(string code, out ulong seed, out ShotInput[] shots)
+            => TryDecode(code, out seed, out shots, out _);
+
+        /// <summary>
+        /// Decodes a code produced by <see cref="Encode"/>;
+        /// <paramref name="configVersion"/> is the generator config version the
+        /// course must regenerate with. Returns false on any malformed input
+        /// (wrong prefix, bad base64, unknown version, truncated or oversized
+        /// payload) without throwing.
+        /// </summary>
+        public static bool TryDecode(string code, out ulong seed, out ShotInput[] shots, out int configVersion)
         {
             seed = 0;
             shots = Array.Empty<ShotInput>();
+            configVersion = 0;
 
             if (code == null || !code.StartsWith(Prefix, StringComparison.Ordinal))
             {
@@ -75,10 +97,12 @@ namespace PuttSeed.Core.Replay
                 return false;
             }
 
-            if (payload.Length < HeaderBytes || payload[0] != Version)
+            if (payload.Length < HeaderBytes || payload[0] < 1 || payload[0] > Version)
             {
                 return false;
             }
+
+            configVersion = payload[0];
 
             int count = payload[9];
             if (payload.Length != HeaderBytes + count * BytesPerShot)
