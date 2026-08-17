@@ -39,6 +39,9 @@ namespace PuttSeed.Unity
         private int _lastWallHits;
         private int _lastBumperHits;
         private int _lastWaterEntries;
+        private int _lastGateHits;
+        private int _lastMillHits;
+        private int _lastPortalTransits;
         private bool _lastHoled;
         private bool _lastFailed;
         private float _lastBounceSoundTime;
@@ -158,6 +161,9 @@ namespace PuttSeed.Unity
             _lastWallHits = sim.WallHitCount;
             _lastBumperHits = sim.BumperHitCount;
             _lastWaterEntries = sim.WaterEntryCount;
+            _lastGateHits = sim.GateHitCount;
+            _lastMillHits = sim.WindmillHitCount;
+            _lastPortalTransits = sim.PortalTransitCount;
             _lastHoled = sim.IsHoled;
             _lastFailed = sim.IsFailed;
             _wasInSand = false;
@@ -328,6 +334,34 @@ namespace PuttSeed.Unity
                 FlashNearestBumper(FixView.ToVector2(sim.Ball.Position));
             }
 
+            // Gate blocks and windmill slaps are wall-family hits: same voice,
+            // their own spark tints.
+            if (sim.GateHitCount > _lastGateHits)
+            {
+                OnBounce(wallClip);
+                EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                    new Color(0.99f, 0.80f, 0.38f, 0.9f), count: 5, speed: 1.3f, life: 0.25f);
+            }
+
+            if (sim.WindmillHitCount > _lastMillHits)
+            {
+                OnBounce(wallClip);
+                Tap();
+                _cameraJuice?.Shake(0.04f, 0.15f);
+                EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                    new Color(1f, 1f, 1f, 0.85f), count: 5, speed: 1.4f, life: 0.22f);
+            }
+
+            if (sim.PortalTransitCount > _lastPortalTransits)
+            {
+                // Two violet puffs: where the ball vanished and where it is now.
+                Play(readyClip, 0.9f);
+                EmitBurst(_burstPs, _lastBallPos, new Color(0.62f, 0.40f, 0.92f, 0.9f),
+                    count: 10, speed: 1.2f, life: 0.35f);
+                EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                    new Color(0.62f, 0.40f, 0.92f, 0.9f), count: 10, speed: 1.2f, life: 0.35f);
+            }
+
             if (sim.WaterEntryCount > _lastWaterEntries)
             {
                 Play(waterClip, 1f);
@@ -403,6 +437,9 @@ namespace PuttSeed.Unity
             _lastWallHits = sim.WallHitCount;
             _lastBumperHits = sim.BumperHitCount;
             _lastWaterEntries = sim.WaterEntryCount;
+            _lastGateHits = sim.GateHitCount;
+            _lastMillHits = sim.WindmillHitCount;
+            _lastPortalTransits = sim.PortalTransitCount;
             _lastHoled = sim.IsHoled;
             _lastFailed = sim.IsFailed;
             _lastBallPos = FixView.ToVector2(sim.Ball.Position);

@@ -86,5 +86,14 @@ namespace PuttSeed.Unity
 
         /// <summary>Active flag cloth.</summary>
         public static Color FlagColor => ColorblindMode ? new Color(0.98f, 0.60f, 0.12f) : Flag;
+
+        /// <summary>One-way gate bar (amber reads as a signal in both palettes).</summary>
+        public static readonly Color Gate = new Color(0.99f, 0.80f, 0.38f);
+
+        /// <summary>
+        /// Portal mouths. Violet sits apart from every zone fill in both
+        /// palettes; the ring shape is the redundant cue.
+        /// </summary>
+        public static readonly Color Portal = new Color(0.62f, 0.40f, 0.92f);
     }
 }

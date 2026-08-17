@@ -129,5 +129,26 @@ namespace PuttSeed.Core.Tests.Sim
         {
             Assert.That(BareCourse().Windmills, Is.Empty);
         }
+
+        [Test]
+        public void TicksSinceShot_TracksTheShotClock()
+        {
+            var sim = new GolfSim(BareCourse(), SimConfig.Default);
+            Assert.That(sim.TicksSinceShot, Is.Zero);
+
+            sim.Shoot(new ShotInput(0, 100));
+            for (int i = 0; i < 7; i++)
+            {
+                sim.Tick();
+            }
+
+            Assert.That(sim.TicksSinceShot, Is.EqualTo(7), "the clock counts moving ticks");
+
+            sim.RestoreRest(Vec2Fix.Zero, 0);
+            Assert.That(sim.TicksSinceShot, Is.Zero, "RestoreRest re-arms the clock");
+
+            sim.Shoot(new ShotInput(0, 100));
+            Assert.That(sim.TicksSinceShot, Is.Zero, "Shoot re-arms the clock");
+        }
     }
 }

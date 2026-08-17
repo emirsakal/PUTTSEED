@@ -16,6 +16,9 @@ namespace PuttSeed.Unity
         [Tooltip("When set, the build-in reveal waits for the cover to lift.")]
         public LoadingOverlay? overlay;
 
+        [Tooltip("Windmill views mirror this sim's blade phase.")]
+        public SimRunner? runner;
+
         private Coroutine? _intro;
 
         /// <summary>
@@ -119,7 +122,121 @@ namespace PuttSeed.Unity
             MeshFactory.CreateMeshObject(transform, "WallCaps",
                 MeshFactory.WallCaps(course.Walls, WallHalfThickness, PaletteMaterials.Wall), -0.05f);
 
+            BuildElementWave(course);
+
             _intro = StartCoroutine(IntroReveal());
+        }
+
+        /// <summary>
+        /// The 2026-08 element wave: ramps (arrowed bands), one-way gates
+        /// (amber bar + chevrons), portal mouths (rings) and windmills
+        /// (blade bar rotating in lockstep with the sim's phase clock).
+        /// </summary>
+        private void BuildElementWave(CourseData course)
+        {
+            foreach (var ramp in course.Ramps)
+            {
+                var quad = new Vector2[ramp.Area.Vertices.Length];
+                for (int i = 0; i < quad.Length; i++)
+                {
+                    quad[i] = FixView.ToVector2(ramp.Area.Vertices[i]);
+                }
+
+                // A whisper of shade over the felt plus downhill arrows — the
+                // direction is the information, so the arrows do the talking.
+                MeshFactory.CreateMeshObject(transform, "Ramp",
+                    MeshFactory.Zone(ramp.Area, new Color(0f, 0f, 0f, 0.10f)), -0.007f);
+                if (quad.Length == 4)
+                {
+                    var dir = FixView.ToVector2(ramp.Accel).normalized;
+                    var arrow = new Color(0.97f, 0.96f, 0.90f, 0.5f);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var tip = Bilerp(quad, 0.25f + 0.25f * i, 0.5f) + dir * 0.22f;
+                        DrawChevron(tip, dir, 0.16f, arrow, -0.0065f, "RampArrow");
+                    }
+                }
+            }
+
+            foreach (var gate in course.Gates)
+            {
+                var a = FixView.ToVector2(gate.A);
+                var b = FixView.ToVector2(gate.B);
+                var pass = FixView.ToVector2(gate.PassNormal).normalized;
+                MeshFactory.CreateMeshObject(transform, "Gate",
+                    MeshFactory.Outline(new[] { a, b }, 0.05f, PaletteMaterials.Gate, closed: false),
+                    -0.042f);
+
+                // Chevrons along the bar, pointing the passable way.
+                for (int i = 1; i <= 3; i++)
+                {
+                    var basePoint = Vector2.Lerp(a, b, i / 4f);
+                    DrawChevron(basePoint + pass * 0.16f, pass, 0.14f, PaletteMaterials.Gate,
+                        -0.042f, "GateChevron");
+                }
+            }
+
+            foreach (var portal in course.Portals)
+            {
+                var mouth = FixView.ToVector2(portal.Entry);
+                float radius = FixView.ToFloat(portal.Radius);
+                MeshFactory.CreateMeshObject(transform, "PortalGlow",
+                    MeshFactory.Disc(mouth, radius, new Color(
+                        PaletteMaterials.Portal.r, PaletteMaterials.Portal.g,
+                        PaletteMaterials.Portal.b, 0.20f)), -0.018f);
+                MeshFactory.CreateMeshObject(transform, "PortalRing",
+                    MeshFactory.Ring(mouth, radius * 0.82f, radius, PaletteMaterials.Portal), -0.019f);
+                MeshFactory.CreateMeshObject(transform, "PortalCore",
+                    MeshFactory.Disc(mouth, radius * 0.30f, PaletteMaterials.Portal), -0.019f);
+            }
+
+            foreach (var mill in course.Windmills)
+            {
+                var pivot = FixView.ToVector2(mill.Pivot);
+                float blade = FixView.ToFloat(mill.BladeLength);
+
+                var shadow = MeshFactory.CreateMeshObject(transform, "MillShadow",
+                    MeshFactory.Disc(pivot, 0.12f, PaletteMaterials.Shadow), -0.043f);
+                shadow.transform.localPosition += new Vector3(ShadowOffset.x, ShadowOffset.y, 0f);
+
+                // Blade container rotates as a whole; blades are wall-colored
+                // strokes so "this blocks" reads instantly.
+                var bladesGo = new GameObject("MillBlades");
+                bladesGo.transform.SetParent(transform, false);
+                bladesGo.transform.localPosition = new Vector3(pivot.x, pivot.y, -0.044f);
+                for (int b = 0; b < mill.BladeCount; b++)
+                {
+                    float angle = b * (360f / mill.BladeCount);
+                    var dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    MeshFactory.CreateMeshObject(bladesGo.transform, "MillBlade",
+                        MeshFactory.Outline(new[] { Vector2.zero, dir * blade }, 0.07f,
+                            PaletteMaterials.Wall, closed: false), 0f);
+                }
+
+                if (runner != null)
+                {
+                    bladesGo.AddComponent<WindmillView>()
+                        .Initialize(runner, mill.Phase0, mill.OmegaSteps);
+                }
+
+                MeshFactory.CreateMeshObject(transform, "MillPivot",
+                    MeshFactory.Disc(pivot, 0.10f, PaletteMaterials.Wall), -0.045f);
+                MeshFactory.CreateMeshObject(transform, "MillPivotCap",
+                    MeshFactory.Disc(pivot, 0.045f, new Color(0.97f, 0.96f, 0.90f)), -0.046f);
+            }
+        }
+
+        /// <summary>Two strokes meeting at a tip — a '&gt;' pointing along dir.</summary>
+        private void DrawChevron(Vector2 tip, Vector2 dir, float size, Color color, float z, string name)
+        {
+            var side = new Vector2(-dir.y, dir.x);
+            var back = tip - dir * size;
+            MeshFactory.CreateMeshObject(transform, name,
+                MeshFactory.Outline(new[] { back + side * size * 0.7f, tip }, 0.035f, color,
+                    closed: false), z);
+            MeshFactory.CreateMeshObject(transform, name,
+                MeshFactory.Outline(new[] { back - side * size * 0.7f, tip }, 0.035f, color,
+                    closed: false), z);
         }
 
         /// <summary>

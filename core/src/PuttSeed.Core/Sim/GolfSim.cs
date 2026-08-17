@@ -32,6 +32,14 @@ namespace PuttSeed.Core.Sim
         /// <summary>Number of ticks advanced since construction.</summary>
         public int TickCount { get; private set; }
 
+        /// <summary>
+        /// Ticks since the current shot began — the windmill phase clock
+        /// (frozen while at rest, reset by <see cref="Shoot"/> and
+        /// <see cref="RestoreRest"/>). Exposed so the render layer can mirror
+        /// blade angles exactly.
+        /// </summary>
+        public int TicksSinceShot => _ticksSinceShot;
+
         /// <summary>Strokes played so far.</summary>
         public int Strokes { get; private set; }
 

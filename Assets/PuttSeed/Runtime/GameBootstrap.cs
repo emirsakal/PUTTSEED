@@ -51,6 +51,7 @@ namespace PuttSeed.Unity
             var courseGo = new GameObject("CourseView");
             var courseRenderer = courseGo.AddComponent<CourseRenderer>();
             courseRenderer.overlay = overlay;
+            courseRenderer.runner = runner; // windmill views mirror the sim phase
 
             var flagGo = new GameObject("Flag");
             var flagView = flagGo.AddComponent<FlagView>();
