@@ -39,6 +39,10 @@ namespace PuttSeed.Unity
         private readonly FixedStepper _stepper = new FixedStepper();
         private readonly List<Ghost> _ghosts = new List<Ghost>();
         private readonly List<ShotInput> _playedShots = new List<ShotInput>();
+        // Per accepted shot: launch rest position + strokes BEFORE the shot
+        // (water penalties can push strokes past the shot index).
+        private readonly List<(Vec2Fix Origin, int Strokes)> _shotOrigins =
+            new List<(Vec2Fix, int)>();
 
         private SimConfig _simConfig = SimConfig.Default;
         private GenerationResult? _generation;
@@ -122,6 +126,34 @@ namespace PuttSeed.Unity
         /// <summary>Restarts the current course (attempt counter is UI-side).</summary>
         public void Retry() => ResetRun();
 
+        /// <summary>
+        /// Undoes the last accepted shot (the practice mulligan): restores the
+        /// pre-shot rest state via core's RestoreRest — bit-exact, so replays
+        /// of the remaining shots stay valid — and reverts any water penalty
+        /// that shot incurred. Works mid-roll; refuses once the ball is holed.
+        /// </summary>
+        public bool TryUndoShot()
+        {
+            if (_sim == null || _playedShots.Count == 0 || _sim.IsHoled)
+            {
+                return false;
+            }
+
+            int last = _playedShots.Count - 1;
+            _sim.RestoreRest(_shotOrigins[last].Origin, _shotOrigins[last].Strokes);
+            _playedShots.RemoveAt(last);
+            _shotOrigins.RemoveAt(last);
+            _prev = _curr = _sim.Ball;
+            for (int i = 0; i < _ghosts.Count; i++)
+            {
+                ResetGhost(_ghosts[i]);
+            }
+
+            RunReset?.Invoke(); // clears trails and presentation state
+            StateChanged?.Invoke();
+            return true;
+        }
+
         private void ResetRun()
         {
             if (_generation == null)
@@ -132,6 +164,7 @@ namespace PuttSeed.Unity
             _sim = new GolfSim(_generation.Course, _simConfig);
             _prev = _curr = _sim.Ball;
             _playedShots.Clear();
+            _shotOrigins.Clear();
             for (int i = 0; i < _ghosts.Count; i++)
             {
                 ResetGhost(_ghosts[i]);
@@ -216,6 +249,7 @@ namespace PuttSeed.Unity
             LastShotOrigin = origin;
             LastShot = shot;
             _playedShots.Add(shot);
+            _shotOrigins.Add((origin, before));
             ShotFired?.Invoke();
             StateChanged?.Invoke();
             return true;

@@ -48,6 +48,17 @@ namespace PuttSeed.Unity
         public RectTransform? deco1;
         public RectTransform? deco2;
         public Text? taglineText;
+        public Button? aimButton;
+        public Text? aimLabel;
+        public Button? ballSkinButton;
+        public Text? ballSkinLabel;
+        public InputField? saveField;
+        public Button? importSaveButton;
+        public Text? importSaveLabel;
+        public Button? exportSaveButton;
+        public Text? exportSaveLabel;
+
+        private bool _importArmed;
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
@@ -154,20 +165,84 @@ namespace PuttSeed.Unity
                 stats.SetHapticsEnabled(!stats.Data.hapticsEnabled);
                 RefreshSettingsLabels(stats);
             });
+            aimButton?.onClick.AddListener(() =>
+            {
+                stats.SetAimDirect(!stats.Data.aimDirect);
+                RefreshSettingsLabels(stats);
+            });
+            ballSkinButton?.onClick.AddListener(() =>
+            {
+                stats.SetBallSkin(BallSkins.NextUnlocked(stats.Data.ballSkin, stats.Data).Id);
+                RefreshSettingsLabels(stats);
+            });
+            exportSaveButton?.onClick.AddListener(ExportSave);
+            importSaveButton?.onClick.AddListener(ImportSave);
+        }
+
+        private void ExportSave()
+        {
+            GUIUtility.systemCopyBuffer = SaveCodec.Export(_stats.Data);
+            if (exportSaveLabel != null)
+            {
+                exportSaveLabel.text = "Copied!";
+            }
+        }
+
+        private void ImportSave()
+        {
+            string text = saveField != null ? saveField.text.Trim() : "";
+            if (!SaveCodec.TryImport(text, out var imported))
+            {
+                if (importSaveLabel != null)
+                {
+                    importSaveLabel.text = "Invalid code";
+                    _importArmed = false;
+                }
+
+                return;
+            }
+
+            // Importing OVERWRITES this device's save — ask for a second tap.
+            if (!_importArmed)
+            {
+                _importArmed = true;
+                if (importSaveLabel != null)
+                {
+                    importSaveLabel.text = "Tap to confirm";
+                }
+
+                return;
+            }
+
+            _stats.ReplaceData(imported);
+            SceneFader.LoadScene("Menu"); // rebuild every label from the new save
         }
 
         private void RefreshSettingsLabels(StatsStore stats)
         {
             if (soundLabel != null)
             {
-                soundLabel.text = stats.Data.soundEnabled ? "Sound: On" : "Sound: Off";
+                soundLabel.text = stats.Data.soundEnabled ? "Sound On" : "Sound Off";
                 soundLabel.color = stats.Data.soundEnabled ? UIStyle.Cream : UIStyle.CreamDim;
             }
 
             if (hapticsLabel != null)
             {
-                hapticsLabel.text = stats.Data.hapticsEnabled ? "Haptics: On" : "Haptics: Off";
+                hapticsLabel.text = stats.Data.hapticsEnabled ? "Haptics On" : "Haptics Off";
                 hapticsLabel.color = stats.Data.hapticsEnabled ? UIStyle.Cream : UIStyle.CreamDim;
+            }
+
+            if (aimLabel != null)
+            {
+                aimLabel.text = stats.Data.aimDirect ? "Aim Direct" : "Aim Sling";
+            }
+
+            if (ballSkinLabel != null)
+            {
+                var skin = BallSkins.Resolve(stats.Data.ballSkin);
+                int unlocked = BallSkins.UnlockedCount(stats.Data);
+                ballSkinLabel.text = $"Ball: {skin.Name}  ({unlocked}/{BallSkins.All.Length})";
+                ballSkinLabel.color = skin.Color;
             }
         }
 
@@ -289,12 +364,14 @@ namespace PuttSeed.Unity
 
             if (statsBlock != null)
             {
+                string Pb(int best) => best == 0 ? "—" : best.ToString();
                 statsBlock.text =
                     $"Streak {data.streak}  (best {data.bestStreak})\n" +
                     $"Dailies completed  {Achievements.CompletedDailyCount(data)}\n" +
                     $"3-star {s3}  ·  2-star {s2}  ·  1-star {s1}\n" +
-                    $"Daily attempts  {attempts}\n" +
-                    $"Practice courses  {data.practicePlayed}";
+                    $"Daily attempts  {attempts}  ·  Practice  {data.practicePlayed}\n" +
+                    $"Practice best   E {Pb(data.bestPracticeEasy)}  ·  " +
+                    $"N {Pb(data.bestPracticeNormal)}  ·  H {Pb(data.bestPracticeHard)}";
             }
 
             if (achievementsBlock != null)
@@ -317,8 +394,20 @@ namespace PuttSeed.Unity
                 todayBest != null && todayBest.completed && todayBest.bestReplay.Length > 0);
             if (shareBestLabel != null)
             {
-                shareBestLabel.text = "Share today's best";
+                shareBestLabel.text = "Share best";
             }
+
+            if (exportSaveLabel != null)
+            {
+                exportSaveLabel.text = "Export save";
+            }
+
+            if (importSaveLabel != null)
+            {
+                importSaveLabel.text = "Import";
+            }
+
+            _importArmed = false;
 
             if (statsPanel != null)
             {

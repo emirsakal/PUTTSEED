@@ -32,6 +32,7 @@ namespace PuttSeed.Unity
         public Button? retryButton;
         public Button? shareButton;
         public Button? ghostButton;
+        public Button? undoButton;
 
         private SimRunner _runner = null!;
         private ModeController _modes = null!;
@@ -58,9 +59,11 @@ namespace PuttSeed.Unity
             shareButton?.onClick.AddListener(OnShare);
             ghostButton?.onClick.AddListener(OnToggleAuthorGhost);
 
+            undoButton?.onClick.AddListener(OnUndo);
             runner.StateChanged += Refresh;
             modes.ModeChanged += Refresh;
             modes.AchievementUnlocked += def => ShowToast($"Achievement — {def.Title}!");
+            modes.PracticeBestImproved += strokes => ShowToast($"New practice best — {strokes}!");
             Refresh();
         }
 
@@ -90,6 +93,8 @@ namespace PuttSeed.Unity
 
             hintChip?.SetActive(_modes.CurrentHint.Length > 0);
             nextLessonButton?.gameObject.SetActive(_modes.Mode == GameMode.Tutorial);
+            // The mulligan is a teaching tool — never on the daily.
+            undoButton?.gameObject.SetActive(_modes.Mode != GameMode.Daily);
 
             if (counterText == null)
             {
@@ -235,11 +240,30 @@ namespace PuttSeed.Unity
             SceneFader.LoadScene("Menu");
         }
 
+        private void OnUndo()
+        {
+            if (_runner.TryUndoShot())
+            {
+                ShowToast("Shot undone.");
+            }
+        }
+
         private void OnShare()
         {
             var sim = _runner.Sim;
             if (sim == null || !sim.IsHoled)
             {
+                // Practice courses are shareable BEFORE finishing: a zero-shot
+                // code is a course invitation, not a replay.
+                if (sim != null && _modes.Mode == GameMode.Practice && _runner.Generation != null)
+                {
+                    var courseCode = ReplayCodec.Encode(_runner.Seed, System.Array.Empty<PuttSeed.Core.Sim.ShotInput>());
+                    string invite = $"PUTTSEED — can you beat par {_runner.Generation.Course.Par}? Play: {courseCode}";
+                    GUIUtility.systemCopyBuffer = invite;
+                    ShowToast(NativeShare.Share(invite) ? "Sharing course…" : "Course code copied!");
+                    return;
+                }
+
                 ShowToast("Finish the hole to share your run.");
                 return;
             }

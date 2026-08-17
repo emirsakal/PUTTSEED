@@ -72,6 +72,9 @@ namespace PuttSeed.Unity
         /// <summary>Raised once per newly unlocked achievement (toast hook).</summary>
         public event Action<AchievementDef>? AchievementUnlocked;
 
+        /// <summary>Raised when a practice run sets a new personal best.</summary>
+        public event Action<int>? PracticeBestImproved;
+
         /// <summary>True while a course is being generated behind the overlay.</summary>
         public bool IsLoading { get; private set; }
 
@@ -233,7 +236,7 @@ namespace PuttSeed.Unity
                 CurrentHint = "";
                 LoadAndShow(seed, ghostShots: shots); // ghost attaches after the load
             }
-            else
+            else if (shots.Length > 0)
             {
                 _runner.AddGhost(shots, "import");
             }
@@ -347,7 +350,8 @@ namespace PuttSeed.Unity
             {
                 _runner.AdoptGeneration(seed, task.Result, config);
                 RebuildView();
-                if (ghostShots != null)
+                // Zero-shot codes are course invitations — no ghost to race.
+                if (ghostShots != null && ghostShots.Length > 0)
                 {
                     _runner.AddGhost(ghostShots, "import");
                 }
@@ -406,6 +410,11 @@ namespace PuttSeed.Unity
                 // The next retry races the (possibly new) best run.
                 _runner.RemoveGhosts("best");
                 AttachBestGhostIfDaily();
+            }
+            else if (Mode == GameMode.Practice && _runner.Generation != null
+                && _stats.RecordPracticeBest((int)_runner.Generation.Difficulty, sim.Strokes))
+            {
+                PracticeBestImproved?.Invoke(sim.Strokes);
             }
 
             // Achievements see the post-record save, so streak/day counts

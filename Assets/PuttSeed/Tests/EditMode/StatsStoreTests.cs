@@ -160,6 +160,47 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void PracticeBest_KeepsTheLowestPerBucket()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.RecordPracticeBest(0, 4), Is.True, "first is a best");
+            Assert.That(store.RecordPracticeBest(0, 5), Is.False, "worse never records");
+            Assert.That(store.RecordPracticeBest(0, 3), Is.True, "better records");
+            Assert.That(store.RecordPracticeBest(2, 6), Is.True, "buckets are independent");
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.bestPracticeEasy, Is.EqualTo(3));
+            Assert.That(reloaded.Data.bestPracticeNormal, Is.EqualTo(0));
+            Assert.That(reloaded.Data.bestPracticeHard, Is.EqualTo(6));
+        }
+
+        [Test]
+        public void AimAndSkin_Persist()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.aimDirect, Is.False);
+            Assert.That(store.Data.ballSkin, Is.EqualTo("cream"));
+            store.SetAimDirect(true);
+            store.SetBallSkin("rose");
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.aimDirect, Is.True);
+            Assert.That(reloaded.Data.ballSkin, Is.EqualTo("rose"));
+        }
+
+        [Test]
+        public void ReplaceData_OverwritesAndPersists()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 3, 2, "a");
+            store.ReplaceData(new SaveData { streak = 7 });
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.streak, Is.EqualTo(7));
+            Assert.That(reloaded.Data.days, Is.Empty);
+        }
+
+        [Test]
         public void SoundAndHaptics_DefaultOn_TogglesPersist()
         {
             var store = new StatsStore(_path);

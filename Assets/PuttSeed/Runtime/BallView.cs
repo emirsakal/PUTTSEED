@@ -24,11 +24,14 @@ namespace PuttSeed.Unity
         private MeshRenderer _renderer = null!;
 
         /// <summary>Creates the ball visuals and subscribes to run resets.</summary>
-        public void Initialize(SimRunner runner)
+        public void Initialize(SimRunner runner) => Initialize(runner, PaletteMaterials.Ball);
+
+        /// <summary>Creates the ball visuals with a cosmetic skin color.</summary>
+        public void Initialize(SimRunner runner, Color ballColor)
         {
             _runner = runner;
 
-            var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, PaletteMaterials.Ball);
+            var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, ballColor);
             gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
             _renderer = gameObject.AddComponent<MeshRenderer>();
             _renderer.sharedMaterial = PaletteMaterials.Shared;

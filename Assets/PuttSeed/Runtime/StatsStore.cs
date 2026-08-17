@@ -34,6 +34,13 @@ namespace PuttSeed.Unity
         // leaves absent fields at their initializer values).
         public bool soundEnabled = true;
         public bool hapticsEnabled = true;
+        public bool aimDirect;
+        public string ballSkin = "cream";
+
+        // Practice personal bests per difficulty bucket (0 = none yet).
+        public int bestPracticeEasy;
+        public int bestPracticeNormal;
+        public int bestPracticeHard;
 
         public List<DayRecord> days = new List<DayRecord>();
     }
@@ -159,6 +166,48 @@ namespace PuttSeed.Unity
         public void SetHapticsEnabled(bool enabled)
         {
             Data.hapticsEnabled = enabled;
+            Save();
+        }
+
+        /// <summary>Persists the aim direction preference.</summary>
+        public void SetAimDirect(bool direct)
+        {
+            Data.aimDirect = direct;
+            Save();
+        }
+
+        /// <summary>Persists the chosen ball skin id.</summary>
+        public void SetBallSkin(string id)
+        {
+            Data.ballSkin = id;
+            Save();
+        }
+
+        /// <summary>
+        /// Keeps the lowest stroke count per practice bucket; true when this
+        /// run set a new best.
+        /// </summary>
+        public bool RecordPracticeBest(int difficulty, int strokes)
+        {
+            int current = difficulty == 0 ? Data.bestPracticeEasy
+                : difficulty == 1 ? Data.bestPracticeNormal
+                : Data.bestPracticeHard;
+            if (current != 0 && strokes >= current)
+            {
+                return false;
+            }
+
+            if (difficulty == 0) { Data.bestPracticeEasy = strokes; }
+            else if (difficulty == 1) { Data.bestPracticeNormal = strokes; }
+            else { Data.bestPracticeHard = strokes; }
+            Save();
+            return true;
+        }
+
+        /// <summary>Replaces the whole save (import); persists immediately.</summary>
+        public void ReplaceData(SaveData data)
+        {
+            Data = data;
             Save();
         }
 

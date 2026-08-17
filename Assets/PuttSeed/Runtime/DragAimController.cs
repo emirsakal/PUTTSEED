@@ -22,6 +22,10 @@ namespace PuttSeed.Unity
         /// <summary>Preview policy hook (wired by the bootstrap); null = never.</summary>
         public System.Func<bool>? previewAllowed;
 
+        /// <summary>Aim preference hook: true = drag toward the target, false
+        /// (default) = slingshot. Wired from the saved setting.</summary>
+        public System.Func<bool>? aimDirect;
+
         /// <summary>True while the player is mid-drag (ready halo yields).</summary>
         public bool IsDragging => _dragging;
 
@@ -100,6 +104,11 @@ namespace PuttSeed.Unity
             if (_dragging && PointerHeld())
             {
                 _aim = _dragStartWorld - PointerWorld();
+                if (aimDirect != null && aimDirect())
+                {
+                    _aim = -_aim; // direct: the drag points where the ball goes
+                }
+
                 DrawAimLine();
                 UpdatePreview(canAim);
             }

@@ -98,14 +98,22 @@ namespace PuttSeed.Unity
             menu.statsButton = footerHit.gameObject.AddComponent<Button>();
             footerHit.gameObject.AddComponent<UiClickSound>();
 
-            // Settings chips: sound and haptics toggles, persisted in the
-            // stats file. MenuBootstrap fills the labels and wires the clicks.
-            menu.soundLabel = UIFactory.CreateButton(canvas.transform, "Sound: On",
-                new Vector2(0.14f, 0.145f), new Vector2(0.48f, 0.195f), NoOp, 28);
+            // Settings chips (persisted in the stats file): sound, haptics and
+            // aim style on one row, the cosmetic ball skin below. MenuBootstrap
+            // fills the labels and wires the clicks.
+            menu.soundLabel = UIFactory.CreateButton(canvas.transform, "Sound On",
+                new Vector2(0.10f, 0.145f), new Vector2(0.36f, 0.195f), NoOp, 24);
             menu.soundButton = menu.soundLabel.GetComponentInParent<Button>();
-            menu.hapticsLabel = UIFactory.CreateButton(canvas.transform, "Haptics: On",
-                new Vector2(0.52f, 0.145f), new Vector2(0.86f, 0.195f), NoOp, 28);
+            menu.hapticsLabel = UIFactory.CreateButton(canvas.transform, "Haptics On",
+                new Vector2(0.38f, 0.145f), new Vector2(0.62f, 0.195f), NoOp, 24);
             menu.hapticsButton = menu.hapticsLabel.GetComponentInParent<Button>();
+            menu.aimLabel = UIFactory.CreateButton(canvas.transform, "Aim Sling",
+                new Vector2(0.64f, 0.145f), new Vector2(0.90f, 0.195f), NoOp, 24);
+            menu.aimButton = menu.aimLabel.GetComponentInParent<Button>();
+
+            menu.ballSkinLabel = UIFactory.CreateButton(canvas.transform, "Ball: Cream",
+                new Vector2(0.30f, 0.088f), new Vector2(0.70f, 0.138f), NoOp, 24);
+            menu.ballSkinButton = menu.ballSkinLabel.GetComponentInParent<Button>();
 
             BuildArchivePanel(canvas.transform, menu);
             BuildStatsPanel(canvas.transform, menu);
@@ -124,28 +132,39 @@ namespace PuttSeed.Unity
             menu.statsPanel = dim.gameObject;
 
             UIFactory.CreatePanel(dim, "Card",
-                new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
+                new Vector2(0.07f, 0.10f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.765f), new Vector2(0.9f, 0.82f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Stats";
 
             menu.statsBlock = UIFactory.CreateText(dim, "StatsBlock",
-                new Vector2(0.13f, 0.555f), new Vector2(0.87f, 0.75f), 30, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.565f), new Vector2(0.87f, 0.76f), 28, TextAnchor.UpperLeft);
 
             var achTitle = UIFactory.CreateText(dim, "AchTitle",
-                new Vector2(0.13f, 0.505f), new Vector2(0.87f, 0.55f), 36, TextAnchor.MiddleLeft);
+                new Vector2(0.13f, 0.515f), new Vector2(0.87f, 0.56f), 36, TextAnchor.MiddleLeft);
             achTitle.text = "Achievements";
             achTitle.color = UIStyle.Hint;
 
             menu.achievementsBlock = UIFactory.CreateText(dim, "AchBlock",
-                new Vector2(0.13f, 0.20f), new Vector2(0.87f, 0.50f), 26, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.26f), new Vector2(0.87f, 0.51f), 26, TextAnchor.UpperLeft);
 
-            menu.shareBestLabel = UIFactory.CreateButton(dim, "Share today's best",
-                new Vector2(0.12f, 0.135f), new Vector2(0.52f, 0.19f), NoOp, 26);
+            // Save transfer: export copies a PUTTSAVE- code; import reads one
+            // pasted into the field (double-tap confirms the overwrite).
+            menu.saveField = UIFactory.CreateInputField(dim,
+                new Vector2(0.12f, 0.20f), new Vector2(0.55f, 0.25f), "paste PUTTSAVE- code…");
+            menu.importSaveLabel = UIFactory.CreateButton(dim, "Import",
+                new Vector2(0.58f, 0.20f), new Vector2(0.88f, 0.25f), NoOp, 24);
+            menu.importSaveButton = menu.importSaveLabel.GetComponentInParent<Button>();
+
+            menu.exportSaveLabel = UIFactory.CreateButton(dim, "Export save",
+                new Vector2(0.12f, 0.135f), new Vector2(0.42f, 0.19f), NoOp, 24);
+            menu.exportSaveButton = menu.exportSaveLabel.GetComponentInParent<Button>();
+            menu.shareBestLabel = UIFactory.CreateButton(dim, "Share best",
+                new Vector2(0.45f, 0.135f), new Vector2(0.72f, 0.19f), NoOp, 24);
             menu.shareBestButton = menu.shareBestLabel.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.56f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
+                new Vector2(0.75f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 26, primary: true);
             menu.statsCloseButton = close.GetComponentInParent<Button>();
             menu.statsCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -285,6 +304,8 @@ namespace PuttSeed.Unity
                 new Vector2(0.27f, 0.018f), new Vector2(0.49f, 0.088f), NoOp));
             ui.ghostButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Ghost",
                 new Vector2(0.51f, 0.018f), new Vector2(0.73f, 0.088f), NoOp));
+            ui.undoButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Undo",
+                new Vector2(0.75f, 0.018f), new Vector2(0.97f, 0.088f), NoOp));
         }
 
         /// <summary>Builds the loading cover under the overlay root and wires its references.</summary>
