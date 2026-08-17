@@ -43,5 +43,51 @@ namespace PuttSeed.Unity.Tests
                 }
             }
         }
+
+        [Test]
+        public void JourneyGates_StayWithinTheCampaign()
+        {
+            foreach (var skin in BallSkins.All)
+            {
+                Assert.That(skin.RequiredJourneyLevel,
+                    Is.InRange(0, JourneyConfig.Seeds.Length), skin.Id);
+                Assert.That(skin.RequiredJourneyStars,
+                    Is.InRange(0, JourneyConfig.Seeds.Length * 3), skin.Id);
+            }
+        }
+
+        [Test]
+        public void JourneyLevelGate_UnlocksOnCompletion()
+        {
+            var lime = BallSkins.Resolve("lime"); // requires journey level 5
+            var data = new SaveData();
+            for (int level = 0; level < 4; level++)
+            {
+                data.journeyStars.Add(1);
+            }
+
+            Assert.That(BallSkins.IsUnlocked(lime, data), Is.False, "4 done is not enough");
+            data.journeyStars.Add(1);
+            Assert.That(BallSkins.IsUnlocked(lime, data), Is.True, "5 done unlocks");
+        }
+
+        [Test]
+        public void JourneyStarsGate_CountsTotalStars()
+        {
+            var ember = BallSkins.Resolve("ember"); // requires 75 total stars
+            var data = new SaveData();
+            for (int level = 0; level < 25; level++)
+            {
+                data.journeyStars.Add(2); // 50 stars
+            }
+
+            Assert.That(BallSkins.IsUnlocked(ember, data), Is.False);
+            for (int level = 0; level < 13; level++)
+            {
+                data.journeyStars.Add(2); // 76 stars total
+            }
+
+            Assert.That(BallSkins.IsUnlocked(ember, data), Is.True);
+        }
     }
 }

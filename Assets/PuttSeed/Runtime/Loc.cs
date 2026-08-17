@@ -181,6 +181,13 @@ namespace PuttSeed.Unity
             ["Rose"] = "Gül",
             ["Mint"] = "Nane",
             ["Sky"] = "Gök",
+            ["Lime"] = "Limon",
+            ["Coral"] = "Mercan",
+            ["Violet"] = "Menekşe",
+            ["Ember"] = "Köz",
+            ["Gold"] = "Altın",
+            ["complete journey level {0}"] = "{0}. yolculuk bölümünü tamamla",
+            ["earn {0} journey stars"] = "{0} yolculuk yıldızı topla",
         };
     }
 

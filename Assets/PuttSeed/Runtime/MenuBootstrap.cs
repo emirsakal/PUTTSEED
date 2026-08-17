@@ -578,9 +578,7 @@ namespace PuttSeed.Unity
 
                 if (collectionRowLabels[i] != null)
                 {
-                    string hint = skin.RequiredAchievement != null
-                        ? Loc.Tr(Achievements.Find(skin.RequiredAchievement)?.Detail ?? "")
-                        : "";
+                    string hint = BallSkins.UnlockHint(skin);
                     string name = Loc.Tr(skin.Name);
                     collectionRowLabels[i].text = equipped
                         ? string.Format(Loc.Tr("{0}  —  equipped"), name)

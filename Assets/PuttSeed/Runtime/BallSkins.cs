@@ -15,15 +15,24 @@ namespace PuttSeed.Unity
         /// <summary>The ball disc color.</summary>
         public readonly Color Color;
 
-        /// <summary>Achievement id that unlocks it (null = always available).</summary>
+        /// <summary>Achievement id that unlocks it (null = no achievement gate).</summary>
         public readonly string? RequiredAchievement;
 
-        public BallSkinDef(string id, string name, Color color, string? requiredAchievement)
+        /// <summary>Journey level (1-based) whose completion unlocks it (0 = none).</summary>
+        public readonly int RequiredJourneyLevel;
+
+        /// <summary>Total journey stars required (0 = none).</summary>
+        public readonly int RequiredJourneyStars;
+
+        public BallSkinDef(string id, string name, Color color, string? requiredAchievement,
+            int requiredJourneyLevel = 0, int requiredJourneyStars = 0)
         {
             Id = id;
             Name = name;
             Color = color;
             RequiredAchievement = requiredAchievement;
+            RequiredJourneyLevel = requiredJourneyLevel;
+            RequiredJourneyStars = requiredJourneyStars;
         }
     }
 
@@ -34,7 +43,7 @@ namespace PuttSeed.Unity
     /// </summary>
     public static class BallSkins
     {
-        /// <summary>All skins in cycle order; the first is always unlocked.</summary>
+        /// <summary>All skins in display order; the first is always unlocked.</summary>
         public static readonly BallSkinDef[] All =
         {
             new BallSkinDef("cream", "Cream", new Color(0.97f, 0.97f, 0.95f), null),
@@ -42,6 +51,11 @@ namespace PuttSeed.Unity
             new BallSkinDef("rose", "Rose", new Color(0.98f, 0.62f, 0.66f), "ace"),
             new BallSkinDef("mint", "Mint", new Color(0.62f, 0.92f, 0.70f), "dailies10"),
             new BallSkinDef("sky", "Sky", new Color(0.60f, 0.82f, 0.99f), "streak7"),
+            new BallSkinDef("lime", "Lime", new Color(0.74f, 0.95f, 0.42f), null, requiredJourneyLevel: 5),
+            new BallSkinDef("coral", "Coral", new Color(1f, 0.55f, 0.40f), null, requiredJourneyLevel: 10),
+            new BallSkinDef("violet", "Violet", new Color(0.74f, 0.62f, 0.98f), null, requiredJourneyLevel: 25),
+            new BallSkinDef("ember", "Ember", new Color(0.94f, 0.42f, 0.22f), null, requiredJourneyStars: 75),
+            new BallSkinDef("gold", "Gold", new Color(1f, 0.85f, 0.22f), null, requiredJourneyLevel: 50),
         };
 
         /// <summary>The skin for an id (unknown ids fall back to the default).</summary>
@@ -58,10 +72,44 @@ namespace PuttSeed.Unity
             return All[0];
         }
 
-        /// <summary>True when the save has earned the skin.</summary>
+        /// <summary>True when the save has earned the skin (all gates pass).</summary>
         public static bool IsUnlocked(BallSkinDef skin, SaveData data)
-            => skin.RequiredAchievement == null
-               || data.achievements.Contains(skin.RequiredAchievement);
+            => (skin.RequiredAchievement == null
+                || data.achievements.Contains(skin.RequiredAchievement))
+               && data.journeyStars.Count >= skin.RequiredJourneyLevel
+               && TotalJourneyStars(data) >= skin.RequiredJourneyStars;
+
+        /// <summary>Localized one-line unlock hint for a locked skin.</summary>
+        public static string UnlockHint(BallSkinDef skin)
+        {
+            if (skin.RequiredAchievement != null)
+            {
+                return Loc.Tr(Achievements.Find(skin.RequiredAchievement)?.Detail ?? "");
+            }
+
+            if (skin.RequiredJourneyLevel > 0)
+            {
+                return string.Format(Loc.Tr("complete journey level {0}"), skin.RequiredJourneyLevel);
+            }
+
+            if (skin.RequiredJourneyStars > 0)
+            {
+                return string.Format(Loc.Tr("earn {0} journey stars"), skin.RequiredJourneyStars);
+            }
+
+            return "";
+        }
+
+        private static int TotalJourneyStars(SaveData data)
+        {
+            int total = 0;
+            for (int i = 0; i < data.journeyStars.Count; i++)
+            {
+                total += data.journeyStars[i];
+            }
+
+            return total;
+        }
 
         /// <summary>The next unlocked skin after the current one (wraps).</summary>
         public static BallSkinDef NextUnlocked(string currentId, SaveData data)

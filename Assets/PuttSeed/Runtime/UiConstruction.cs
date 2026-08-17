@@ -266,29 +266,30 @@ namespace PuttSeed.Unity
             menu.collectionPanel = dim.gameObject;
 
             UIFactory.CreateFramedCard(dim, "Card",
-                new Vector2(0.09f, 0.20f), new Vector2(0.91f, 0.80f));
+                new Vector2(0.09f, 0.12f), new Vector2(0.91f, 0.80f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.715f), new Vector2(0.9f, 0.775f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.72f), new Vector2(0.9f, 0.78f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Collection";
 
+            // Ten slim rows on one page — the catalog grew with the journey.
             int count = BallSkins.All.Length;
             menu.collectionRowButtons = new Button[count];
             menu.collectionRowLabels = new Text[count];
             menu.collectionRowSwatches = new Image[count];
             for (int i = 0; i < count; i++)
             {
-                float yMax = 0.685f - i * 0.078f;
+                float yMax = 0.705f - i * 0.0465f;
                 var rowLabel = UIFactory.CreateButton(dim, "—",
-                    new Vector2(0.13f, yMax - 0.068f), new Vector2(0.87f, yMax), NoOp, 24);
+                    new Vector2(0.13f, yMax - 0.042f), new Vector2(0.87f, yMax), NoOp, 20);
                 rowLabel.alignment = TextAnchor.MiddleLeft;
                 var labelRect = rowLabel.rectTransform;
-                labelRect.anchorMin = new Vector2(0.16f, 0f);
+                labelRect.anchorMin = new Vector2(0.13f, 0f);
                 labelRect.anchorMax = new Vector2(0.98f, 1f);
                 menu.collectionRowLabels[i] = rowLabel;
                 menu.collectionRowButtons[i] = rowLabel.GetComponentInParent<Button>();
 
                 var swatch = UIFactory.CreateRect(menu.collectionRowButtons[i].transform, "Swatch",
-                    new Vector2(0.03f, 0.22f), new Vector2(0.12f, 0.78f));
+                    new Vector2(0.025f, 0.16f), new Vector2(0.10f, 0.84f));
                 var swatchImage = swatch.gameObject.AddComponent<Image>();
                 swatchImage.sprite = UIFactory.CircleSprite();
                 swatchImage.preserveAspect = true;
@@ -297,7 +298,7 @@ namespace PuttSeed.Unity
             }
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.22f), new Vector2(0.7f, 0.28f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, 30, primary: true);
             menu.collectionCloseButton = close.GetComponentInParent<Button>();
             menu.collectionCloseButton.GetComponent<UiClickSound>().downTone = true;
 
