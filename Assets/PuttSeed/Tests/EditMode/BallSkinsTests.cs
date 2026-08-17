@@ -74,19 +74,15 @@ namespace PuttSeed.Unity.Tests
         [Test]
         public void JourneyStarsGate_CountsTotalStars()
         {
-            var ember = BallSkins.Resolve("ember"); // requires 75 total stars
+            var ember = BallSkins.Resolve("ember"); // requires 150 total stars
             var data = new SaveData();
-            for (int level = 0; level < 25; level++)
+            for (int level = 0; level < 49; level++)
             {
-                data.journeyStars.Add(2); // 50 stars
+                data.journeyStars.Add(3); // 147 stars
             }
 
             Assert.That(BallSkins.IsUnlocked(ember, data), Is.False);
-            for (int level = 0; level < 13; level++)
-            {
-                data.journeyStars.Add(2); // 76 stars total
-            }
-
+            data.journeyStars.Add(3); // 150 stars total
             Assert.That(BallSkins.IsUnlocked(ember, data), Is.True);
         }
     }

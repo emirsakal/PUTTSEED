@@ -479,7 +479,7 @@ namespace PuttSeed.Unity
             ui.statusText = UIFactory.CreateText(canvas.transform, "Status",
                 new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), 76, TextAnchor.MiddleCenter, shadow: true);
 
-            // Star row (GDD scoring: 3 under par / 2 par / 1 within limit) —
+            // Star row (GDD scoring: 3 at par or better / 2 one over / 1 within limit) —
             // shown by GameUI on hole-out, dimmed stars stay as empty slots.
             var starsRow = UIFactory.CreateRect(canvas.transform, "StarsRow",
                 new Vector2(0.32f, 0.72f), new Vector2(0.68f, 0.79f));

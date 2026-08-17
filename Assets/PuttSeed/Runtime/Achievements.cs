@@ -36,7 +36,7 @@ namespace PuttSeed.Unity
             new AchievementDef("first_hole", "First Putt", "hole out for the first time"),
             new AchievementDef("ace", "Ace", "hole in one"),
             new AchievementDef("no_walls", "Clean Strike", "hole out without touching a wall"),
-            new AchievementDef("three_star", "Under Par", "finish a daily under par"),
+            new AchievementDef("three_star", "Three Stars", "earn three stars on a daily"),
             new AchievementDef("streak7", "Seven Days", "reach a 7-day streak"),
             new AchievementDef("dailies10", "Regular", "complete 10 different dailies"),
             new AchievementDef("archive1", "Time Traveler", "complete an archive day"),
@@ -87,7 +87,11 @@ namespace PuttSeed.Unity
 
             if (mode == GameMode.Daily)
             {
-                if (strokes < par)
+                // Was "strokes < par", which on the par-2 courses generation
+                // actually makes was the same condition as Ace — two of eight
+                // achievements firing together, forever. It now means what its
+                // id always said, and defers to the one scoring rule.
+                if (PuttSeed.Core.Sim.Scoring.Stars(strokes, par) == 3)
                 {
                     Earn("three_star");
                 }

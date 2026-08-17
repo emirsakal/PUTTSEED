@@ -153,8 +153,8 @@ Drag to aim (slingshot or direct — your pick), release to shoot; ball must
 rest before the next stroke. Walls bounce, bumpers boost, sand drags, ice
 slides, water costs a stroke and a reset. Capture needs a slow ball over the
 cup — fast attempts rim out. Stroke limit is par + 3; holing out scores
-stars — 3 under par, 2 at par, 1 within the limit. Feel tuning lives in one
-ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
+stars — 3 at par or better, 2 one over, 1 within the limit. Feel tuning
+lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
 
 ## Four modes, one generator
 

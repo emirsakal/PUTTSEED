@@ -38,12 +38,34 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
-        public void UnderPar_OnlyOnDailies()
+        public void ThreeStars_OnlyOnDailies()
         {
             Assert.That(Achievements.EvaluateRun(Fresh(), GameMode.Daily, false, 2, 3, 1),
                 Does.Contain("three_star"));
             Assert.That(Achievements.EvaluateRun(Fresh(), GameMode.Practice, false, 2, 3, 1),
                 Does.Not.Contain("three_star"));
+        }
+
+        [Test]
+        public void ThreeStars_EarnedAtPar_NotJustUnderIt()
+        {
+            // The 2026-08-18 scoring recalibration: par carries the top tier,
+            // so this no longer duplicates the Ace condition.
+            var atPar = Achievements.EvaluateRun(Fresh(), GameMode.Daily, false, 2, 2, 1);
+            Assert.That(atPar, Does.Contain("three_star"), "par earns three stars");
+
+            var overPar = Achievements.EvaluateRun(Fresh(), GameMode.Daily, false, 3, 2, 1);
+            Assert.That(overPar, Does.Not.Contain("three_star"), "one over does not");
+        }
+
+        [Test]
+        public void ThreeStars_AndAce_AreNoLongerTheSameCondition()
+        {
+            // On the par-2 courses generation actually makes, a two-stroke
+            // finish must earn the star achievement WITHOUT earning Ace.
+            var earned = Achievements.EvaluateRun(Fresh(), GameMode.Daily, false, 2, 2, 1);
+            Assert.That(earned, Does.Contain("three_star"));
+            Assert.That(earned, Does.Not.Contain("ace"));
         }
 
         [Test]

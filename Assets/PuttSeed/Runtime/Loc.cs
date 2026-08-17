@@ -160,7 +160,7 @@ namespace PuttSeed.Unity
             // Achievements
             ["First Putt"] = "İlk Vuruş",
             ["Clean Strike"] = "Temiz Vuruş",
-            ["Under Par"] = "Par Altı",
+            ["Three Stars"] = "Üç Yıldız",
             ["Seven Days"] = "Yedi Gün",
             ["Regular"] = "Müdavim",
             ["Time Traveler"] = "Zaman Yolcusu",
@@ -168,7 +168,7 @@ namespace PuttSeed.Unity
             ["hole out for the first time"] = "ilk kez deliği bitir",
             ["hole in one"] = "tek vuruşta delik",
             ["hole out without touching a wall"] = "duvara değmeden deliği bitir",
-            ["finish a daily under par"] = "bir günlüğü par altında bitir",
+            ["earn three stars on a daily"] = "bir günlükte üç yıldız kazan",
             ["reach a 7-day streak"] = "7 günlük seriye ulaş",
             ["complete 10 different dailies"] = "10 farklı günlük tamamla",
             ["complete an archive day"] = "arşivden bir gün tamamla",

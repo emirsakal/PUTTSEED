@@ -51,7 +51,13 @@ share your run as a ~20-character replay code. Wordle loop, golf body.
 
 ## Scoring & retention surface
 
-- Stars: 3 = under par, 2 = par, 1 = finished within limit.
+- Stars: 3 = par or better, 2 = one over par, 1 = finished within limit.
+  (Recalibrated 2026-08-18. The original 3 = under par was written for
+  courses of varying par; in practice generation certifies par 2 for
+  every seed, so "under par" meant an ace — a tier most layouts have no
+  line for at all, while one star covered three, four and five strokes.
+  The ace keeps its own reward: the hole-out vocabulary and the Ace
+  achievement. See LATER.md "Deeper pars" for the root-cause fix.)
 - Local streak counter (played N days in a row) and per-day best.
 - Ghost: the day's best run and any imported replay render as a
   translucent ghost ball with trail.

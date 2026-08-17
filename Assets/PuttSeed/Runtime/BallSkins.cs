@@ -54,7 +54,11 @@ namespace PuttSeed.Unity
             new BallSkinDef("lime", "Lime", new Color(0.74f, 0.95f, 0.42f), null, requiredJourneyLevel: 5),
             new BallSkinDef("coral", "Coral", new Color(1f, 0.55f, 0.40f), null, requiredJourneyLevel: 10),
             new BallSkinDef("violet", "Violet", new Color(0.74f, 0.62f, 0.98f), null, requiredJourneyLevel: 25),
-            new BallSkinDef("ember", "Ember", new Color(0.94f, 0.42f, 0.22f), null, requiredJourneyStars: 75),
+            // 150 of the campaign's 300 stars. Was 75, set when three stars
+            // meant an ace and were correspondingly rare; the 2026-08-18
+            // scoring recalibration made stars far more attainable, so the
+            // gate moved to half the campaign to stay a real milestone.
+            new BallSkinDef("ember", "Ember", new Color(0.94f, 0.42f, 0.22f), null, requiredJourneyStars: 150),
             new BallSkinDef("gold", "Gold", new Color(1f, 0.85f, 0.22f), null, requiredJourneyLevel: 50),
         };
 
