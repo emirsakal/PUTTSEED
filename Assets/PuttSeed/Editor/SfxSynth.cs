@@ -29,7 +29,6 @@ namespace PuttSeed.Unity.Editor
             Write("capture", Capture());
             Write("water", Water());
             Write("fail", Fail());
-            Write("roll", Roll(), fadeOut: false); // seamless loop — no tail fade
             Write("sand", SandEntry());
             Write("ice", IceEntry());
             Write("click", UiClick());
@@ -37,7 +36,7 @@ namespace PuttSeed.Unity.Editor
             Write("star", StarNote());
             Write("jingle", Jingle());
             AssetDatabase.Refresh();
-            Debug.Log($"PuttSeed: synthesized 13 SFX clips into {OutDir}.");
+            Debug.Log($"PuttSeed: synthesized 12 SFX clips into {OutDir}.");
         }
 
         // --- sound recipes -------------------------------------------------
@@ -149,40 +148,6 @@ namespace PuttSeed.Unity.Editor
                     ? Mathf.Sin(2f * Mathf.PI * 165f * (t - 0.16f)) * Mathf.Exp(-(t - 0.16f) * 14f) * 0.5f
                     : 0f;
                 s[i] = tone1 + tone2;
-            }
-
-            return s;
-        }
-
-        /// <summary>
-        /// Rolling loop: one-pole low-passed noise with the tail crossfaded
-        /// into the head so the loop point is seamless. Pitch and volume are
-        /// driven live from ball speed.
-        /// </summary>
-        private static float[] Roll()
-        {
-            const float seconds = 0.6f;
-            var raw = new float[(int)(SampleRate * seconds)];
-            var rng = new System.Random(404);
-            float lp = 0f;
-            for (int i = 0; i < raw.Length; i++)
-            {
-                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
-                lp = lp * 0.94f + white * 0.06f;
-                raw[i] = lp * 2.2f;
-            }
-
-            int fade = SampleRate * 60 / 1000;
-            var s = new float[raw.Length - fade];
-            for (int i = 0; i < s.Length; i++)
-            {
-                s[i] = raw[i];
-            }
-
-            for (int i = 0; i < fade; i++)
-            {
-                float w = (float)i / fade;
-                s[i] = s[i] * w + raw[raw.Length - fade + i] * (1f - w);
             }
 
             return s;

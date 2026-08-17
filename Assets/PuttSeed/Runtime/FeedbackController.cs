@@ -20,7 +20,6 @@ namespace PuttSeed.Unity
         public AudioClip? captureClip;
         public AudioClip? waterClip;
         public AudioClip? failClip;
-        public AudioClip? rollClip;
         public AudioClip? sandClip;
         public AudioClip? iceClip;
         public AudioClip? readyClip;
@@ -55,8 +54,6 @@ namespace PuttSeed.Unity
         private Coroutine? _slowMoRoutine;
         private GameObject? _slowMoBall;
 
-        private AudioSource _rollSource = null!;
-        private float _rollLevel;
         private bool _wasInIce;
         private bool _wasReady;
         private Coroutine? _starRoutine;
@@ -84,7 +81,6 @@ namespace PuttSeed.Unity
             if (captureClip == null) { captureClip = Resources.Load<AudioClip>("Sfx/capture"); }
             if (waterClip == null) { waterClip = Resources.Load<AudioClip>("Sfx/water"); }
             if (failClip == null) { failClip = Resources.Load<AudioClip>("Sfx/fail"); }
-            if (rollClip == null) { rollClip = Resources.Load<AudioClip>("Sfx/roll"); }
             if (sandClip == null) { sandClip = Resources.Load<AudioClip>("Sfx/sand"); }
             if (iceClip == null) { iceClip = Resources.Load<AudioClip>("Sfx/ice"); }
             if (readyClip == null) { readyClip = Resources.Load<AudioClip>("Sfx/ready"); }
@@ -108,13 +104,6 @@ namespace PuttSeed.Unity
             _ballView = ballView;
             _source = gameObject.AddComponent<AudioSource>();
             _source.playOnAwake = false;
-
-            // A dedicated looping source hums while the ball rolls; volume and
-            // pitch follow ball speed in Update.
-            _rollSource = gameObject.AddComponent<AudioSource>();
-            _rollSource.playOnAwake = false;
-            _rollSource.loop = true;
-            _rollSource.clip = rollClip;
             _burstPs = CreateParticleSystem("Bursts", gravity: 0f);
             _confettiPs = CreateParticleSystem("Confetti", gravity: 0.7f);
 
@@ -226,34 +215,14 @@ namespace PuttSeed.Unity
             return false;
         }
 
-        /// <summary>The rolling loop: speed-driven volume and pitch.</summary>
         private void Update()
         {
-            if (_runner == null || _rollSource == null)
+            if (_runner == null)
             {
                 return;
             }
 
             var sim = _runner.Sim;
-            bool soundOn = _settings == null || _settings.Data.soundEnabled;
-            float target = 0f;
-            if (soundOn && sim != null && !sim.IsAtRest && !sim.IsHoled)
-            {
-                float speed = FixView.ToVector2(sim.Ball.Velocity).magnitude;
-                target = Mathf.Clamp01(speed / 6f);
-            }
-
-            _rollLevel = Mathf.MoveTowards(_rollLevel, target, Time.deltaTime * 5f);
-            _rollSource.volume = _rollLevel * 0.45f * volume;
-            _rollSource.pitch = 0.75f + _rollLevel * 0.55f;
-            if (_rollLevel > 0.01f && !_rollSource.isPlaying && _rollSource.clip != null)
-            {
-                _rollSource.Play();
-            }
-            else if (_rollLevel <= 0.01f && _rollSource.isPlaying)
-            {
-                _rollSource.Pause();
-            }
 
             // Sparse sparkles trail the ball while it glides across ice.
             if (_wasInIce && sim != null && !sim.IsAtRest)
