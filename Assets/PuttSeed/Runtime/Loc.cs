@@ -117,7 +117,6 @@ namespace PuttSeed.Unity
             ["Invalid code"] = "Geçersiz kod",
             ["Tap to confirm"] = "Onay için tekrar dokun",
             ["{0}  —  equipped"] = "{0}  —  kuşanıldı",
-            ["{0}  —  tap to equip"] = "{0}  —  kuşanmak için dokun",
             ["{0}  —  locked: {1}"] = "{0}  —  kilitli: {1}",
 
             // Game HUD

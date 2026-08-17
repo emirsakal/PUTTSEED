@@ -71,9 +71,11 @@ namespace PuttSeed.Unity
         public Button? collectionButton;
         public GameObject? collectionPanel;
         public Button? collectionCloseButton;
-        public Button[] collectionRowButtons = new Button[0];
-        public Text[] collectionRowLabels = new Text[0];
-        public Image[] collectionRowSwatches = new Image[0];
+        public Button[] collectionCellButtons = new Button[0];
+        public Text[] collectionCellLabels = new Text[0];
+        public Image[] collectionCellSwatches = new Image[0];
+        public Image[] collectionCellRings = new Image[0];
+        public Text? collectionHintText;
         public InputField? saveField;
         public Button? importSaveButton;
         public Text? importSaveLabel;
@@ -239,10 +241,10 @@ namespace PuttSeed.Unity
             settingsCloseButton?.onClick.AddListener(() => settingsPanel?.SetActive(false));
             collectionButton?.onClick.AddListener(OpenCollection);
             collectionCloseButton?.onClick.AddListener(() => collectionPanel?.SetActive(false));
-            for (int i = 0; i < collectionRowButtons.Length; i++)
+            for (int i = 0; i < collectionCellButtons.Length; i++)
             {
-                int row = i; // capture per row
-                collectionRowButtons[i]?.onClick.AddListener(() => EquipSkin(row));
+                int cell = i; // capture per cell
+                collectionCellButtons[i]?.onClick.AddListener(() => OnCollectionCell(cell));
             }
             exportSaveButton?.onClick.AddListener(ExportSave);
             importSaveButton?.onClick.AddListener(ImportSave);
@@ -562,6 +564,8 @@ namespace PuttSeed.Unity
         private void OpenCollection()
         {
             RefreshCollection();
+            var equipped = BallSkins.Resolve(_stats.Data.ballSkin);
+            SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"), Loc.Tr(equipped.Name)));
             if (collectionPanel != null)
             {
                 UiFx.PopIn(this, collectionPanel);
@@ -571,52 +575,65 @@ namespace PuttSeed.Unity
         private void RefreshCollection()
         {
             var data = _stats.Data;
-            for (int i = 0; i < collectionRowLabels.Length && i < BallSkins.All.Length; i++)
+            for (int i = 0; i < collectionCellLabels.Length && i < BallSkins.All.Length; i++)
             {
                 var skin = BallSkins.All[i];
                 bool unlocked = BallSkins.IsUnlocked(skin, data);
                 bool equipped = data.ballSkin == skin.Id;
 
-                if (collectionRowSwatches[i] != null)
+                if (collectionCellSwatches[i] != null)
                 {
-                    collectionRowSwatches[i].color = unlocked
+                    collectionCellSwatches[i].color = unlocked
                         ? skin.Color
                         : new Color(skin.Color.r, skin.Color.g, skin.Color.b, 0.22f);
                 }
 
-                if (collectionRowLabels[i] != null)
+                if (collectionCellRings[i] != null)
                 {
-                    string hint = BallSkins.UnlockHint(skin);
-                    string name = Loc.Tr(skin.Name);
-                    collectionRowLabels[i].text = equipped
-                        ? string.Format(Loc.Tr("{0}  —  equipped"), name)
-                        : unlocked
-                            ? string.Format(Loc.Tr("{0}  —  tap to equip"), name)
-                            : string.Format(Loc.Tr("{0}  —  locked: {1}"), name, hint);
-                    collectionRowLabels[i].color = equipped
-                        ? UIStyle.Accent
-                        : unlocked ? UIStyle.Cream : UIStyle.CreamDim;
+                    collectionCellRings[i].gameObject.SetActive(equipped);
                 }
 
-                if (collectionRowButtons[i] != null)
+                if (collectionCellLabels[i] != null)
                 {
-                    collectionRowButtons[i].interactable = unlocked;
+                    collectionCellLabels[i].text = Loc.Tr(skin.Name);
+                    collectionCellLabels[i].color = equipped
+                        ? UIStyle.Accent
+                        : unlocked ? UIStyle.Cream : UIStyle.CreamDim;
                 }
             }
         }
 
-        private void EquipSkin(int row)
+        private void SetCollectionHint(string text)
         {
-            if (row >= BallSkins.All.Length)
+            if (collectionHintText != null)
+            {
+                collectionHintText.text = text;
+            }
+        }
+
+        /// <summary>
+        /// A collection cell tap: equips an unlocked skin; on a locked one the
+        /// hint line explains what still stands in the way.
+        /// </summary>
+        private void OnCollectionCell(int cell)
+        {
+            if (cell >= BallSkins.All.Length)
             {
                 return;
             }
 
-            var skin = BallSkins.All[row];
+            var skin = BallSkins.All[cell];
+            string name = Loc.Tr(skin.Name);
             if (BallSkins.IsUnlocked(skin, _stats.Data))
             {
                 _stats.SetBallSkin(skin.Id);
                 RefreshCollection();
+                SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"), name));
+            }
+            else
+            {
+                SetCollectionHint(string.Format(
+                    Loc.Tr("{0}  —  locked: {1}"), name, BallSkins.UnlockHint(skin)));
             }
         }
 

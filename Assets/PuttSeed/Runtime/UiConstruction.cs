@@ -257,8 +257,10 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// The collection overlay: every ball skin as a row — swatch, name and
-        /// state (equipped / tap to equip / locked with its unlock hint).
+        /// The collection overlay: ball skins as a square grid — big swatch on
+        /// top, name underneath. The equipped cell wears an accent ring;
+        /// locked cells sit dim and tapping one explains its unlock in the
+        /// hint line under the grid.
         /// </summary>
         private static void BuildCollectionPanel(Transform canvas, MenuBootstrap menu)
         {
@@ -274,31 +276,51 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.72f), new Vector2(0.9f, 0.78f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Collection";
 
-            // Ten slim rows on one page — the catalog grew with the journey.
+            const int columns = 4;
             int count = BallSkins.All.Length;
-            menu.collectionRowButtons = new Button[count];
-            menu.collectionRowLabels = new Text[count];
-            menu.collectionRowSwatches = new Image[count];
+            menu.collectionCellButtons = new Button[count];
+            menu.collectionCellLabels = new Text[count];
+            menu.collectionCellSwatches = new Image[count];
+            menu.collectionCellRings = new Image[count];
             for (int i = 0; i < count; i++)
             {
-                float yMax = 0.705f - i * 0.0465f;
-                var rowLabel = UIFactory.CreateButton(dim, "—",
-                    new Vector2(0.13f, yMax - 0.042f), new Vector2(0.87f, yMax), NoOp, 20);
-                rowLabel.alignment = TextAnchor.MiddleLeft;
-                var labelRect = rowLabel.rectTransform;
-                labelRect.anchorMin = new Vector2(0.13f, 0f);
-                labelRect.anchorMax = new Vector2(0.98f, 1f);
-                menu.collectionRowLabels[i] = rowLabel;
-                menu.collectionRowButtons[i] = rowLabel.GetComponentInParent<Button>();
+                int r = i / columns;
+                int c = i % columns;
+                float x0 = 0.135f + c * 0.19f;
+                float yMax = 0.685f - r * 0.122f;
+                var cellLabel = UIFactory.CreateButton(dim, "—",
+                    new Vector2(x0, yMax - 0.108f), new Vector2(x0 + 0.175f, yMax), NoOp, 20);
+                var labelRect = cellLabel.rectTransform;
+                labelRect.anchorMin = new Vector2(0.03f, 0.04f);
+                labelRect.anchorMax = new Vector2(0.97f, 0.30f);
+                menu.collectionCellLabels[i] = cellLabel;
+                menu.collectionCellButtons[i] = cellLabel.GetComponentInParent<Button>();
 
-                var swatch = UIFactory.CreateRect(menu.collectionRowButtons[i].transform, "Swatch",
-                    new Vector2(0.025f, 0.16f), new Vector2(0.10f, 0.84f));
+                // Accent ring behind the swatch: visible only on the equipped
+                // cell (MenuBootstrap toggles it).
+                var ring = UIFactory.CreateRect(menu.collectionCellButtons[i].transform, "Ring",
+                    new Vector2(0.26f, 0.33f), new Vector2(0.74f, 0.95f));
+                var ringImage = ring.gameObject.AddComponent<Image>();
+                ringImage.sprite = UIFactory.CircleSprite();
+                ringImage.preserveAspect = true;
+                ringImage.raycastTarget = false;
+                ringImage.color = UIStyle.Accent;
+                menu.collectionCellRings[i] = ringImage;
+
+                var swatch = UIFactory.CreateRect(menu.collectionCellButtons[i].transform, "Swatch",
+                    new Vector2(0.31f, 0.38f), new Vector2(0.69f, 0.90f));
                 var swatchImage = swatch.gameObject.AddComponent<Image>();
                 swatchImage.sprite = UIFactory.CircleSprite();
                 swatchImage.preserveAspect = true;
                 swatchImage.raycastTarget = false;
-                menu.collectionRowSwatches[i] = swatchImage;
+                menu.collectionCellSwatches[i] = swatchImage;
             }
+
+            // Status line: equipped skin, or the unlock hint of a tapped
+            // locked cell.
+            menu.collectionHintText = UIFactory.CreateText(dim, "Hint",
+                new Vector2(0.12f, 0.235f), new Vector2(0.88f, 0.30f), 24, TextAnchor.MiddleCenter);
+            menu.collectionHintText.color = UIStyle.CreamDim;
 
             var close = UIFactory.CreateButton(dim, "Close",
                 new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, 30, primary: true);
