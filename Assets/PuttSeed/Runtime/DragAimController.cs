@@ -41,7 +41,7 @@ namespace PuttSeed.Unity
         private const int MaxAimDashes = 14;
         private GameObject[] _aimDashes = System.Array.Empty<GameObject>();
         private MeshRenderer[] _aimDashRenderers = System.Array.Empty<MeshRenderer>();
-        private readonly MaterialPropertyBlock _tintBlock = new MaterialPropertyBlock();
+        private MaterialPropertyBlock _tintBlock = null!; // Unity API — created in Initialize, never in the ctor
 
         private static readonly Color LowPower = new Color(0.55f, 0.9f, 0.55f);
         private static readonly Color HighPower = new Color(0.95f, 0.35f, 0.3f);
@@ -61,6 +61,7 @@ namespace PuttSeed.Unity
             _line.sortingOrder = 10;
             _line.enabled = false;
 
+            _tintBlock = new MaterialPropertyBlock();
             var dashMesh = MeshFactory.Disc(Vector2.zero, 0.04f, Color.white);
             _aimDashes = new GameObject[MaxAimDashes];
             _aimDashRenderers = new MeshRenderer[MaxAimDashes];
