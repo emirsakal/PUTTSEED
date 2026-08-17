@@ -35,8 +35,9 @@ namespace PuttSeed.Unity.Editor
             Write("ready", ReadyPluck());
             Write("star", StarNote());
             Write("jingle", Jingle());
+            Write("ambient", AmbientPad(), fadeOut: false); // seamless loop
             AssetDatabase.Refresh();
-            Debug.Log($"PuttSeed: synthesized 12 SFX clips into {OutDir}.");
+            Debug.Log($"PuttSeed: synthesized 13 SFX clips into {OutDir}.");
         }
 
         // --- sound recipes -------------------------------------------------
@@ -247,6 +248,56 @@ namespace PuttSeed.Unity.Editor
                     float dt = (float)(i - first) / SampleRate;
                     s[i] += Mathf.Sin(2f * Mathf.PI * freqs[n] * dt) * Mathf.Exp(-dt * 10f) * 0.28f;
                 }
+            }
+
+            return s;
+        }
+
+        /// <summary>
+        /// Ambient pad: a quiet C-add9 chord of detuned sine pairs, each voice
+        /// swelling on its own slow LFO, over a whisper of low-passed air.
+        /// Ten seconds, tail crossfaded into the head for a seamless loop.
+        /// </summary>
+        private static float[] AmbientPad()
+        {
+            const float seconds = 10f;
+            var raw = new float[(int)(SampleRate * seconds)];
+            float[] freqs = { 130.81f, 196.00f, 329.63f, 587.33f }; // C3 G3 E4 D5
+            float[] amps = { 0.15f, 0.12f, 0.08f, 0.04f };
+            float[] lfoRates = { 0.11f, 0.07f, 0.09f, 0.13f };
+            float[] lfoPhases = { 0f, 1.7f, 3.1f, 4.6f };
+
+            var rng = new System.Random(808);
+            float air = 0f;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float sample = 0f;
+                for (int v = 0; v < freqs.Length; v++)
+                {
+                    float swell = 0.35f + 0.65f * (0.5f + 0.5f * Mathf.Sin(
+                        2f * Mathf.PI * lfoRates[v] * t + lfoPhases[v]));
+                    sample += amps[v] * swell * 0.5f
+                        * (Mathf.Sin(2f * Mathf.PI * freqs[v] * t)
+                         + Mathf.Sin(2f * Mathf.PI * freqs[v] * 1.004f * t));
+                }
+
+                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
+                air = air * 0.985f + white * 0.015f;
+                raw[i] = sample + air * 0.5f;
+            }
+
+            int fade = SampleRate / 2; // 500 ms crossfade
+            var s = new float[raw.Length - fade];
+            for (int i = 0; i < s.Length; i++)
+            {
+                s[i] = raw[i];
+            }
+
+            for (int i = 0; i < fade; i++)
+            {
+                float w = (float)i / fade;
+                s[i] = s[i] * w + raw[raw.Length - fade + i] * (1f - w);
             }
 
             return s;
