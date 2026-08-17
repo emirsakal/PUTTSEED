@@ -18,8 +18,13 @@ namespace PuttSeed.Unity
 
         private Coroutine? _intro;
 
-        /// <summary>Clears and rebuilds all course meshes.</summary>
-        public void Rebuild(CourseData course)
+        /// <summary>
+        /// Clears and rebuilds all course meshes. The seed nudges the felt
+        /// tone a touch warmer or cooler — every day's course has its own
+        /// light, identical for every player (presentation only; the sim
+        /// never sees colors).
+        /// </summary>
+        public void Rebuild(CourseData course, ulong seed = 0)
         {
             if (_intro != null)
             {
@@ -47,7 +52,8 @@ namespace PuttSeed.Unity
             var margin = new Vector2(6f, 6f);
             MeshFactory.CreateMeshObject(transform, "Stripes",
                 MeshFactory.Stripes(min - margin, max + margin, 0.85f,
-                    PaletteMaterials.Felt, PaletteMaterials.FeltLight), 0.05f);
+                    DailyTint(PaletteMaterials.Felt, seed),
+                    DailyTint(PaletteMaterials.FeltLight, seed)), 0.05f);
 
             int zoneIndex = 0;
             foreach (var zone in course.IceZones)
@@ -253,6 +259,24 @@ namespace PuttSeed.Unity
                 wavesGo.transform.SetParent(transform, false);
                 wavesGo.AddComponent<WaterWaves>().Initialize(quad);
             }
+        }
+
+        /// <summary>Seed-derived subtle felt tint (±3% warm/cool shift).</summary>
+        private static Color DailyTint(Color felt, ulong seed)
+        {
+            if (seed == 0)
+            {
+                return felt;
+            }
+
+            uint h = (uint)(seed ^ (seed >> 32)) * 2654435761u;
+            float warm = ((h & 0xFF) / 255f - 0.5f) * 0.055f;
+            float bright = (((h >> 8) & 0xFF) / 255f - 0.5f) * 0.04f;
+            return new Color(
+                Mathf.Clamp01(felt.r + warm + bright),
+                Mathf.Clamp01(felt.g + bright),
+                Mathf.Clamp01(felt.b - warm * 0.7f + bright),
+                felt.a);
         }
 
         /// <summary>Bilinear point inside a quad zone (u along, v across).</summary>

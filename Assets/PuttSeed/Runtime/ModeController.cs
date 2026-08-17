@@ -367,7 +367,7 @@ namespace PuttSeed.Unity
 
         private void RebuildView()
         {
-            _courseRenderer.Rebuild(_runner.Generation!.Course);
+            _courseRenderer.Rebuild(_runner.Generation!.Course, _runner.Seed);
             CameraFramer.Frame(_camera, _runner.Generation.Course);
         }
 

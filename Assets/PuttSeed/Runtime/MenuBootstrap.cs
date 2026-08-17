@@ -45,6 +45,9 @@ namespace PuttSeed.Unity
         public Button? shareBestButton;
         public Text? shareBestLabel;
         public RectTransform? emblemBall;
+        public RectTransform? deco1;
+        public RectTransform? deco2;
+        public Text? taglineText;
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
@@ -170,6 +173,26 @@ namespace PuttSeed.Unity
 
         private void Update()
         {
+            // Gentle life: the deco circles drift, the tagline breathes.
+            float time = Time.time;
+            if (deco1 != null)
+            {
+                deco1.anchoredPosition = new Vector2(
+                    Mathf.Sin(time * 0.11f) * 16f, Mathf.Cos(time * 0.08f) * 11f);
+            }
+
+            if (deco2 != null)
+            {
+                deco2.anchoredPosition = new Vector2(
+                    Mathf.Cos(time * 0.09f) * 13f, Mathf.Sin(time * 0.12f) * 15f);
+            }
+
+            if (taglineText != null)
+            {
+                var c = taglineText.color;
+                taglineText.color = new Color(c.r, c.g, c.b, 0.5f + 0.14f * Mathf.Sin(time * 0.9f));
+            }
+
             // Android back button (Escape): close an open panel, else quit.
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -295,7 +318,10 @@ namespace PuttSeed.Unity
                 shareBestLabel.text = "Share today's best";
             }
 
-            statsPanel?.SetActive(true);
+            if (statsPanel != null)
+            {
+                UiFx.PopIn(this, statsPanel);
+            }
         }
 
         private void ShareTodaysBest()
@@ -320,7 +346,10 @@ namespace PuttSeed.Unity
         {
             _archivePage = 0;
             RefreshArchive();
-            archivePanel?.SetActive(true);
+            if (archivePanel != null)
+            {
+                UiFx.PopIn(this, archivePanel);
+            }
         }
 
         /// <summary>Day number shown on a row: yesterday backward, 7 per page.</summary>

@@ -32,7 +32,7 @@ namespace PuttSeed.Unity
             }
 
             _runner.LoadSeed(_runner.Seed);
-            _courseRenderer.Rebuild(_runner.Generation.Course);
+            _courseRenderer.Rebuild(_runner.Generation.Course, _runner.Seed);
             CameraFramer.Frame(_camera, _runner.Generation.Course);
             Debug.Log("PuttSeed: reloaded seed with current FeelConfig values.");
         }

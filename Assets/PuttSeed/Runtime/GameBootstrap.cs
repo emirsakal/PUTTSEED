@@ -38,6 +38,7 @@ namespace PuttSeed.Unity
             }
 
             var cameraJuice = cam.gameObject.AddComponent<CameraJuice>();
+            new GameObject("Vignette").AddComponent<VignetteView>().Initialize(cam);
 
             // The loading cover is scene-authored; resolve it early so the
             // course/flag intro reveals can wait for it to lift.

@@ -38,6 +38,9 @@ namespace PuttSeed.Unity
         private float _toastUntil;
         private bool _starsRevealed;
         private Coroutine? _starReveal;
+        private Vector3 _toastBase;
+        private bool _toastBaseCached;
+        private Coroutine? _toastAnim;
 
         /// <summary>Wires behavior onto the scene-authored controls.</summary>
         public void Initialize(SimRunner runner, ModeController modes)
@@ -112,7 +115,18 @@ namespace PuttSeed.Unity
                 statusText.text = sim.IsHoled ? GolfTerms.SuccessLine(sim.Strokes, gen.Course.Par) : "";
             }
 
-            failPanel?.SetActive(sim.IsFailed);
+            if (failPanel != null && failPanel.activeSelf != sim.IsFailed)
+            {
+                if (sim.IsFailed)
+                {
+                    UiFx.PopIn(this, failPanel);
+                }
+                else
+                {
+                    failPanel.SetActive(false);
+                }
+            }
+
             RefreshStars(sim, gen.Course.Par);
         }
 
@@ -254,8 +268,20 @@ namespace PuttSeed.Unity
         {
             if (toastText != null && toastChip != null)
             {
+                if (!_toastBaseCached)
+                {
+                    _toastBase = toastChip.transform.localPosition;
+                    _toastBaseCached = true;
+                }
+
+                if (_toastAnim != null)
+                {
+                    StopCoroutine(_toastAnim);
+                }
+
+                toastChip.transform.localPosition = _toastBase;
                 toastText.text = message;
-                toastChip.SetActive(true);
+                _toastAnim = UiFx.SlideUp(this, toastChip);
                 _toastUntil = Time.unscaledTime + 2.5f;
             }
         }

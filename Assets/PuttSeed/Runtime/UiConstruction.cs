@@ -19,10 +19,12 @@ namespace PuttSeed.Unity
         {
             var canvas = UIFactory.CreateCanvas(menu.transform);
 
-            UIFactory.CreateCircle(canvas.transform, "Deco1",
-                new Vector2(-0.25f, 0.62f), new Vector2(0.35f, 0.96f), new Color(1f, 1f, 1f, 0.05f));
-            UIFactory.CreateCircle(canvas.transform, "Deco2",
-                new Vector2(0.7f, -0.12f), new Vector2(1.35f, 0.25f), new Color(1f, 1f, 1f, 0.05f));
+            menu.deco1 = UIFactory.CreateCircle(canvas.transform, "Deco1",
+                new Vector2(-0.25f, 0.62f), new Vector2(0.35f, 0.96f), new Color(1f, 1f, 1f, 0.05f))
+                .rectTransform;
+            menu.deco2 = UIFactory.CreateCircle(canvas.transform, "Deco2",
+                new Vector2(0.7f, -0.12f), new Vector2(1.35f, 0.25f), new Color(1f, 1f, 1f, 0.05f))
+                .rectTransform;
 
             UIFactory.CreateCircle(canvas.transform, "EmblemHole",
                 new Vector2(0.44f, 0.855f), new Vector2(0.56f, 0.885f), new Color(0.05f, 0.09f, 0.06f, 0.9f));
@@ -50,6 +52,7 @@ namespace PuttSeed.Unity
                 new Vector2(0.05f, 0.705f), new Vector2(0.95f, 0.745f), 33, TextAnchor.MiddleCenter);
             tagline.text = "one hole a day · same for everyone";
             tagline.color = UIStyle.CreamDim;
+            menu.taglineText = tagline;
 
             UIFactory.CreatePanel(canvas.transform, "Card",
                 new Vector2(0.06f, 0.27f), new Vector2(0.94f, 0.67f), UIStyle.PanelSoft);
