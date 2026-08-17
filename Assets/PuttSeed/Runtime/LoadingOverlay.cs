@@ -19,6 +19,7 @@ namespace PuttSeed.Unity
             Swing,
             Rolling,
             Finishing,
+            RimOut,
             Sinking,
         }
 
@@ -60,6 +61,7 @@ namespace PuttSeed.Unity
         private Vector2 _ballStart;
         private Vector2 _holePosition;
         private bool _positionsCached;
+        private bool _rimOut;
 
         /// <summary>True while the cover is visible (including the finish putt).</summary>
         public bool IsShown => root != null && root.activeSelf;
@@ -90,6 +92,7 @@ namespace PuttSeed.Unity
                 _progress = 0f;
                 _phaseTime = 0f;
                 _shownTime = 0f;
+                _rimOut = Random.value < 0.2f; // easter egg: sometimes it lips out first
                 _phase = Phase.Swing;
                 if (club != null)
                 {
@@ -117,7 +120,7 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            if (_phase != Phase.Finishing && _phase != Phase.Sinking)
+            if (_phase != Phase.Finishing && _phase != Phase.RimOut && _phase != Phase.Sinking)
             {
                 _finishStartProgress = _progress;
                 _finishStartClubAngle = club != null ? SignedZ(club) : clubThroughAngle;
@@ -215,6 +218,26 @@ namespace PuttSeed.Unity
                     _progress = Mathf.Lerp(_finishStartProgress, 1f, rollEased);
                     ball.anchoredPosition = Vector2.Lerp(_ballStart, _holePosition, _progress);
                     if (u >= 1f)
+                    {
+                        _phase = _rimOut ? Phase.RimOut : Phase.Sinking;
+                        _rimOut = false;
+                        _phaseTime = 0f;
+                    }
+
+                    break;
+
+                case Phase.RimOut:
+                    // Easter egg: the ball lips out around the cup, rolls back
+                    // in, and only then drops — a putt that keeps you honest.
+                    const float rimSeconds = 0.55f;
+                    float r = Mathf.Clamp01(_phaseTime / rimSeconds);
+                    var dir = (_holePosition - _ballStart).normalized;
+                    var perp = new Vector2(-dir.y, dir.x);
+                    float over = Mathf.Sin(r * Mathf.PI) * 0.16f;
+                    ball.anchoredPosition =
+                        Vector2.LerpUnclamped(_ballStart, _holePosition, 1f + over)
+                        + perp * (Mathf.Sin(r * Mathf.PI * 2f) * 14f * (1f - r));
+                    if (r >= 1f)
                     {
                         _phase = Phase.Sinking;
                         _phaseTime = 0f;

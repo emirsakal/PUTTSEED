@@ -1,7 +1,6 @@
 #nullable enable
 using PuttSeed.Core.Replay;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace PuttSeed.Unity
@@ -189,7 +188,7 @@ namespace PuttSeed.Unity
 
         private static void OnMenu()
         {
-            SceneManager.LoadScene("Menu");
+            SceneFader.LoadScene("Menu");
         }
 
         private void OnShare()

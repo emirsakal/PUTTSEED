@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using PuttSeed.Core.CourseGen;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace PuttSeed.Unity
@@ -45,6 +44,7 @@ namespace PuttSeed.Unity
         public Button? statsCloseButton;
         public Button? shareBestButton;
         public Text? shareBestLabel;
+        public RectTransform? emblemBall;
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
@@ -133,6 +133,8 @@ namespace PuttSeed.Unity
                 archiveRowButtons[i]?.onClick.AddListener(() => LaunchArchiveRow(row));
             }
 
+            StartCoroutine(EmblemIdle());
+
             statsButton?.onClick.AddListener(OpenStats);
             statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
             shareBestButton?.onClick.AddListener(ShareTodaysBest);
@@ -194,6 +196,54 @@ namespace PuttSeed.Unity
             countdownText.text = remaining.TotalSeconds <= 0
                 ? "New hole is ready — restart to play!"
                 : $"next hole in {DailyCountdown.Format(remaining)}";
+        }
+
+        /// <summary>
+        /// Menu idle: every few seconds the emblem ball rolls into the emblem
+        /// cup, sinks, and pops back at the tee — the menu never sits frozen.
+        /// Anchor fractions mirror the emblem layout in UiConstruction.
+        /// </summary>
+        private System.Collections.IEnumerator EmblemIdle()
+        {
+            if (emblemBall == null)
+            {
+                yield break;
+            }
+
+            var start = emblemBall.anchoredPosition;
+            while (true)
+            {
+                yield return new WaitForSeconds(UnityEngine.Random.Range(5f, 9f));
+                var parentRect = (RectTransform)emblemBall.parent;
+                var target = start + new Vector2(
+                    (0.5f - 0.425f) * parentRect.rect.width,
+                    (0.87f - 0.8765f) * parentRect.rect.height);
+
+                for (float t = 0f; t < 0.8f; t += Time.deltaTime)
+                {
+                    float k = t / 0.8f;
+                    emblemBall.anchoredPosition = Vector2.Lerp(start, target, k * k);
+                    yield return null;
+                }
+
+                for (float t = 0f; t < 0.18f; t += Time.deltaTime)
+                {
+                    emblemBall.localScale = Vector3.one * (1f - t / 0.18f);
+                    yield return null;
+                }
+
+                emblemBall.localScale = Vector3.zero;
+                yield return new WaitForSeconds(0.7f);
+
+                emblemBall.anchoredPosition = start;
+                for (float t = 0f; t < 0.2f; t += Time.deltaTime)
+                {
+                    emblemBall.localScale = Vector3.one * Mathf.SmoothStep(0f, 1f, t / 0.2f);
+                    yield return null;
+                }
+
+                emblemBall.localScale = Vector3.one;
+            }
         }
 
         private void OpenStats()
@@ -328,7 +378,7 @@ namespace PuttSeed.Unity
             GameSession.Mode = GameMode.Daily;
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
-            SceneManager.LoadScene("Game");
+            SceneFader.LoadScene("Game");
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)
@@ -355,7 +405,7 @@ namespace PuttSeed.Unity
             GameSession.TutorialIndex = 0;
             GameSession.ArchiveDayNumber = -1;
             GameSession.UseFixedSeed = false;
-            SceneManager.LoadScene("Game");
+            SceneFader.LoadScene("Game");
         }
 
         /// <summary>The shared stats file path (same file the game scene writes).</summary>

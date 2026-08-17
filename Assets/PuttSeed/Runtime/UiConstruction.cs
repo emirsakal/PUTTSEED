@@ -40,6 +40,7 @@ namespace PuttSeed.Unity
             ballImage.sprite = UIFactory.CircleSprite();
             ballImage.color = UIStyle.Cream;
             ballImage.raycastTarget = false;
+            menu.emblemBall = ballRect; // idle animation target (rolls into the cup)
 
             var title = UIFactory.CreateText(canvas.transform, "Title",
                 new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), 124, TextAnchor.MiddleCenter, shadow: true);
