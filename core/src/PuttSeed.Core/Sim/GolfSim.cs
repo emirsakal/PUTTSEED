@@ -123,6 +123,10 @@ namespace PuttSeed.Core.Sim
                 return;
             }
 
+            // Ramp acceleration first, then friction damping — damping applies
+            // to the boosted velocity, so a slope has a stable terminal speed.
+            ApplyRampAcceleration();
+
             // Surface friction priority: sand beats ice beats bare ground
             // (deterministic tie-break when generated zones overlap).
             _velocity *= IsInSand() ? _config.SandDamping
@@ -289,6 +293,19 @@ namespace PuttSeed.Core.Sim
             }
 
             return false;
+        }
+
+        /// <summary>Adds every containing ramp's acceleration for one tick.</summary>
+        private void ApplyRampAcceleration()
+        {
+            var ramps = _course.Ramps;
+            for (int i = 0; i < ramps.Length; i++)
+            {
+                if (ramps[i].Area.Contains(_position))
+                {
+                    _velocity += ramps[i].Accel * _config.Dt;
+                }
+            }
         }
 
         /// <summary>True when the ball center is inside any sand polygon.</summary>
