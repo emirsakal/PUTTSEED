@@ -571,7 +571,10 @@ namespace PuttSeed.Unity
 
         private void OnBounce(AudioClip? clip)
         {
-            _ballView.Squash();
+            var velocity = _runner.Sim != null
+                ? FixView.ToVector2(_runner.Sim.Ball.Velocity)
+                : Vector2.right;
+            _ballView.Squash(velocity);
             if (Time.unscaledTime - _lastBounceSoundTime >= bounceSoundCooldown)
             {
                 _lastBounceSoundTime = Time.unscaledTime;

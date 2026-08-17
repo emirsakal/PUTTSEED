@@ -16,7 +16,9 @@ namespace PuttSeed.Unity
         private SimRunner _runner = null!;
         private TrailRenderer _trail = null!;
         private float _squash;
+        private float _squashAngle;
         private float _popIn;
+        private Transform _body = null!;
         private Transform? _spin;
         private float _spinAngle;
         private Color _trailColor = TrailDefault;
@@ -31,9 +33,14 @@ namespace PuttSeed.Unity
         {
             _runner = runner;
 
+            // The disc lives on a rotatable child so impact squash can align
+            // to the contact axis without swinging the shadow or the trail.
+            var bodyGo = new GameObject("Body");
+            bodyGo.transform.SetParent(transform, false);
+            _body = bodyGo.transform;
             var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, ballColor);
-            gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
-            _renderer = gameObject.AddComponent<MeshRenderer>();
+            bodyGo.AddComponent<MeshFilter>().sharedMesh = mesh;
+            _renderer = bodyGo.AddComponent<MeshRenderer>();
             _renderer.sharedMaterial = PaletteMaterials.Shared;
             // Invisible until the first course is actually loaded — a ball
             // floating over an empty field must never render.
@@ -96,8 +103,19 @@ namespace PuttSeed.Unity
             };
         }
 
-        /// <summary>Impact juice: a brief squash pulse that eases back to round.</summary>
-        public void Squash() => _squash = 1f;
+        /// <summary>
+        /// Impact juice: a brief squash pulse, compressed along the impact
+        /// axis (the ball's travel direction at contact) — side hits finally
+        /// read as side hits.
+        /// </summary>
+        public void Squash(Vector2 impactDirection)
+        {
+            _squash = 1f;
+            if (impactDirection.sqrMagnitude > 0.0001f)
+            {
+                _squashAngle = Mathf.Atan2(impactDirection.y, impactDirection.x) * Mathf.Rad2Deg;
+            }
+        }
 
         /// <summary>Scale-in pop after a teleport (the water reset).</summary>
         public void PopIn() => _popIn = 1f;
@@ -126,15 +144,20 @@ namespace PuttSeed.Unity
                 pop = Mathf.SmoothStep(0.25f, 1f, 1f - _popIn);
             }
 
+            transform.localScale = Vector3.one * pop;
+
             if (_squash > 0f)
             {
                 _squash = Mathf.Max(0f, _squash - Time.deltaTime * 8f);
                 float k = _squash * 0.22f;
-                transform.localScale = new Vector3((1f + k) * pop, (1f - k) * pop, 1f);
+                // Body-local: compressed along the impact axis, bulging across.
+                _body.localEulerAngles = new Vector3(0f, 0f, _squashAngle);
+                _body.localScale = new Vector3(1f - k, 1f + k, 1f);
             }
             else
             {
-                transform.localScale = Vector3.one * pop;
+                _body.localEulerAngles = Vector3.zero;
+                _body.localScale = Vector3.one;
             }
 
             // The trail borrows the ground's tone: icy blue on ice, warm tan

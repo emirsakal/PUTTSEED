@@ -246,7 +246,12 @@ namespace PuttSeed.Unity
             title.text = "Stats";
 
             menu.statsBlock = UIFactory.CreateText(dim, "StatsBlock",
-                new Vector2(0.13f, 0.565f), new Vector2(0.87f, 0.76f), 28, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.565f), new Vector2(0.58f, 0.76f), 26, TextAnchor.UpperLeft);
+
+            // Stroke distribution: language-free numbers + bullet bars.
+            menu.histogramBlock = UIFactory.CreateText(dim, "Histogram",
+                new Vector2(0.61f, 0.565f), new Vector2(0.87f, 0.76f), 24, TextAnchor.UpperLeft);
+            menu.histogramBlock.color = UIStyle.CreamDim;
 
             var achTitle = UIFactory.CreateText(dim, "AchTitle",
                 new Vector2(0.13f, 0.515f), new Vector2(0.87f, 0.56f), 36, TextAnchor.MiddleLeft);
@@ -339,8 +344,12 @@ namespace PuttSeed.Unity
                 new Vector2(0.66f, 0.20f), new Vector2(0.88f, 0.26f), NoOp, 28);
             menu.archiveNewerButton = newer.GetComponentInParent<Button>();
 
+            var randomLabel = UIFactory.CreateButton(dim, "Random day",
+                new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, 26);
+            menu.archiveRandomButton = randomLabel.GetComponentInParent<Button>();
+
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.135f), new Vector2(0.7f, 0.19f), NoOp, 30, primary: true);
+                new Vector2(0.52f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
             menu.archiveCloseButton = close.GetComponentInParent<Button>();
             menu.archiveCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -412,28 +421,38 @@ namespace PuttSeed.Unity
                 new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), 32, TextAnchor.MiddleCenter);
             ui.toastChip.SetActive(false);
 
+            // Compact control bar: ONE row of six buttons — the old triple-row
+            // bar ate a quarter of the screen and collided with tall courses.
             UIFactory.CreatePanel(canvas.transform, "BottomBar",
-                new Vector2(0.01f, 0.008f), new Vector2(0.99f, 0.245f), UIStyle.PanelSoft);
+                new Vector2(0.01f, 0.008f), new Vector2(0.99f, 0.085f), UIStyle.PanelSoft);
 
             ui.menuButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Menu",
-                new Vector2(0.03f, 0.168f), new Vector2(0.25f, 0.232f), NoOp));
-            var next = UIFactory.CreateButton(canvas.transform, "Next lesson",
-                new Vector2(0.27f, 0.168f), new Vector2(0.61f, 0.232f), NoOp, 34, primary: true);
-            ui.nextLessonButton = ButtonOf(next);
-
-            ui.importField = UIFactory.CreateInputField(canvas.transform,
-                new Vector2(0.03f, 0.098f), new Vector2(0.71f, 0.158f), "paste PUTT- code…");
-            ui.watchButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Watch",
-                new Vector2(0.73f, 0.098f), new Vector2(0.97f, 0.158f), NoOp));
-
+                new Vector2(0.02f, 0.016f), new Vector2(0.17f, 0.077f), NoOp, 25));
             ui.retryButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Retry",
-                new Vector2(0.03f, 0.018f), new Vector2(0.25f, 0.088f), NoOp));
+                new Vector2(0.182f, 0.016f), new Vector2(0.332f, 0.077f), NoOp, 25));
             ui.shareButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Share",
-                new Vector2(0.27f, 0.018f), new Vector2(0.49f, 0.088f), NoOp));
+                new Vector2(0.344f, 0.016f), new Vector2(0.494f, 0.077f), NoOp, 25));
             ui.ghostButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Ghost",
-                new Vector2(0.51f, 0.018f), new Vector2(0.73f, 0.088f), NoOp));
+                new Vector2(0.506f, 0.016f), new Vector2(0.656f, 0.077f), NoOp, 25));
+            ui.watchButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Watch",
+                new Vector2(0.668f, 0.016f), new Vector2(0.818f, 0.077f), NoOp, 25));
             ui.undoButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Undo",
-                new Vector2(0.75f, 0.018f), new Vector2(0.97f, 0.088f), NoOp));
+                new Vector2(0.83f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, 25));
+
+            // The paste field only exists while wanted: Watch opens this chip,
+            // a second tap (or a successful import) closes it again.
+            var importChip = UIFactory.CreatePanel(canvas.transform, "ImportChip",
+                new Vector2(0.03f, 0.095f), new Vector2(0.97f, 0.152f), UIStyle.PanelDark);
+            ui.importRow = importChip.gameObject;
+            ui.importField = UIFactory.CreateInputField(importChip.transform,
+                new Vector2(0.02f, 0.08f), new Vector2(0.98f, 0.92f), "paste PUTT- code…");
+            ui.importRow.SetActive(false);
+
+            // Next lesson rides with the tutorial hint at the top instead of
+            // widening the bar for every mode.
+            var next = UIFactory.CreateButton(canvas.transform, "Next lesson",
+                new Vector2(0.60f, 0.80f), new Vector2(0.94f, 0.858f), NoOp, 28, primary: true);
+            ui.nextLessonButton = ButtonOf(next);
         }
 
         /// <summary>Builds the loading cover under the overlay root and wires its references.</summary>

@@ -51,6 +51,8 @@ namespace PuttSeed.Unity
         public RectTransform? deco2;
         public Text? taglineText;
         public Image[] archiveRowStars = new Image[0];
+        public Button? archiveRandomButton;
+        public Text? histogramBlock;
         public Button? settingsButton;
         public GameObject? settingsPanel;
         public Button? settingsCloseButton;
@@ -145,6 +147,7 @@ namespace PuttSeed.Unity
             tutorialButton?.onClick.AddListener(() => Launch(GameMode.Tutorial));
 
             archiveButton?.onClick.AddListener(OpenArchive);
+            archiveRandomButton?.onClick.AddListener(PlayRandomUnplayedDay);
             archiveCloseButton?.onClick.AddListener(() => archivePanel?.SetActive(false));
             archiveOlderButton?.onClick.AddListener(() => { _archivePage++; RefreshArchive(); });
             archiveNewerButton?.onClick.AddListener(() =>
@@ -429,6 +432,44 @@ namespace PuttSeed.Unity
                 achievementsBlock.text = sb.ToString();
             }
 
+            // Stroke distribution: bullet bars over the completed days' bests.
+            if (histogramBlock != null)
+            {
+                var buckets = new int[6]; // 1..5 strokes, then 6+
+                foreach (var day in data.days)
+                {
+                    if (day.completed)
+                    {
+                        buckets[Mathf.Clamp(day.bestStrokes, 1, 6) - 1]++;
+                    }
+                }
+
+                int max = 1;
+                foreach (int b in buckets)
+                {
+                    max = Mathf.Max(max, b);
+                }
+
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < buckets.Length; i++)
+                {
+                    string bucketLabel = i < 5 ? (i + 1).ToString() : "6+";
+                    int length = buckets[i] == 0
+                        ? 0
+                        : Mathf.Max(1, Mathf.RoundToInt(buckets[i] * 8f / max));
+                    sb.Append(bucketLabel.PadLeft(2)).Append(' ')
+                        .Append("<color=#FCC24A>").Append(new string('•', length)).Append("</color>");
+                    if (buckets[i] > 0)
+                    {
+                        sb.Append(' ').Append(buckets[i]);
+                    }
+
+                    sb.AppendLine();
+                }
+
+                histogramBlock.text = sb.ToString();
+            }
+
             // Share is only offered once today's best actually exists.
             var todayBest = _stats.FindDay(ModeController.DayNumber(DateTime.UtcNow));
             shareBestButton?.gameObject.SetActive(
@@ -606,6 +647,36 @@ namespace PuttSeed.Unity
             {
                 archiveNewerButton.interactable = _archivePage > 0;
             }
+        }
+
+        /// <summary>
+        /// Jumps into a random past day the player has not completed yet —
+        /// sampled, with a fair fallback when history is (nearly) exhausted.
+        /// </summary>
+        private void PlayRandomUnplayedDay()
+        {
+            int today = ModeController.DayNumber(DateTime.UtcNow);
+            if (today <= 1)
+            {
+                return; // no past days exist yet
+            }
+
+            int day = UnityEngine.Random.Range(1, today);
+            for (int tries = 0; tries < 40; tries++)
+            {
+                int candidate = UnityEngine.Random.Range(1, today);
+                var record = _stats.FindDay(candidate);
+                if (record == null || !record.completed)
+                {
+                    day = candidate;
+                    break;
+                }
+            }
+
+            GameSession.Mode = GameMode.Daily;
+            GameSession.ArchiveDayNumber = day;
+            GameSession.UseFixedSeed = false;
+            SceneFader.LoadScene("Game");
         }
 
         private void LaunchArchiveRow(int row)

@@ -27,6 +27,7 @@ namespace PuttSeed.Unity
         public Text? toastText;
         public Button? menuButton;
         public Button? nextLessonButton;
+        public GameObject? importRow;
         public InputField? importField;
         public Button? watchButton;
         public Button? retryButton;
@@ -44,6 +45,7 @@ namespace PuttSeed.Unity
         private Coroutine? _toastAnim;
         private int _lastStrokesShown;
         private Coroutine? _counterPulse;
+        private bool? _undoLaidOut;
 
         // Prompt each clipboard code once per app run, not per scene entry.
         private static string? _promptedClipboardCode;
@@ -97,8 +99,15 @@ namespace PuttSeed.Unity
 
             hintChip?.SetActive(_modes.CurrentHint.Length > 0);
             nextLessonButton?.gameObject.SetActive(_modes.Mode == GameMode.Tutorial);
-            // The mulligan is a teaching tool — never on the daily.
-            undoButton?.gameObject.SetActive(_modes.Mode != GameMode.Daily);
+            // The mulligan is a teaching tool — never on the daily. The bar
+            // reflows so five buttons share the row evenly when Undo is gone.
+            bool showUndo = _modes.Mode != GameMode.Daily;
+            undoButton?.gameObject.SetActive(showUndo);
+            if (_undoLaidOut != showUndo)
+            {
+                _undoLaidOut = showUndo;
+                LayoutBottomBar(showUndo);
+            }
 
             if (counterText == null)
             {
@@ -184,6 +193,35 @@ namespace PuttSeed.Unity
                 _starsRevealed = true;
                 _starReveal = StartCoroutine(
                     RevealStars(PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, par)));
+            }
+        }
+
+        /// <summary>
+        /// Distributes the bottom-bar buttons evenly across the row — five
+        /// slots when Undo is hidden (daily), six when it shows.
+        /// </summary>
+        private void LayoutBottomBar(bool withUndo)
+        {
+            var buttons = withUndo
+                ? new[] { menuButton, retryButton, shareButton, ghostButton, watchButton, undoButton }
+                : new[] { menuButton, retryButton, shareButton, ghostButton, watchButton };
+            const float margin = 0.02f;
+            const float gap = 0.012f;
+            float width = (1f - 2f * margin - (buttons.Length - 1) * gap) / buttons.Length;
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null)
+                {
+                    continue;
+                }
+
+                var rect = (RectTransform)buttons[i]!.transform;
+                float x0 = margin + i * (width + gap);
+                rect.anchorMin = new Vector2(x0, 0.016f);
+                rect.anchorMax = new Vector2(x0 + width, 0.077f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
             }
         }
 
@@ -276,6 +314,11 @@ namespace PuttSeed.Unity
             if (importField != null)
             {
                 importField.text = token;
+                if (importRow != null && !importRow.activeSelf)
+                {
+                    UiFx.SlideUp(this, importRow); // surface the prefilled chip
+                }
+
                 ShowToast(Loc.Tr("Replay code found in clipboard — tap Watch."));
             }
         }
@@ -343,14 +386,31 @@ namespace PuttSeed.Unity
 
         private void OnImport()
         {
-            if (importField == null)
+            if (importField == null || importRow == null)
             {
                 return;
             }
 
-            if (_modes.ImportReplay(importField.text.Trim()))
+            // Watch is a toggle-and-confirm: first tap opens the paste chip,
+            // the next tap imports (or closes an empty chip again).
+            if (!importRow.activeSelf)
+            {
+                UiFx.SlideUp(this, importRow);
+                return;
+            }
+
+            string text = importField.text.Trim();
+            if (text.Length == 0)
+            {
+                importRow.SetActive(false);
+                return;
+            }
+
+            if (_modes.ImportReplay(text))
             {
                 ShowToast(Loc.Tr("Ghost playing (pink)."));
+                importField.text = "";
+                importRow.SetActive(false);
             }
             else
             {

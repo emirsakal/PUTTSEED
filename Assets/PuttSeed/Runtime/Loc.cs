@@ -65,6 +65,7 @@ namespace PuttSeed.Unity
             ["Close"] = "Kapat",
             ["Older"] = "Eski",
             ["Newer"] = "Yeni",
+            ["Random day"] = "Rastgele gün",
             ["Menu"] = "Menü",
             ["Next lesson"] = "Sonraki ders",
             ["Watch"] = "İzle",
