@@ -11,23 +11,27 @@ using PuttSeed.Core.Sim;
 
 if (args.Length < 1)
 {
-    Console.WriteLine("usage: CourseViewer <seed|yyyy-mm-dd> [--stats]");
-    Console.WriteLine("       CourseViewer --scan <count>   (CSV of seed stats, for curation)");
+    Console.WriteLine("usage: CourseViewer <seed|yyyy-mm-dd> [--stats] [--v1]");
+    Console.WriteLine("       CourseViewer --scan <count> [--v1]   (CSV of seed stats, for curation)");
+    Console.WriteLine("seeds default to the v2 generator; dates pick their own version by schedule.");
     return 1;
 }
+
+bool wantV1 = Array.Exists(args, a => a == "--v1");
 
 // Curation support: sweep seeds 1..N and emit one CSV row per generatable
 // course — the Journey level list is picked from this output.
 if (args[0] == "--scan")
 {
     int count = args.Length > 1 && int.TryParse(args[1], out int n) ? n : 1000;
-    Console.WriteLine("seed,par,difficulty,walls,bumpers,sand,ice,water,hazards,authorStrokes,attempts");
+    var scanCfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
+    Console.WriteLine("seed,par,difficulty,walls,bumpers,sand,ice,water,gates,ramps,portals,mills,hazards,authorStrokes,attempts");
     for (ulong s = 1; s <= (ulong)count; s++)
     {
         GenerationResult r;
         try
         {
-            r = CourseGenerator.Generate(s, GeneratorConfig.Default, SimConfig.Default, SolverConfig.Default);
+            r = CourseGenerator.Generate(s, scanCfg, SimConfig.Default, SolverConfig.Default);
         }
         catch (InvalidOperationException)
         {
@@ -35,21 +39,33 @@ if (args[0] == "--scan")
         }
 
         var c = r.Course;
-        int hazards = c.Bumpers.Length + c.SandZones.Length + c.IceZones.Length + c.WaterZones.Length;
+        int hazards = c.Bumpers.Length + c.SandZones.Length + c.IceZones.Length + c.WaterZones.Length
+            + c.Gates.Length + c.Ramps.Length + c.Portals.Length / 2 + c.Windmills.Length;
         Console.WriteLine($"{s},{c.Par},{r.Difficulty},{c.Walls.Length},{c.Bumpers.Length}," +
-            $"{c.SandZones.Length},{c.IceZones.Length},{c.WaterZones.Length},{hazards},{r.AuthorStrokes},{r.Attempts}");
+            $"{c.SandZones.Length},{c.IceZones.Length},{c.WaterZones.Length}," +
+            $"{c.Gates.Length},{c.Ramps.Length},{c.Portals.Length / 2},{c.Windmills.Length}," +
+            $"{hazards},{r.AuthorStrokes},{r.Attempts}");
     }
 
     return 0;
 }
 
 ulong seed;
+GeneratorConfig cfg;
 if (args[0].Contains('-') && DateTime.TryParse(args[0], out var date))
 {
     seed = DailySeed.FromUtcDate(date.Year, date.Month, date.Day);
-    Console.WriteLine($"date {date:yyyy-MM-dd} -> seed {seed}");
+    // Dates carry their own generator version, mirroring the game exactly.
+    int dayNumber = (int)(date.Date - new DateTime(2020, 1, 1)).TotalDays;
+    int version = GeneratorSchedule.VersionForDay(dayNumber);
+    cfg = GeneratorConfig.ForVersion(version);
+    Console.WriteLine($"date {date:yyyy-MM-dd} -> seed {seed} (generator v{version})");
 }
-else if (!ulong.TryParse(args[0], out seed))
+else if (ulong.TryParse(args[0], out seed))
+{
+    cfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
+}
+else
 {
     Console.WriteLine($"not a seed or date: {args[0]}");
     return 1;
@@ -59,7 +75,7 @@ var sw = Stopwatch.StartNew();
 GenerationResult result;
 try
 {
-    result = CourseGenerator.Generate(seed, GeneratorConfig.Default, SimConfig.Default, SolverConfig.Default);
+    result = CourseGenerator.Generate(seed, cfg, SimConfig.Default, SolverConfig.Default);
 }
 catch (InvalidOperationException e)
 {
@@ -76,6 +92,10 @@ Console.WriteLine();
 Console.WriteLine($"seed        {seed}");
 Console.WriteLine($"par         {course.Par}   difficulty {result.Difficulty}");
 Console.WriteLine($"walls       {course.Walls.Length}   bumpers {course.Bumpers.Length}   sand {course.SandZones.Length}   water {course.WaterZones.Length}   ice {course.IceZones.Length}");
+if (course.Gates.Length + course.Ramps.Length + course.Portals.Length + course.Windmills.Length > 0)
+{
+    Console.WriteLine($"gates       {course.Gates.Length}   ramps {course.Ramps.Length}   portals {course.Portals.Length / 2}   mills {course.Windmills.Length}");
+}
 Console.WriteLine($"author solution ({result.AuthorSolution.Length} shots, {result.AuthorStrokes} strokes):");
 for (int i = 0; i < result.AuthorSolution.Length; i++)
 {
@@ -130,6 +150,11 @@ static void Render(CourseData course)
                 if (zone.Contains(probe)) { grid[r, c] = '*'; }
             }
 
+            foreach (var ramp in course.Ramps)
+            {
+                if (ramp.Area.Contains(probe)) { grid[r, c] = '%'; }
+            }
+
             foreach (var zone in course.SandZones)
             {
                 if (zone.Contains(probe)) { grid[r, c] = ':'; }
@@ -159,17 +184,34 @@ static void Render(CourseData course)
     // Walls: rasterize by stepping along each segment.
     foreach (var wall in course.Walls)
     {
-        double ax = ToDouble(wall.A.X), ay = ToDouble(wall.A.Y);
-        double bx = ToDouble(wall.B.X), by = ToDouble(wall.B.Y);
-        double len = Math.Sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
-        int steps = Math.Max(1, (int)(len / (cell * 0.5)));
-        for (int s = 0; s <= steps; s++)
+        RasterizeSegment(grid, wall.A, wall.B, '#', minX, minY, cell);
+    }
+
+    // One-way gates: '=' across the corridor (direction in the stats only).
+    foreach (var gate in course.Gates)
+    {
+        RasterizeSegment(grid, gate.A, gate.B, '=', minX, minY, cell);
+    }
+
+    // Windmills: blades at their shot-start phase, 'X' on the pivot.
+    foreach (var mill in course.Windmills)
+    {
+        int spacing = FixTrig.AngleSteps / mill.BladeCount;
+        for (int b = 0; b < mill.BladeCount; b++)
         {
-            double t = (double)s / steps;
-            int c = (int)((ax + (bx - ax) * t - minX) / cell);
-            int r = (int)((ay + (by - ay) * t - minY) / cell);
-            if (r >= 0 && r < rows && c >= 0 && c < cols) { grid[r, c] = '#'; }
+            int angle = ((mill.Phase0 + b * spacing) % FixTrig.AngleSteps + FixTrig.AngleSteps)
+                % FixTrig.AngleSteps;
+            var tip = mill.Pivot + FixTrig.UnitVector(angle) * mill.BladeLength;
+            RasterizeSegment(grid, mill.Pivot, tip, 'x', minX, minY, cell);
         }
+
+        Plot(grid, mill.Pivot, 'X', minX, minY, cell);
+    }
+
+    // Portals: '@' discs on both mouths.
+    foreach (var portal in course.Portals)
+    {
+        Plot(grid, portal.Entry, '@', minX, minY, cell);
     }
 
     Plot(grid, course.StartPosition, 'S', minX, minY, cell);
@@ -185,6 +227,23 @@ static void Render(CourseData course)
         }
 
         Console.WriteLine(new string(line));
+    }
+}
+
+static void RasterizeSegment(char[,] grid, Vec2Fix a, Vec2Fix b, char ch,
+    double minX, double minY, double cell)
+{
+    double ax = ToDouble(a.X), ay = ToDouble(a.Y);
+    double bx = ToDouble(b.X), by = ToDouble(b.Y);
+    double len = Math.Sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
+    int steps = Math.Max(1, (int)(len / (cell * 0.5)));
+    int rows = grid.GetLength(0), cols = grid.GetLength(1);
+    for (int s = 0; s <= steps; s++)
+    {
+        double t = (double)s / steps;
+        int c = (int)((ax + (bx - ax) * t - minX) / cell);
+        int r = (int)((ay + (by - ay) * t - minY) / cell);
+        if (r >= 0 && r < rows && c >= 0 && c < cols) { grid[r, c] = ch; }
     }
 }
 

@@ -71,6 +71,10 @@ namespace PuttSeed.Core.CourseGen
                 int maxSand = Math.Max(0, cfg.MaxSand - level);
                 int maxWater = Math.Max(0, cfg.MaxWater - level);
                 int maxIce = Math.Max(0, cfg.MaxIce - level);
+                int maxGates = Math.Max(0, cfg.MaxGates - level);
+                int maxRamps = Math.Max(0, cfg.MaxRamps - level);
+                int maxPortals = Math.Max(0, cfg.MaxPortals - level);
+                int maxWindmills = Math.Max(0, cfg.MaxWindmills - level);
 
                 for (int a = 0; a < cfg.AttemptsPerLevel; a++)
                 {
@@ -90,8 +94,11 @@ namespace PuttSeed.Core.CourseGen
                         continue;
                     }
 
-                    CourseDecorator.Decorate(rng, corridor, cfg, maxBumpers, maxSand, maxWater, maxIce,
-                        out var bumpers, out var sand, out var water, out var ice);
+                    CourseDecorator.Decorate(rng, corridor, cfg,
+                        maxBumpers, maxSand, maxWater, maxIce,
+                        maxGates, maxRamps, maxPortals, maxWindmills,
+                        out var bumpers, out var sand, out var water, out var ice,
+                        out var gates, out var ramps, out var portals, out var windmills);
 
                     var walls = CorridorBuilder.BuildWalls(corridor);
                     var start = CorridorBuilder.StartPosition(corridor);
@@ -100,7 +107,7 @@ namespace PuttSeed.Core.CourseGen
                     // Par does not influence physics; solve with the cap, then
                     // stamp the real par from the author solution.
                     var candidate = new CourseData(start, hole, solverConfig.MaxPar,
-                        walls, bumpers, sand, water, ice);
+                        walls, bumpers, sand, water, ice, gates, ramps, portals, windmills);
                     var solve = SolvabilityChecker.Solve(candidate, simConfig, solverConfig);
                     if (!solve.Solved)
                     {
@@ -108,10 +115,14 @@ namespace PuttSeed.Core.CourseGen
                     }
 
                     int par = Math.Min(Math.Max(solve.AuthorStrokes, 2), solverConfig.MaxPar);
-                    var course = new CourseData(start, hole, par, walls, bumpers, sand, water, ice);
+                    var course = new CourseData(start, hole, par, walls,
+                        bumpers, sand, water, ice, gates, ramps, portals, windmills);
 
                     int turns = corridor.SegmentAngles.Length - 1;
-                    int hazards = bumpers.Length + sand.Length + water.Length + ice.Length;
+
+                    // A portal pair is one hazard: two array entries, one idea.
+                    int hazards = bumpers.Length + sand.Length + water.Length + ice.Length
+                        + gates.Length + ramps.Length + portals.Length / 2 + windmills.Length;
                     var difficulty = DifficultyRater.Rate(
                         solve.CaptureShotCount, solve.SampledShotCount, turns, hazards);
 

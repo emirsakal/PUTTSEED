@@ -48,6 +48,14 @@ namespace PuttSeed.Unity
         private DateTime _activeDayDate;
         private bool _completionRecorded;
 
+        // Generator config version of the loaded course. Daily derives it from
+        // the day number, journey and tutorial pin v1 forever, practice runs
+        // the newest; replay codes carry theirs.
+        private int _activeConfigVersion = 1;
+
+        /// <summary>Generator config version of the loaded course (share codes carry it).</summary>
+        public int ActiveConfigVersion => _activeConfigVersion;
+
         /// <summary>True when the loaded daily is a past day from the archive.</summary>
         public bool IsArchiveDay { get; private set; }
 
@@ -122,7 +130,7 @@ namespace PuttSeed.Unity
             PracticeDifficulty = GameSession.PracticeDifficulty;
             if (GameSession.UseFixedSeed)
             {
-                StartFixedSeed(GameSession.FixedSeed);
+                StartFixedSeed(GameSession.FixedSeed, GameSession.FixedSeedConfigVersion);
                 return;
             }
 
@@ -163,7 +171,7 @@ namespace PuttSeed.Unity
             _activeDayNumber = DayNumber(utc);
             _activeDayDate = utc.Date;
             _dailySeed = DailySeed.FromUtcDate(utc.Year, utc.Month, utc.Day);
-            LoadAndShow(_dailySeed);
+            LoadAndShow(_dailySeed, configVersion: GeneratorSchedule.VersionForDay(_activeDayNumber));
         }
 
         /// <summary>
@@ -181,7 +189,8 @@ namespace PuttSeed.Unity
             _activeDayDate = DateOfDay(dayNumber);
             _dailySeed = DailySeed.FromUtcDate(
                 _activeDayDate.Year, _activeDayDate.Month, _activeDayDate.Day);
-            LoadAndShow(_dailySeed);
+            // Past days regenerate with the config they shipped under, forever.
+            LoadAndShow(_dailySeed, configVersion: GeneratorSchedule.VersionForDay(dayNumber));
         }
 
         /// <summary>Starts a practice course in the current difficulty bucket.</summary>
@@ -204,7 +213,7 @@ namespace PuttSeed.Unity
                 % TutorialConfig.Stages.Length;
             var stage = TutorialConfig.Stages[TutorialIndex];
             CurrentHint = stage.Hint;
-            LoadAndShow(stage.Seed);
+            LoadAndShow(stage.Seed, configVersion: 1); // hand-tuned layouts: v1 forever
         }
 
         /// <summary>Advances to the next tutorial stage (wraps).</summary>
@@ -220,7 +229,8 @@ namespace PuttSeed.Unity
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = Mathf.Clamp(level, 0, _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) - 1);
-            LoadAndShow(JourneyConfig.Seeds[JourneyLevel]);
+            // The campaign was curated under v1; its layouts are frozen.
+            LoadAndShow(JourneyConfig.Seeds[JourneyLevel], configVersion: 1);
         }
 
         /// <summary>True when a next journey level exists and is unlocked.</summary>
@@ -238,13 +248,13 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>Bootstrap testing hook: load a specific seed, practice-style.</summary>
-        public void StartFixedSeed(ulong seed)
+        public void StartFixedSeed(ulong seed, int configVersion = 1)
         {
             Mode = GameMode.Practice;
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = -1;
-            LoadAndShow(seed);
+            LoadAndShow(seed, configVersion: configVersion);
         }
 
         /// <summary>
@@ -265,16 +275,21 @@ namespace PuttSeed.Unity
                 end++;
             }
 
-            if (!ReplayCodec.TryDecode(text.Substring(at, end - at), out var seed, out var shots))
+            if (!ReplayCodec.TryDecode(text.Substring(at, end - at), out var seed, out var shots,
+                out var configVersion))
             {
                 return false;
             }
 
-            if (seed != _runner.Seed)
+            // Same seed under a different config is a DIFFERENT course — the
+            // ghost would desync. Reload whenever either differs.
+            if (seed != _runner.Seed || configVersion != _activeConfigVersion)
             {
-                Mode = seed == _dailySeed ? GameMode.Daily : GameMode.Practice;
+                Mode = seed == _dailySeed && configVersion == GeneratorSchedule.VersionForDay(_activeDayNumber)
+                    ? GameMode.Daily
+                    : GameMode.Practice;
                 CurrentHint = "";
-                LoadAndShow(seed, ghostShots: shots); // ghost attaches after the load
+                LoadAndShow(seed, ghostShots: shots, configVersion: configVersion);
             }
             else if (shots.Length > 0)
             {
@@ -309,9 +324,11 @@ namespace PuttSeed.Unity
                 ulong seed = BitConverter.ToUInt64(buffer, 0);
 
                 // Background generation: frames (and the putt vignette) keep
-                // running while each candidate is solved.
+                // running while each candidate is solved. Practice always runs
+                // the newest generator — the fresh-course firehose is where new
+                // elements meet players first.
                 var task = Task.Run(() => CourseGenerator.Generate(
-                    seed, GeneratorConfig.Default, config, SolverConfig.Default));
+                    seed, GeneratorConfig.V2, config, SolverConfig.Default));
                 while (!task.IsCompleted)
                 {
                     yield return null;
@@ -343,6 +360,7 @@ namespace PuttSeed.Unity
 
             if (best != null)
             {
+                _activeConfigVersion = 2;
                 _runner.AdoptGeneration(bestSeed, best, config);
                 RebuildView();
                 _stats.RecordPracticePlayed();
@@ -353,9 +371,9 @@ namespace PuttSeed.Unity
             ModeChanged?.Invoke();
         }
 
-        private void LoadAndShow(ulong seed, ShotInput[]? ghostShots = null)
+        private void LoadAndShow(ulong seed, ShotInput[]? ghostShots = null, int configVersion = 1)
         {
-            StartCoroutine(LoadRoutine(seed, ghostShots));
+            StartCoroutine(LoadRoutine(seed, ghostShots, configVersion));
         }
 
         /// <summary>
@@ -365,7 +383,7 @@ namespace PuttSeed.Unity
         /// vignette genuinely rolls toward the cup during the load. The result
         /// is adopted on the main thread, then Hide plays the drop-in.
         /// </summary>
-        private IEnumerator LoadRoutine(ulong seed, ShotInput[]? ghostShots)
+        private IEnumerator LoadRoutine(ulong seed, ShotInput[]? ghostShots, int configVersion)
         {
             if (IsLoading)
             {
@@ -379,8 +397,9 @@ namespace PuttSeed.Unity
             // Read Unity-side state (the ScriptableObject) on the main thread;
             // the task only touches pure core types.
             var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
+            var genConfig = GeneratorConfig.ForVersion(configVersion);
             var task = Task.Run(() => CourseGenerator.Generate(
-                seed, GeneratorConfig.Default, config, SolverConfig.Default));
+                seed, genConfig, config, SolverConfig.Default));
             while (!task.IsCompleted)
             {
                 yield return null; // frames render; the ball rolls while we wait
@@ -388,6 +407,7 @@ namespace PuttSeed.Unity
 
             if (task.Status == TaskStatus.RanToCompletion)
             {
+                _activeConfigVersion = configVersion;
                 _runner.AdoptGeneration(seed, task.Result, config);
                 RebuildView();
                 // Zero-shot codes are course invitations — no ghost to race.
@@ -444,7 +464,7 @@ namespace PuttSeed.Unity
                 _stats.RecordDailyCompletion(
                     _activeDayNumber, sim.Strokes,
                     Scoring.Stars(sim.Strokes, _runner.Generation!.Course.Par),
-                    ReplayCodec.Encode(_runner.Seed, shots),
+                    ReplayCodec.Encode(_runner.Seed, shots, _activeConfigVersion),
                     countsForStreak: !IsArchiveDay);
 
                 // The next retry races the (possibly new) best run.
@@ -496,7 +516,11 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            if (ReplayCodec.TryDecode(record.bestReplay, out var seed, out var shots) && seed == _dailySeed)
+            // A best recorded under another generator version is a different
+            // course — never race a desyncing ghost.
+            if (ReplayCodec.TryDecode(record.bestReplay, out var seed, out var shots, out var version)
+                && seed == _dailySeed
+                && version == _activeConfigVersion)
             {
                 _runner.AddGhost(shots, "best");
             }

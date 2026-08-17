@@ -7,15 +7,16 @@ namespace PuttSeed.Core.Tests.CourseGen
     public class DifficultyRaterTests
     {
         /// <summary>
-        /// Pins the 2026-08-16 threshold recalibration (ice joined the hazard
-        /// pool): score = tightness + turns + 2*hazards, Easy ≤ 12 &lt; Normal
-        /// ≤ 16 &lt; Hard. A silent cut change re-shuffles every practice
-        /// bucket, so the exact boundaries are asserted.
+        /// Pins the 2026-08-18 threshold recalibration (the v2 element wave
+        /// joined the hazard pool): score = tightness + turns + 2*hazards,
+        /// Easy ≤ 16 &lt; Normal ≤ 20 &lt; Hard. A silent cut change
+        /// re-shuffles every practice bucket, so the exact boundaries are
+        /// asserted.
         /// </summary>
-        [TestCase(0, 6, Difficulty.Easy, Description = "score 12 — top of Easy")]
-        [TestCase(1, 6, Difficulty.Normal, Description = "score 13 — bottom of Normal")]
-        [TestCase(4, 6, Difficulty.Normal, Description = "score 16 — top of Normal")]
-        [TestCase(5, 6, Difficulty.Hard, Description = "score 17 — bottom of Hard")]
+        [TestCase(4, 6, Difficulty.Easy, Description = "score 16 — top of Easy")]
+        [TestCase(5, 6, Difficulty.Normal, Description = "score 17 — bottom of Normal")]
+        [TestCase(8, 6, Difficulty.Normal, Description = "score 20 — top of Normal")]
+        [TestCase(9, 6, Difficulty.Hard, Description = "score 21 — bottom of Hard")]
         public void BucketBoundaries_ArePinned(int turns, int hazards, Difficulty expected)
         {
             // captureShots == sampledShots → tightness 0; score is turns + 2*hazards.
@@ -25,22 +26,22 @@ namespace PuttSeed.Core.Tests.CourseGen
         [Test]
         public void ForgivingCourse_IsEasy()
         {
-            // Loose capture (1/8), 4 turns, 2 hazards: 0 + 4 + 4 = 8 <= 12.
+            // Loose capture (1/8), 4 turns, 2 hazards: 0 + 4 + 4 = 8 <= 16.
             Assert.That(DifficultyRater.Rate(64, 512, 4, 2), Is.EqualTo(Difficulty.Easy));
         }
 
         [Test]
         public void MidCourse_IsNormal()
         {
-            // 1/32 capture ratio, 6 turns, 3 hazards: 2 + 6 + 6 = 14 <= 16.
-            Assert.That(DifficultyRater.Rate(16, 512, 6, 3), Is.EqualTo(Difficulty.Normal));
+            // 1/32 capture ratio, 6 turns, 5 hazards: 2 + 6 + 10 = 18 <= 20.
+            Assert.That(DifficultyRater.Rate(16, 512, 6, 5), Is.EqualTo(Difficulty.Normal));
         }
 
         [Test]
         public void TightWindingHazardousCourse_IsHard()
         {
-            // 1/128 capture ratio, 7 turns, 5 hazards: 4 + 7 + 10 = 21 > 16.
-            Assert.That(DifficultyRater.Rate(4, 512, 7, 5), Is.EqualTo(Difficulty.Hard));
+            // 1/128 capture ratio, 7 turns, 6 hazards: 4 + 7 + 12 = 23 > 20.
+            Assert.That(DifficultyRater.Rate(4, 512, 7, 6), Is.EqualTo(Difficulty.Hard));
         }
 
         [Test]

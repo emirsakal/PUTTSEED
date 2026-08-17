@@ -30,5 +30,8 @@ namespace PuttSeed.Unity
 
         /// <summary>The fixed seed when <see cref="UseFixedSeed"/> is set.</summary>
         public static ulong FixedSeed = 1;
+
+        /// <summary>Generator config version for the fixed seed (default v1).</summary>
+        public static int FixedSeedConfigVersion = 1;
     }
 }

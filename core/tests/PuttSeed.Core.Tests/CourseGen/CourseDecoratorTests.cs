@@ -28,8 +28,10 @@ namespace PuttSeed.Core.Tests.CourseGen
                 return false;
             }
 
-            CourseDecorator.Decorate(rng, corridor, cfg, cfg.MaxBumpers, cfg.MaxSand, cfg.MaxWater,
-                cfg.MaxIce, out bumpers, out sand, out water, out ice);
+            CourseDecorator.Decorate(rng, corridor, cfg,
+                cfg.MaxBumpers, cfg.MaxSand, cfg.MaxWater, cfg.MaxIce,
+                cfg.MaxGates, cfg.MaxRamps, cfg.MaxPortals, cfg.MaxWindmills,
+                out bumpers, out sand, out water, out ice, out _, out _, out _, out _);
             return true;
         }
 

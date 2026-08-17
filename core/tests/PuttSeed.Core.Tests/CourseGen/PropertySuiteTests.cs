@@ -44,17 +44,29 @@ namespace PuttSeed.Core.Tests.CourseGen
 
         [Test]
         public void ThousandSeeds_GenerateSolvableRoundTrippingCourses()
+            => RunSuite(GeneratorConfig.Default, SeedCount);
+
+        /// <summary>
+        /// The same properties under v2 (the 2026-08 element wave): gates,
+        /// ramps, portals and windmills must never cost solvability or codec
+        /// round-trips. Half the seed count keeps suite time in check.
+        /// </summary>
+        [Test]
+        public void V2Seeds_GenerateSolvableRoundTrippingCourses()
+            => RunSuite(GeneratorConfig.V2, SeedCount / 2);
+
+        private static void RunSuite(GeneratorConfig cfg, int seedCount)
         {
             var failures = new ConcurrentBag<string>();
-            int maxAttempts = 4 * GeneratorConfig.Default.AttemptsPerLevel;
+            int maxAttempts = 4 * cfg.AttemptsPerLevel;
 
-            Parallel.For(1, SeedCount + 1, seedInt =>
+            Parallel.For(1, seedCount + 1, seedInt =>
             {
                 ulong seed = (ulong)seedInt;
                 try
                 {
                     var result = CourseGenerator.Generate(
-                        seed, GeneratorConfig.Default, SimConfig.Default, SolverConfig.Default);
+                        seed, cfg, SimConfig.Default, SolverConfig.Default);
 
                     if (result.Attempts > maxAttempts)
                     {

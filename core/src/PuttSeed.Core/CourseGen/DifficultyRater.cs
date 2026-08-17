@@ -49,13 +49,20 @@ namespace PuttSeed.Core.CourseGen
             // hazard pool (average score rose by ~8): a 300-seed scan under the
             // old cuts rated 1/39/260 Easy/Normal/Hard. These cuts target
             // roughly even thirds so every practice bucket actually generates.
+            //
+            // Recalibrated again 2026-08-18 for the v2 element wave (gates,
+            // ramps, portals, windmills each score like a hazard): under the
+            // 12/16 cuts a 300-seed v2 scan rated 29/75/196; at 16/20 the same
+            // scan rates 104/106/90 — near-even thirds. v1 courses rate easier
+            // under the new cuts, which only affects scan CSVs: practice (the
+            // one difficulty-facing mode) generates v2 exclusively.
             int score = tightness + turnCount + 2 * hazardCount;
-            if (score <= 12)
+            if (score <= 16)
             {
                 return Difficulty.Easy;
             }
 
-            return score <= 16 ? Difficulty.Normal : Difficulty.Hard;
+            return score <= 20 ? Difficulty.Normal : Difficulty.Hard;
         }
     }
 }

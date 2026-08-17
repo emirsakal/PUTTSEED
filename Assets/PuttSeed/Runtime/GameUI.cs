@@ -367,7 +367,8 @@ namespace PuttSeed.Unity
                 // code is a course invitation, not a replay.
                 if (sim != null && _modes.Mode == GameMode.Practice && _runner.Generation != null)
                 {
-                    var courseCode = ReplayCodec.Encode(_runner.Seed, System.Array.Empty<PuttSeed.Core.Sim.ShotInput>());
+                    var courseCode = ReplayCodec.Encode(_runner.Seed,
+                        System.Array.Empty<PuttSeed.Core.Sim.ShotInput>(), _modes.ActiveConfigVersion);
                     string invite = $"PUTTSEED — can you beat par {_runner.Generation.Course.Par}? Play: {courseCode}";
                     GUIUtility.systemCopyBuffer = invite;
                     ShowToast(Loc.Tr(NativeShare.Share(invite) ? "Sharing course…" : "Course code copied!"));
@@ -384,7 +385,7 @@ namespace PuttSeed.Unity
                 shots[i] = _runner.PlayedShots[i];
             }
 
-            var code = ReplayCodec.Encode(_runner.Seed, shots);
+            var code = ReplayCodec.Encode(_runner.Seed, shots, _modes.ActiveConfigVersion);
             string text = _modes.BuildShareText(sim.Strokes, _runner.Generation!.Course.Par, code);
             GUIUtility.systemCopyBuffer = text; // clipboard as well, on every platform
             ShowToast(Loc.Tr(NativeShare.Share(text) ? "Sharing…" : "Copied to clipboard!"));
