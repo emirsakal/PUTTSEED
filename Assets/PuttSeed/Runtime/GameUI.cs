@@ -37,6 +37,8 @@ namespace PuttSeed.Unity
         private SimRunner _runner = null!;
         private ModeController _modes = null!;
         private float _toastUntil;
+        private bool _starsRevealed;
+        private Coroutine? _starReveal;
 
         /// <summary>Wires behavior onto the scene-authored controls.</summary>
         public void Initialize(SimRunner runner, ModeController modes)
@@ -115,7 +117,11 @@ namespace PuttSeed.Unity
             RefreshStars(sim, gen.Course.Par);
         }
 
-        /// <summary>Shows earned stars on hole-out; unearned slots stay dim.</summary>
+        /// <summary>
+        /// Stars reveal one by one on hole-out (in step with the rising audio
+        /// notes: 0.5 s lead, 0.16 s apart), each with a settle-down pop;
+        /// unearned slots stay dim from the start.
+        /// </summary>
         private void RefreshStars(PuttSeed.Core.Sim.GolfSim sim, int par)
         {
             if (starsRow == null)
@@ -123,22 +129,62 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            starsRow.SetActive(sim.IsHoled);
             if (!sim.IsHoled)
             {
+                starsRow.SetActive(false);
+                _starsRevealed = false;
+                if (_starReveal != null)
+                {
+                    StopCoroutine(_starReveal);
+                    _starReveal = null;
+                }
+
                 return;
             }
 
-            int stars = PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, par);
+            if (!_starsRevealed)
+            {
+                _starsRevealed = true;
+                _starReveal = StartCoroutine(
+                    RevealStars(PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, par)));
+            }
+        }
+
+        private System.Collections.IEnumerator RevealStars(int stars)
+        {
+            starsRow!.SetActive(true);
+            var dim = new Color(1f, 1f, 1f, 0.16f);
             for (int i = 0; i < starImages.Length; i++)
             {
                 if (starImages[i] != null)
                 {
-                    starImages[i].color = i < stars
-                        ? UIStyle.Accent
-                        : new Color(1f, 1f, 1f, 0.16f);
+                    starImages[i].color = dim;
+                    starImages[i].transform.localScale = Vector3.one;
                 }
             }
+
+            yield return new WaitForSeconds(0.5f);
+            for (int i = 0; i < stars && i < starImages.Length; i++)
+            {
+                var image = starImages[i];
+                if (image != null)
+                {
+                    image.color = UIStyle.Accent;
+                    for (float t = 0f; t < 0.15f; t += Time.deltaTime)
+                    {
+                        image.transform.localScale =
+                            Vector3.one * Mathf.Lerp(1.8f, 1f, Mathf.SmoothStep(0f, 1f, t / 0.15f));
+                        yield return null;
+                    }
+
+                    image.transform.localScale = Vector3.one;
+                }
+
+                // Remaining gap so the next star lands with its audio note.
+                yield return new WaitForSeconds(0.01f);
+            }
+
+            _starReveal = null;
         }
 
         private static void OnMenu()

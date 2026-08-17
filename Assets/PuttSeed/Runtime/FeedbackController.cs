@@ -60,6 +60,7 @@ namespace PuttSeed.Unity
         private bool _wasInIce;
         private bool _wasReady;
         private Coroutine? _starRoutine;
+        private float _iceSparkleTimer;
 
         private static readonly Color SandPuff = new Color(0.85f, 0.78f, 0.55f);
         private static readonly Color WaterSplash = new Color(0.42f, 0.62f, 0.88f);
@@ -253,6 +254,18 @@ namespace PuttSeed.Unity
             {
                 _rollSource.Pause();
             }
+
+            // Sparse sparkles trail the ball while it glides across ice.
+            if (_wasInIce && sim != null && !sim.IsAtRest)
+            {
+                _iceSparkleTimer -= Time.deltaTime;
+                if (_iceSparkleTimer <= 0f)
+                {
+                    _iceSparkleTimer = 0.07f;
+                    EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                        new Color(0.85f, 0.96f, 1f, 0.8f), count: 1, speed: 0.2f, life: 0.5f);
+                }
+            }
         }
 
         private void OnShotFired()
@@ -312,6 +325,9 @@ namespace PuttSeed.Unity
             if (sim.WallHitCount > _lastWallHits)
             {
                 OnBounce(wallClip);
+                // A few sparks at the contact point.
+                EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                    new Color(1f, 1f, 1f, 0.85f), count: 4, speed: 1.3f, life: 0.22f);
             }
 
             if (sim.BumperHitCount > _lastBumperHits)
@@ -319,6 +335,7 @@ namespace PuttSeed.Unity
                 OnBounce(bumperClip);
                 Tap();
                 _cameraJuice?.Shake(0.05f, 0.18f);
+                FlashNearestBumper(FixView.ToVector2(sim.Ball.Position));
             }
 
             if (sim.WaterEntryCount > _lastWaterEntries)
@@ -328,6 +345,7 @@ namespace PuttSeed.Unity
                 // The sim already snapped the ball back to its last rest, so
                 // splash where it was LAST frame — right at the water's edge.
                 EmitBurst(_burstPs, _lastBallPos, WaterSplash, count: 14, speed: 1.6f, life: 0.5f);
+                StartCoroutine(WaterSink(_lastBallPos));
             }
 
             var course = _runner.Generation?.Course;
@@ -354,6 +372,7 @@ namespace PuttSeed.Unity
                 Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);
                 StartCoroutine(CelebrationRing(hole));
+                StartCoroutine(CaptureFlash());
                 _cameraJuice?.CelebrateZoom(hole);
                 if (PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3)
                 {
@@ -396,6 +415,109 @@ namespace PuttSeed.Unity
             _lastHoled = sim.IsHoled;
             _lastFailed = sim.IsFailed;
             _lastBallPos = FixView.ToVector2(sim.Ball.Position);
+        }
+
+        /// <summary>A white pulse on the bumper the ball just punched.</summary>
+        private void FlashNearestBumper(Vector2 ballPos)
+        {
+            var course = _runner.Generation?.Course;
+            if (course == null || course.Bumpers.Length == 0)
+            {
+                return;
+            }
+
+            var nearest = FixView.ToVector2(course.Bumpers[0].Center);
+            float radius = FixView.ToFloat(course.Bumpers[0].Radius);
+            float bestSq = (nearest - ballPos).sqrMagnitude;
+            for (int i = 1; i < course.Bumpers.Length; i++)
+            {
+                var center = FixView.ToVector2(course.Bumpers[i].Center);
+                float dSq = (center - ballPos).sqrMagnitude;
+                if (dSq < bestSq)
+                {
+                    bestSq = dSq;
+                    nearest = center;
+                    radius = FixView.ToFloat(course.Bumpers[i].Radius);
+                }
+            }
+
+            StartCoroutine(BumperFlash(nearest, radius));
+        }
+
+        private IEnumerator BumperFlash(Vector2 center, float radius)
+        {
+            var mesh = MeshFactory.Disc(Vector2.zero, radius, Color.white);
+            var go = new GameObject("BumperFlash");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = PaletteMaterials.Shared;
+            go.transform.position = new Vector3(center.x, center.y, -0.042f);
+
+            // Alpha animates through a property block — one mesh, no churn.
+            var block = new MaterialPropertyBlock();
+            const float duration = 0.2f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                go.transform.localScale = Vector3.one * (1f + 0.35f * k);
+                block.SetColor("_Color", new Color(1f, 1f, 1f, 0.65f * (1f - k)));
+                renderer.SetPropertyBlock(block);
+                yield return null;
+            }
+
+            Destroy(mesh);
+            Destroy(go);
+        }
+
+        /// <summary>The entry-point ball sinking into the water (the real ball
+        /// has already been reset by the sim; this sells the dunk).</summary>
+        private IEnumerator WaterSink(Vector2 entry)
+        {
+            var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, PaletteMaterials.Ball);
+            var go = new GameObject("WaterSink");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            go.transform.position = new Vector3(entry.x, entry.y, -0.058f);
+
+            const float duration = 0.3f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                go.transform.localScale = Vector3.one * (1f - t / duration);
+                yield return null;
+            }
+
+            Destroy(mesh);
+            Destroy(go);
+        }
+
+        /// <summary>A 0.12 s white pulse over the whole view on capture.</summary>
+        private IEnumerator CaptureFlash()
+        {
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                yield break;
+            }
+
+            var mesh = MeshFactory.Quad(new Vector2(-60f, -60f), new Vector2(60f, 60f), Color.white);
+            var go = new GameObject("CaptureFlash");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = PaletteMaterials.Shared;
+
+            var block = new MaterialPropertyBlock();
+            const float duration = 0.12f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                var c = cam.transform.position;
+                go.transform.position = new Vector3(c.x, c.y, -0.9f);
+                block.SetColor("_Color", new Color(1f, 1f, 1f, 0.28f * (1f - t / duration)));
+                renderer.SetPropertyBlock(block);
+                yield return null;
+            }
+
+            Destroy(mesh);
+            Destroy(go);
         }
 
         /// <summary>A rising note per earned star (major-triad steps).</summary>

@@ -16,8 +16,10 @@ namespace PuttSeed.Unity
 
         private SimRunner _runner = null!;
         private GameObject? _flagRoot;
+        private LineRenderer? _holePulse;
         private Vector2 _holePosition;
         private float _raise;
+        private float _pulsePhase;
         private object? _builtFor;
 
         /// <summary>Wires the runner; visuals build on each course load.</summary>
@@ -49,6 +51,30 @@ namespace PuttSeed.Unity
                 float eased = Mathf.SmoothStep(0f, 1f, _raise);
                 _flagRoot.transform.position = new Vector3(
                     _holePosition.x, _holePosition.y + eased * RaiseHeight, -0.055f);
+            }
+
+            // The cup breathes while the ball hunts it (never once it's in).
+            if (_holePulse != null)
+            {
+                bool pulse = ballClose && !sim.IsHoled;
+                _holePulse.enabled = pulse;
+                if (pulse)
+                {
+                    _pulsePhase += Time.deltaTime * 5f;
+                    float wave = (Mathf.Sin(_pulsePhase) + 1f) * 0.5f;
+                    float radius = 0.19f + wave * 0.03f;
+                    var color = new Color(0.05f, 0.07f, 0.06f, 0.35f + wave * 0.25f);
+                    _holePulse.startColor = color;
+                    _holePulse.endColor = color;
+                    for (int i = 0; i < 32; i++)
+                    {
+                        float angle = i * 2f * Mathf.PI / 32f;
+                        _holePulse.SetPosition(i, new Vector3(
+                            _holePosition.x + Mathf.Cos(angle) * radius,
+                            _holePosition.y + Mathf.Sin(angle) * radius,
+                            -0.031f));
+                    }
+                }
             }
         }
 
@@ -83,6 +109,19 @@ namespace PuttSeed.Unity
                     new Vector2(0.018f, 0.63f), PaletteMaterials.Flag), -0.002f);
 
             _flagRoot.transform.position = new Vector3(_holePosition.x, _holePosition.y, -0.055f);
+
+            if (_holePulse == null)
+            {
+                var pulseGo = new GameObject("HolePulse");
+                pulseGo.transform.SetParent(transform, false);
+                _holePulse = pulseGo.AddComponent<LineRenderer>();
+                _holePulse.loop = true;
+                _holePulse.positionCount = 32;
+                _holePulse.widthMultiplier = 0.03f;
+                _holePulse.material = PaletteMaterials.Shared;
+                _holePulse.sortingOrder = 5;
+                _holePulse.enabled = false;
+            }
         }
     }
 }
