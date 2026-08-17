@@ -59,6 +59,7 @@ namespace PuttSeed.Unity
         private bool _wasReady;
         private Coroutine? _starRoutine;
         private float _iceSparkleTimer;
+        private float _sandDustTimer;
 
         private static readonly Color SandPuff = new Color(0.85f, 0.78f, 0.55f);
         private static readonly Color WaterSplash = new Color(0.42f, 0.62f, 0.88f);
@@ -242,6 +243,18 @@ namespace PuttSeed.Unity
                         new Color(0.85f, 0.96f, 1f, 0.8f), count: 1, speed: 0.2f, life: 0.5f);
                 }
             }
+
+            // Sand keeps kicking up while the ball grinds through it.
+            if (_wasInSand && sim != null && !sim.IsAtRest)
+            {
+                _sandDustTimer -= Time.deltaTime;
+                if (_sandDustTimer <= 0f)
+                {
+                    _sandDustTimer = 0.09f;
+                    EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                        SandPuff, count: 1, speed: 0.35f, life: 0.3f);
+                }
+            }
         }
 
         private void OnShotFired()
@@ -323,6 +336,7 @@ namespace PuttSeed.Unity
                 // splash where it was LAST frame — right at the water's edge.
                 EmitBurst(_burstPs, _lastBallPos, WaterSplash, count: 14, speed: 1.6f, life: 0.5f);
                 StartCoroutine(WaterSink(_lastBallPos));
+                _ballView.PopIn(); // the real ball pops back in at the drop
             }
 
             var course = _runner.Generation?.Course;
@@ -561,7 +575,16 @@ namespace PuttSeed.Unity
             if (Time.unscaledTime - _lastBounceSoundTime >= bounceSoundCooldown)
             {
                 _lastBounceSoundTime = Time.unscaledTime;
-                Play(clip, Random.Range(0.85f, 1f));
+
+                // A hard hit sounds louder and deeper than a graze.
+                var sim = _runner.Sim;
+                float speed = sim != null ? FixView.ToVector2(sim.Ball.Velocity).magnitude : 3f;
+                float k = Mathf.Clamp01(speed / 6f);
+                if (clip != null && (_settings == null || _settings.Data.soundEnabled))
+                {
+                    _source.pitch = Mathf.Lerp(1.07f, 0.9f, k) * Random.Range(0.98f, 1.02f);
+                    _source.PlayOneShot(clip, volume * Mathf.Lerp(0.35f, 1f, k));
+                }
             }
         }
 

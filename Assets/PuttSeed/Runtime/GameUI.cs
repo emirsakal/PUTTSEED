@@ -41,6 +41,8 @@ namespace PuttSeed.Unity
         private Vector3 _toastBase;
         private bool _toastBaseCached;
         private Coroutine? _toastAnim;
+        private int _lastStrokesShown;
+        private Coroutine? _counterPulse;
 
         /// <summary>Wires behavior onto the scene-authored controls.</summary>
         public void Initialize(SimRunner runner, ModeController modes)
@@ -72,6 +74,7 @@ namespace PuttSeed.Unity
             // Android back button (Escape) returns to the menu.
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                UiSounds.ClickDown();
                 OnMenu();
             }
         }
@@ -109,6 +112,17 @@ namespace PuttSeed.Unity
             int streak = _modes.Stats.Data.streak;
             string streakLabel = streak > 0 ? $"   Streak {streak}" : "";
             counterText.text = $"{modeLabel}   Strokes {sim.Strokes}/{sim.StrokeLimit}   Par {gen.Course.Par}{streakLabel}";
+            if (sim.Strokes > _lastStrokesShown)
+            {
+                if (_counterPulse != null)
+                {
+                    StopCoroutine(_counterPulse);
+                }
+
+                _counterPulse = StartCoroutine(PulseCounter());
+            }
+
+            _lastStrokesShown = sim.Strokes;
             if (statusText != null)
             {
                 // The fail state gets its own panel; the status line is for success.
@@ -161,6 +175,22 @@ namespace PuttSeed.Unity
                 _starReveal = StartCoroutine(
                     RevealStars(PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, par)));
             }
+        }
+
+        /// <summary>A quick swell on the counter when a stroke is spent.</summary>
+        private System.Collections.IEnumerator PulseCounter()
+        {
+            var rect = counterText!.transform;
+            const float duration = 0.18f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                rect.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(k * Mathf.PI));
+                yield return null;
+            }
+
+            rect.localScale = Vector3.one;
+            _counterPulse = null;
         }
 
         private System.Collections.IEnumerator RevealStars(int stars)

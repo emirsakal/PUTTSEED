@@ -210,6 +210,7 @@ namespace PuttSeed.Unity
 
             var button = rect.gameObject.AddComponent<Button>();
             rect.gameObject.AddComponent<UiClickSound>();
+            rect.gameObject.AddComponent<ButtonPressScale>();
             button.targetGraphic = image;
             var colors = button.colors;
             colors.highlightedColor = new Color(1f, 1f, 1f, 0.92f);

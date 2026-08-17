@@ -9,11 +9,17 @@ namespace PuttSeed.Unity
     /// </summary>
     public sealed class BallView : MonoBehaviour
     {
+        private static readonly Color TrailDefault = new Color(1f, 1f, 1f, 0.5f);
+        private static readonly Color TrailIce = new Color(0.68f, 0.85f, 1f, 0.55f);
+        private static readonly Color TrailSand = new Color(0.9f, 0.82f, 0.6f, 0.5f);
+
         private SimRunner _runner = null!;
         private TrailRenderer _trail = null!;
         private float _squash;
+        private float _popIn;
         private Transform? _spin;
         private float _spinAngle;
+        private Color _trailColor = TrailDefault;
 
         private MeshRenderer _renderer = null!;
 
@@ -90,6 +96,9 @@ namespace PuttSeed.Unity
         /// <summary>Impact juice: a brief squash pulse that eases back to round.</summary>
         public void Squash() => _squash = 1f;
 
+        /// <summary>Scale-in pop after a teleport (the water reset).</summary>
+        public void PopIn() => _popIn = 1f;
+
         private void LateUpdate()
         {
             if (_runner == null || _runner.Sim == null)
@@ -107,16 +116,50 @@ namespace PuttSeed.Unity
                 _spin.localEulerAngles = new Vector3(0f, 0f, _spinAngle);
             }
 
+            float pop = 1f;
+            if (_popIn > 0f)
+            {
+                _popIn = Mathf.Max(0f, _popIn - Time.deltaTime * 5f);
+                pop = Mathf.SmoothStep(0.25f, 1f, 1f - _popIn);
+            }
+
             if (_squash > 0f)
             {
                 _squash = Mathf.Max(0f, _squash - Time.deltaTime * 8f);
                 float k = _squash * 0.22f;
-                transform.localScale = new Vector3(1f + k, 1f - k, 1f);
+                transform.localScale = new Vector3((1f + k) * pop, (1f - k) * pop, 1f);
             }
             else
             {
-                transform.localScale = Vector3.one;
+                transform.localScale = Vector3.one * pop;
             }
+
+            // The trail borrows the ground's tone: icy blue on ice, warm tan
+            // in sand, cream elsewhere — eased so transitions never snap.
+            var target = InZone(_runner.Generation?.Course.IceZones) ? TrailIce
+                : InZone(_runner.Generation?.Course.SandZones) ? TrailSand
+                : TrailDefault;
+            _trailColor = Color.Lerp(_trailColor, target, Time.deltaTime * 6f);
+            _trail.startColor = _trailColor;
+        }
+
+        private bool InZone(PuttSeed.Core.Sim.ZonePolygon[]? zones)
+        {
+            var sim = _runner.Sim;
+            if (zones == null || sim == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < zones.Length; i++)
+            {
+                if (zones[i].Contains(sim.Ball.Position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

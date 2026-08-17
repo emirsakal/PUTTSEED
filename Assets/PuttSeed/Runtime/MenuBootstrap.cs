@@ -198,10 +198,12 @@ namespace PuttSeed.Unity
             {
                 if (archivePanel != null && archivePanel.activeSelf)
                 {
+                    UiSounds.ClickDown();
                     archivePanel.SetActive(false);
                 }
                 else if (statsPanel != null && statsPanel.activeSelf)
                 {
+                    UiSounds.ClickDown();
                     statsPanel.SetActive(false);
                 }
                 else

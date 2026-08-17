@@ -147,6 +147,7 @@ namespace PuttSeed.Unity
             var close = UIFactory.CreateButton(dim, "Close",
                 new Vector2(0.56f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
             menu.statsCloseButton = close.GetComponentInParent<Button>();
+            menu.statsCloseButton.GetComponent<UiClickSound>().downTone = true;
 
             menu.statsPanel.SetActive(false);
         }
@@ -194,6 +195,7 @@ namespace PuttSeed.Unity
             var close = UIFactory.CreateButton(dim, "Close",
                 new Vector2(0.3f, 0.135f), new Vector2(0.7f, 0.19f), NoOp, 30, primary: true);
             menu.archiveCloseButton = close.GetComponentInParent<Button>();
+            menu.archiveCloseButton.GetComponent<UiClickSound>().downTone = true;
 
             menu.archivePanel.SetActive(false);
         }

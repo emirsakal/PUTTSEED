@@ -88,13 +88,21 @@ namespace PuttSeed.Unity
             MeshFactory.CreateMeshObject(transform, "HoleBottom",
                 MeshFactory.Disc(holePos, 0.085f, new Color(0.02f, 0.02f, 0.035f)), -0.031f);
 
+            int bumperIndex = 0;
             foreach (var bumper in course.Bumpers)
             {
+                var center = FixView.ToVector2(bumper.Center);
+                float radius = FixView.ToFloat(bumper.Radius);
                 var shadow = MeshFactory.CreateMeshObject(transform, "BumperShadow",
-                    MeshFactory.Disc(FixView.ToVector2(bumper.Center), FixView.ToFloat(bumper.Radius), PaletteMaterials.Shadow), -0.035f);
+                    MeshFactory.Disc(center, radius, PaletteMaterials.Shadow), -0.035f);
                 shadow.transform.localPosition = new Vector3(ShadowOffset.x, ShadowOffset.y, -0.035f);
-                MeshFactory.CreateMeshObject(transform, "Bumper",
-                    MeshFactory.Disc(FixView.ToVector2(bumper.Center), FixView.ToFloat(bumper.Radius), PaletteMaterials.Bumper), -0.04f);
+
+                // Zero-centered mesh + positioned object, so the idle pulse
+                // can scale the disc around its own center.
+                var bumperGo = MeshFactory.CreateMeshObject(transform, "Bumper",
+                    MeshFactory.Disc(Vector2.zero, radius, PaletteMaterials.Bumper), -0.04f);
+                bumperGo.transform.localPosition = new Vector3(center.x, center.y, -0.04f);
+                bumperGo.AddComponent<BumperPulse>().phase = bumperIndex++ * 1.7f;
             }
 
             // Fake drop shadow: the wall mesh again, nudged down-right in a

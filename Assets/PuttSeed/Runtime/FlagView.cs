@@ -19,6 +19,7 @@ namespace PuttSeed.Unity
 
         private SimRunner _runner = null!;
         private GameObject? _flagRoot;
+        private Transform? _pennant;
         private LineRenderer? _holePulse;
         private Vector2 _holePosition;
         private float _raise;
@@ -54,6 +55,14 @@ namespace PuttSeed.Unity
                 float eased = Mathf.SmoothStep(0f, 1f, _raise);
                 _flagRoot.transform.position = new Vector3(
                     _holePosition.x, _holePosition.y + eased * RaiseHeight, -0.055f);
+            }
+
+            // The pennant waves gently, a touch livelier while raised.
+            if (_pennant != null)
+            {
+                float wave = Mathf.Sin(Time.time * 2.4f) * (3f + _raise * 3f)
+                    + Mathf.Sin(Time.time * 5.1f) * 1.2f;
+                _pennant.localEulerAngles = new Vector3(0f, 0f, wave);
             }
 
             // The cup breathes while the ball hunts it (never once it's in).
@@ -105,11 +114,14 @@ namespace PuttSeed.Unity
                 MeshFactory.Quad(new Vector2(-0.018f, 0f), new Vector2(0.018f, 0.85f),
                     new Color(0.92f, 0.90f, 0.85f)), 0f);
 
-            MeshFactory.CreateMeshObject(_flagRoot.transform, "Pennant",
+            // The pennant pivots at its pole attachment so it can wave.
+            var pennant = MeshFactory.CreateMeshObject(_flagRoot.transform, "Pennant",
                 MeshFactory.Triangle(
-                    new Vector2(0.018f, 0.85f),
-                    new Vector2(0.42f, 0.74f),
-                    new Vector2(0.018f, 0.63f), PaletteMaterials.Flag), -0.002f);
+                    new Vector2(0f, 0.11f),
+                    new Vector2(0.4f, 0f),
+                    new Vector2(0f, -0.11f), PaletteMaterials.Flag), -0.002f);
+            pennant.transform.localPosition = new Vector3(0.018f, 0.74f, -0.002f);
+            _pennant = pennant.transform;
 
             _flagRoot.transform.position = new Vector3(_holePosition.x, _holePosition.y, -0.055f);
 
