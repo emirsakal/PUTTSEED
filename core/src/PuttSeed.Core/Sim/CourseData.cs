@@ -33,6 +33,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Low-friction ice polygons: the ball slides much farther (may be empty).</summary>
         public ZonePolygon[] IceZones { get; }
 
+        /// <summary>One-way gate segments: pass one way, wall the other (may be empty).</summary>
+        public OneWayGate[] Gates { get; }
+
         /// <summary>Creates a course. Arrays are stored as-is (caller must not mutate).</summary>
         public CourseData(
             Vec2Fix startPosition,
@@ -42,7 +45,8 @@ namespace PuttSeed.Core.Sim
             Bumper[]? bumpers = null,
             ZonePolygon[]? sandZones = null,
             ZonePolygon[]? waterZones = null,
-            ZonePolygon[]? iceZones = null)
+            ZonePolygon[]? iceZones = null,
+            OneWayGate[]? gates = null)
         {
             StartPosition = startPosition;
             HolePosition = holePosition;
@@ -52,6 +56,7 @@ namespace PuttSeed.Core.Sim
             SandZones = sandZones ?? System.Array.Empty<ZonePolygon>();
             WaterZones = waterZones ?? System.Array.Empty<ZonePolygon>();
             IceZones = iceZones ?? System.Array.Empty<ZonePolygon>();
+            Gates = gates ?? System.Array.Empty<OneWayGate>();
         }
     }
 }

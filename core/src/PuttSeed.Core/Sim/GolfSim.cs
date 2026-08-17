@@ -60,6 +60,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Water resets so far (see <see cref="WallHitCount"/> caveat).</summary>
         public int WaterEntryCount { get; private set; }
 
+        /// <summary>One-way gate blocks so far (see <see cref="WallHitCount"/> caveat).</summary>
+        public int GateHitCount { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -142,6 +145,7 @@ namespace PuttSeed.Core.Sim
                 _position += _velocity * dtSub;
                 ResolveBumperCollisions();
                 ResolveWallCollisions();
+                ResolveGateCollisions();
                 if (CheckWaterHazard() || CheckHoleCapture())
                 {
                     break; // ball was reset or captured; the rest of the tick is void
@@ -362,6 +366,30 @@ namespace PuttSeed.Core.Sim
         }
 
         /// <summary>
+        /// One-way gates: a ball moving with the gate's pass normal ignores the
+        /// segment entirely; any other ball collides with it exactly like a
+        /// wall. The velocity test uses the pre-collision velocity of this
+        /// sub-step, so a ball reflected by the gate cannot re-trigger passage
+        /// within the same resolution pass.
+        /// </summary>
+        private void ResolveGateCollisions()
+        {
+            var gates = _course.Gates;
+            for (int i = 0; i < gates.Length; i++)
+            {
+                if (Vec2Fix.Dot(_velocity, gates[i].PassNormal) > Fix64.Zero)
+                {
+                    continue; // moving in the allowed direction: the gate is open
+                }
+
+                if (ResolveSegmentCollision(gates[i].A, gates[i].B))
+                {
+                    GateHitCount++;
+                }
+            }
+        }
+
+        /// <summary>
         /// Pushes the ball out of any wall it penetrates and reflects the normal
         /// velocity component with restitution; tangential component is kept.
         /// </summary>
@@ -370,54 +398,68 @@ namespace PuttSeed.Core.Sim
             var walls = _course.Walls;
             for (int i = 0; i < walls.Length; i++)
             {
-                var a = walls[i].A;
-                var ab = walls[i].B - a;
-
-                // Closest point on the segment to the ball center.
-                var abLenSq = ab.LengthSq();
-                var t = abLenSq == Fix64.Zero
-                    ? Fix64.Zero
-                    : Fix64.Clamp(Vec2Fix.Dot(_position - a, ab) / abLenSq, Fix64.Zero, Fix64.One);
-                var closest = a + ab * t;
-
-                var delta = _position - closest;
-                var distSq = delta.LengthSq();
-                var radius = _config.BallRadius;
-                if (distSq >= radius * radius)
-                {
-                    continue;
-                }
-
-                // Contact normal: from wall toward ball center. If the center sits
-                // exactly on the segment, fall back to the segment perpendicular
-                // facing against the velocity (deterministic tie-break).
-                Vec2Fix normal;
-                var dist = Fix64.Sqrt(distSq);
-                if (dist > Fix64.Zero)
-                {
-                    normal = delta / dist;
-                }
-                else
-                {
-                    normal = ab.Perp() / ab.Length();
-                    if (Vec2Fix.Dot(_velocity, normal) > Fix64.Zero)
-                    {
-                        normal = -normal;
-                    }
-                }
-
-                // Positional correction: place the ball exactly on the surface.
-                _position = closest + normal * radius;
-
-                // Velocity response: reflect the approaching normal component.
-                var vn = Vec2Fix.Dot(_velocity, normal);
-                if (vn < Fix64.Zero)
+                if (ResolveSegmentCollision(walls[i].A, walls[i].B))
                 {
                     WallHitCount++;
-                    var bounce = Fix64.One + _config.WallRestitution;
-                    _velocity -= normal * (bounce * vn);
                 }
             }
+        }
+
+        /// <summary>
+        /// Shared circle-vs-segment resolution (walls and blocking gates):
+        /// pushes the ball onto the surface and reflects the approaching normal
+        /// component with wall restitution. Returns true when a bounce happened.
+        /// </summary>
+        private bool ResolveSegmentCollision(Vec2Fix a, Vec2Fix b)
+        {
+            var ab = b - a;
+
+            // Closest point on the segment to the ball center.
+            var abLenSq = ab.LengthSq();
+            var t = abLenSq == Fix64.Zero
+                ? Fix64.Zero
+                : Fix64.Clamp(Vec2Fix.Dot(_position - a, ab) / abLenSq, Fix64.Zero, Fix64.One);
+            var closest = a + ab * t;
+
+            var delta = _position - closest;
+            var distSq = delta.LengthSq();
+            var radius = _config.BallRadius;
+            if (distSq >= radius * radius)
+            {
+                return false;
+            }
+
+            // Contact normal: from wall toward ball center. If the center sits
+            // exactly on the segment, fall back to the segment perpendicular
+            // facing against the velocity (deterministic tie-break).
+            Vec2Fix normal;
+            var dist = Fix64.Sqrt(distSq);
+            if (dist > Fix64.Zero)
+            {
+                normal = delta / dist;
+            }
+            else
+            {
+                normal = ab.Perp() / ab.Length();
+                if (Vec2Fix.Dot(_velocity, normal) > Fix64.Zero)
+                {
+                    normal = -normal;
+                }
+            }
+
+            // Positional correction: place the ball exactly on the surface.
+            _position = closest + normal * radius;
+
+            // Velocity response: reflect the approaching normal component.
+            var vn = Vec2Fix.Dot(_velocity, normal);
+            if (vn < Fix64.Zero)
+            {
+                var bounce = Fix64.One + _config.WallRestitution;
+                _velocity -= normal * (bounce * vn);
+                return true;
+            }
+
+            return false;
         }
     }
 }
