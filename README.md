@@ -69,10 +69,12 @@ PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
 |              committed 1024-entry sine table                 |
 |  Sim         GolfSim: 120 Hz fixed tick, circle-segment      |
 |              walls with sub-stepping, bumpers, sand, ice,    |
-|              water, hole capture, rest, FNV-1a StateHash     |
+|              water, gates, ramps, portals, windmills, hole   |
+|              capture, rest, FNV-1a StateHash                 |
 |  CourseGen   corridor growth -> hazard decoration ->         |
 |              SolvabilityChecker (bounded BFS over the        |
-|              quantized shot space) -> DifficultyRater        |
+|              quantized shot space) -> DifficultyRater;       |
+|              versioned configs freeze published courses      |
 |  Replay      [seed + shots] <-> PUTT- base64url codes        |
 |  Daily       UTC date -> seed (FNV-1a + SplitMix64, salted)  |
 +--------------------------------------------------------------+
@@ -96,11 +98,14 @@ mechanically, not by care:
   fails the build if any appear. All math is `Fix64` — Q32.32 fixed point on
   `long`, with 128-bit multiply intermediates and Newton square root. Trig is
   a committed 1024-entry table; angles only ever exist as table indices.
-- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
-  exercising every element — walls, bumpers, sand, ice, water — runs a
-  scripted 8-shot, 10,000-tick session twice in-process, and the final
-  FNV-1a state hash must equal a committed constant:
-  `12853565983001025895`. Any accidental change to sim math fails it.
+- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course of
+  walls, bumpers, sand, ice and water runs a scripted 8-shot,
+  10,000-tick session twice in-process, and the final FNV-1a state hash
+  must equal a committed constant: `12853565983001025895`. Any
+  accidental change to sim math fails it. (The 2026-08 elements — gates,
+  ramps, portals, windmills — are covered by their own per-element
+  suites and the v2 property run; folding them into this fixture is
+  pending, and would deliberately re-cut the constant.)
 - **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
   end-to-end — generate, replay the author solution — against frozen final
   hashes and frozen `PUTT-` codes.
@@ -117,8 +122,8 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (178 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (81 tests) | `scripts\unity-tests.bat` |
+| Core test suite (219 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Unity EditMode tests (83 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
 | Release .aab (signed) | `scripts\build-release.bat` |
@@ -151,7 +156,9 @@ builds unsigned.
 
 Drag to aim (slingshot or direct — your pick), release to shoot; ball must
 rest before the next stroke. Walls bounce, bumpers boost, sand drags, ice
-slides, water costs a stroke and a reset. Capture needs a slow ball over the
+slides, water costs a stroke and a reset; gates let you through one way
+only, ramps push, portals teleport, and windmill blades sweep while the
+ball rolls. Capture needs a slow ball over the
 cup — fast attempts rim out. Stroke limit is par + 3; holing out scores
 stars — 3 at par or better, 2 one over, 1 within the limit. Feel tuning
 lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).

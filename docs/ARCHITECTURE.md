@@ -57,7 +57,10 @@
    min/max turn-angle and length constraints inside a bounding box; widen
    into wall pairs; place hole at the end.
 2. Decorate: 0–3 bumpers, 0–2 sand zones, 0–2 ice zones, 0–1 water zone,
-   respecting clearance rules (never block the corridor fully).
+   respecting clearance rules (never block the corridor fully). Generator
+   v2 (2026-08-18) adds 0–1 each of one-way gates, ramps, portal pairs
+   and windmills; those draws sit behind budget guards, so a v1 config
+   consumes zero extra RNG and its output stays bit-identical.
 3. **SolvabilityChecker:** breadth-first over shot sequences up to `par`
    depth. From each rest state, sample the quantized shot space on a
    coarse grid (e.g. every 8th angle × every 16th power), simulate with a
@@ -85,6 +88,26 @@
 `seed = SplitMix64(hash(utcDate.ToString("yyyyMMdd") + SALT))` — computed
 locally, no backend. Practice mode draws random seeds from device entropy
 (outside core, passed in).
+
+## Generator versioning (2026-08-18)
+
+A seed alone does not identify a course: the generator config does too.
+Adding elements would therefore rewrite every curated Journey level and
+every archived daily. The fence:
+
+- `GeneratorConfig.V1` is frozen — never retuned. `V2` adds the element
+  wave on top of unchanged v1 budgets.
+- `GeneratorSchedule.VersionForDay` maps a day number to its version
+  with a committed cutover (day 2430), so an archived daily regenerates
+  exactly as it shipped, forever.
+- Journey and the tutorial pin v1 at the call site; practice runs newest.
+- The replay codec's version byte doubles as the config version. Legacy
+  codes decode as v1; ghosts refuse a version mismatch, because the same
+  seed under another config is a different course.
+
+New decoration steps must be APPENDED to the decorator and guarded by
+their budget, never inserted mid-stream: the RNG is a single sequence,
+and reordering draws changes every course after the insertion point.
 
 ## Unity layer
 

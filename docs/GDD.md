@@ -25,7 +25,12 @@ share your run as a ~20-character replay code. Wordle loop, golf body.
 - Stroke limit per course: `par + 3`; hitting the limit = course failed
   (retry allowed, attempt counter shown).
 
-## Course elements (MVP set — exactly these, no more)
+## Course elements
+
+The MVP set was "exactly these, no more"; it has since grown twice, each
+time deliberately and dated. Everything below obeys the same contract:
+fixed-point, deterministic, and provable by the solver before a player
+sees it.
 
 | Element | Behavior |
 |---|---|
@@ -35,6 +40,31 @@ share your run as a ~20-character replay code. Wordle loop, golf body.
 | Ice zone (polygon) | near-zero rolling friction: the ball slides far (added post-MVP, 2026-08-16) |
 | Water zone (polygon) | ball sinks: +1 stroke, ball returns to last rest position |
 | Hole | capture when ball overlaps at low enough speed; fast overlap rims out |
+
+The 2026-08-18 wave (generator v2 — see below):
+
+| Element | Behavior |
+|---|---|
+| One-way gate (segment) | a valve: crossed freely along its pass normal, a solid wall against it |
+| Ramp zone (polygon) | constant acceleration while inside — downhill lengthens the roll, uphill repels gentle shots |
+| Portal pair (two discs) | entering one mouth reappears at its twin, velocity untouched |
+| Windmill (rotating blades) | blades sweep a pivot; the phase advances with ticks since the current shot and re-arms every stroke, so the mill turns only while the ball rolls |
+
+The windmill is the one that had to bend to fit: a real-time obstacle
+would break both the solver (a rest state would no longer determine the
+future) and the replay codec (codes would need timing). Tying its phase
+to the shot clock keeps it a planning puzzle rather than a reflex test,
+and keeps every guarantee intact.
+
+## Generator versions
+
+Adding elements changes what a seed generates — which would silently
+rewrite every curated Journey level and every archived daily. So the
+generator is versioned: **v1** (the five-element set) is frozen forever
+and still regenerates Journey, the tutorial and every daily before the
+cutover; **v2** (the wave above) runs practice and dailies from day 2430
+(2026-08-27). Replay codes carry their version, so a code always
+regenerates the course it was played on.
 
 ## Modes
 
