@@ -164,6 +164,26 @@ namespace PuttSeed.Unity
             return image;
         }
 
+        /// <summary>
+        /// A pop-up card that visibly separates from the felt: a light outline
+        /// frame around a cool near-black body — clearly not the green board
+        /// behind it. Returns the inner body image.
+        /// </summary>
+        public static Image CreateFramedCard(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax)
+        {
+            var frame = CreatePanel(parent, name + "Frame", anchorMin, anchorMax,
+                new Color(0.97f, 0.96f, 0.90f, 0.32f));
+            var inner = CreateRect(frame.transform, name, Vector2.zero, Vector2.one);
+            inner.offsetMin = new Vector2(4f, 4f);
+            inner.offsetMax = new Vector2(-4f, -4f);
+            var image = inner.gameObject.AddComponent<Image>();
+            image.sprite = RoundedSprite();
+            image.type = Image.Type.Sliced;
+            image.color = new Color(0.035f, 0.055f, 0.095f, 0.985f);
+            image.raycastTarget = false;
+            return image;
+        }
+
         /// <summary>Creates a filled circle image (decorative shapes).</summary>
         public static Image CreateCircle(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color color)
         {
@@ -180,6 +200,7 @@ namespace PuttSeed.Unity
         {
             var rect = CreateRect(parent, name, anchorMin, anchorMax);
             var text = rect.gameObject.AddComponent<Text>();
+            rect.gameObject.AddComponent<LocalizedText>(); // baked English self-localizes at Awake
             text.font = Font();
             text.fontSize = size;
             text.alignment = align;

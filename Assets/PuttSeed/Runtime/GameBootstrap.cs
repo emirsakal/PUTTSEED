@@ -112,6 +112,7 @@ namespace PuttSeed.Unity
                 GameSession.FixedSeed = fixedSeed;
             }
 
+            UiPolish.EnsureButtonFeedback();
             modes.StartFromSession();
 
             Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;

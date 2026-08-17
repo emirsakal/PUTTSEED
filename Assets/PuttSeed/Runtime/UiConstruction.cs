@@ -98,31 +98,133 @@ namespace PuttSeed.Unity
             menu.statsButton = footerHit.gameObject.AddComponent<Button>();
             footerHit.gameObject.AddComponent<UiClickSound>();
 
-            // Settings chips (persisted in the stats file): sound, haptics and
-            // aim style on one row, the cosmetic ball skin below. MenuBootstrap
-            // fills the labels and wires the clicks.
-            menu.soundLabel = UIFactory.CreateButton(canvas.transform, "Sound On",
-                new Vector2(0.10f, 0.145f), new Vector2(0.36f, 0.195f), NoOp, 24);
-            menu.soundButton = menu.soundLabel.GetComponentInParent<Button>();
-            menu.hapticsLabel = UIFactory.CreateButton(canvas.transform, "Haptics On",
-                new Vector2(0.38f, 0.145f), new Vector2(0.62f, 0.195f), NoOp, 24);
-            menu.hapticsButton = menu.hapticsLabel.GetComponentInParent<Button>();
-            menu.aimLabel = UIFactory.CreateButton(canvas.transform, "Aim Sling",
-                new Vector2(0.64f, 0.145f), new Vector2(0.90f, 0.195f), NoOp, 24);
-            menu.aimButton = menu.aimLabel.GetComponentInParent<Button>();
+            // The menu stays clean: everything configurable lives behind two
+            // buttons — Settings (toggles) and Collection (ball skins).
+            var settingsLabel = UIFactory.CreateButton(canvas.transform, "Settings",
+                new Vector2(0.10f, 0.14f), new Vector2(0.48f, 0.195f), NoOp, 30);
+            menu.settingsButton = settingsLabel.GetComponentInParent<Button>();
+            var collectionLabel = UIFactory.CreateButton(canvas.transform, "Collection",
+                new Vector2(0.52f, 0.14f), new Vector2(0.90f, 0.195f), NoOp, 30);
+            menu.collectionButton = collectionLabel.GetComponentInParent<Button>();
 
-            menu.ballSkinLabel = UIFactory.CreateButton(canvas.transform, "Ball: Cream",
-                new Vector2(0.10f, 0.088f), new Vector2(0.36f, 0.138f), NoOp, 22);
-            menu.ballSkinButton = menu.ballSkinLabel.GetComponentInParent<Button>();
-            menu.colorblindLabel = UIFactory.CreateButton(canvas.transform, "Colors Std",
-                new Vector2(0.38f, 0.088f), new Vector2(0.62f, 0.138f), NoOp, 22);
-            menu.colorblindButton = menu.colorblindLabel.GetComponentInParent<Button>();
-            menu.batteryLabel = UIFactory.CreateButton(canvas.transform, "120 FPS",
-                new Vector2(0.64f, 0.088f), new Vector2(0.90f, 0.138f), NoOp, 22);
-            menu.batteryButton = menu.batteryLabel.GetComponentInParent<Button>();
+            // Pop-ups mount on the CANVAS root, not the safe-area root: their
+            // dim backdrops must cover the whole screen, notch included (the
+            // cards themselves are centered, so cutouts never cover content).
+            var canvasRoot = canvas.transform.parent;
+            BuildArchivePanel(canvasRoot, menu);
+            BuildStatsPanel(canvasRoot, menu);
+            BuildSettingsPanel(canvasRoot, menu);
+            BuildCollectionPanel(canvasRoot, menu);
+        }
 
-            BuildArchivePanel(canvas.transform, menu);
-            BuildStatsPanel(canvas.transform, menu);
+        /// <summary>The settings overlay: every toggle chip in one place.</summary>
+        private static void BuildSettingsPanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "SettingsPanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true;
+            menu.settingsPanel = dim.gameObject;
+
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.10f, 0.15f), new Vector2(0.90f, 0.83f));
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.745f), new Vector2(0.9f, 0.805f), 52, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Settings";
+
+            menu.soundToggle = CreateSettingRow(dim, 0.71f, "Sound", "On", "Off");
+            menu.hapticsToggle = CreateSettingRow(dim, 0.632f, "Haptics", "On", "Off");
+            menu.aimToggle = CreateSettingRow(dim, 0.554f, "Aim", "Sling", "Direct");
+            menu.colorblindToggle = CreateSettingRow(dim, 0.476f, "Colors", "Std", "Vivid");
+            menu.batteryToggle = CreateSettingRow(dim, 0.398f, "FPS", "120", "60");
+            menu.languageToggle = CreateSettingRow(dim, 0.32f, "Language", "EN", "TR");
+
+            var close = UIFactory.CreateButton(dim, "Close",
+                new Vector2(0.3f, 0.18f), new Vector2(0.7f, 0.24f), NoOp, 30, primary: true);
+            menu.settingsCloseButton = close.GetComponentInParent<Button>();
+            menu.settingsCloseButton.GetComponent<UiClickSound>().downTone = true;
+
+            menu.settingsPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// One settings row: the label on the left, a two-segment selector on
+        /// the right. Tapping a segment SELECTS that option — the active side
+        /// fills amber, so the current state is readable at a glance.
+        /// </summary>
+        private static SegmentedToggle CreateSettingRow(RectTransform dim, float yMax,
+            string label, string optionA, string optionB)
+        {
+            var row = UIFactory.CreateRect(dim, $"Row{label}",
+                new Vector2(0.15f, yMax - 0.058f), new Vector2(0.85f, yMax));
+            var toggle = row.gameObject.AddComponent<SegmentedToggle>();
+
+            var rowLabel = UIFactory.CreateText(row, "Label",
+                new Vector2(0.02f, 0f), new Vector2(0.40f, 1f), 30, TextAnchor.MiddleLeft);
+            rowLabel.text = label;
+
+            toggle.optionALabel = UIFactory.CreateButton(row, optionA,
+                new Vector2(0.44f, 0.06f), new Vector2(0.70f, 0.94f), NoOp, 26);
+            toggle.optionAButton = toggle.optionALabel.GetComponentInParent<Button>();
+            toggle.optionABg = toggle.optionAButton.GetComponent<Image>();
+
+            toggle.optionBLabel = UIFactory.CreateButton(row, optionB,
+                new Vector2(0.72f, 0.06f), new Vector2(0.98f, 0.94f), NoOp, 26);
+            toggle.optionBButton = toggle.optionBLabel.GetComponentInParent<Button>();
+            toggle.optionBBg = toggle.optionBButton.GetComponent<Image>();
+
+            return toggle;
+        }
+
+        /// <summary>
+        /// The collection overlay: every ball skin as a row — swatch, name and
+        /// state (equipped / tap to equip / locked with its unlock hint).
+        /// </summary>
+        private static void BuildCollectionPanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "CollectionPanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true;
+            menu.collectionPanel = dim.gameObject;
+
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.09f, 0.20f), new Vector2(0.91f, 0.80f));
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.715f), new Vector2(0.9f, 0.775f), 52, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Collection";
+
+            int count = BallSkins.All.Length;
+            menu.collectionRowButtons = new Button[count];
+            menu.collectionRowLabels = new Text[count];
+            menu.collectionRowSwatches = new Image[count];
+            for (int i = 0; i < count; i++)
+            {
+                float yMax = 0.685f - i * 0.078f;
+                var rowLabel = UIFactory.CreateButton(dim, "—",
+                    new Vector2(0.13f, yMax - 0.068f), new Vector2(0.87f, yMax), NoOp, 24);
+                rowLabel.alignment = TextAnchor.MiddleLeft;
+                var labelRect = rowLabel.rectTransform;
+                labelRect.anchorMin = new Vector2(0.16f, 0f);
+                labelRect.anchorMax = new Vector2(0.98f, 1f);
+                menu.collectionRowLabels[i] = rowLabel;
+                menu.collectionRowButtons[i] = rowLabel.GetComponentInParent<Button>();
+
+                var swatch = UIFactory.CreateRect(menu.collectionRowButtons[i].transform, "Swatch",
+                    new Vector2(0.03f, 0.22f), new Vector2(0.12f, 0.78f));
+                var swatchImage = swatch.gameObject.AddComponent<Image>();
+                swatchImage.sprite = UIFactory.CircleSprite();
+                swatchImage.preserveAspect = true;
+                swatchImage.raycastTarget = false;
+                menu.collectionRowSwatches[i] = swatchImage;
+            }
+
+            var close = UIFactory.CreateButton(dim, "Close",
+                new Vector2(0.3f, 0.22f), new Vector2(0.7f, 0.28f), NoOp, 30, primary: true);
+            menu.collectionCloseButton = close.GetComponentInParent<Button>();
+            menu.collectionCloseButton.GetComponent<UiClickSound>().downTone = true;
+
+            menu.collectionPanel.SetActive(false);
         }
 
         /// <summary>
@@ -137,8 +239,8 @@ namespace PuttSeed.Unity
             dimImage.raycastTarget = true;
             menu.statsPanel = dim.gameObject;
 
-            UIFactory.CreatePanel(dim, "Card",
-                new Vector2(0.07f, 0.10f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.07f, 0.10f), new Vector2(0.93f, 0.84f));
             var title = UIFactory.CreateText(dim, "Title",
                 new Vector2(0.1f, 0.765f), new Vector2(0.9f, 0.82f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Stats";
@@ -190,21 +292,41 @@ namespace PuttSeed.Unity
             dimImage.raycastTarget = true; // swallow clicks under the panel
             menu.archivePanel = dim.gameObject;
 
-            UIFactory.CreatePanel(dim, "Card",
-                new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f), UIStyle.PanelDark);
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f));
             var title = UIFactory.CreateText(dim, "Title",
                 new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Archive";
 
             menu.archiveRowButtons = new Button[7];
             menu.archiveRowLabels = new Text[7];
+            menu.archiveRowStars = new Image[7 * 3];
             for (int i = 0; i < 7; i++)
             {
                 float yMax = 0.72f - i * 0.062f;
                 var rowLabel = UIFactory.CreateButton(dim, "—",
                     new Vector2(0.12f, yMax - 0.055f), new Vector2(0.88f, yMax), NoOp, 30);
+                rowLabel.alignment = TextAnchor.MiddleLeft;
+                var labelRect = rowLabel.rectTransform;
+                labelRect.anchorMin = new Vector2(0.06f, 0f);
+                labelRect.anchorMax = new Vector2(0.70f, 1f);
                 menu.archiveRowLabels[i] = rowLabel;
                 menu.archiveRowButtons[i] = rowLabel.GetComponentInParent<Button>();
+
+                // Played days show their stars as icons on the row's right.
+                for (int s = 0; s < 3; s++)
+                {
+                    var starRect = UIFactory.CreateRect(menu.archiveRowButtons[i].transform,
+                        $"Star{s + 1}",
+                        new Vector2(0.72f + s * 0.09f, 0.22f),
+                        new Vector2(0.79f + s * 0.09f, 0.78f));
+                    var starImage = starRect.gameObject.AddComponent<Image>();
+                    starImage.sprite = UIFactory.StarSprite();
+                    starImage.preserveAspect = true;
+                    starImage.raycastTarget = false;
+                    starRect.gameObject.SetActive(false);
+                    menu.archiveRowStars[i * 3 + s] = starImage;
+                }
             }
 
             var older = UIFactory.CreateButton(dim, "Older",

@@ -24,10 +24,12 @@ namespace PuttSeed.Unity
         public Button? tutorialButton;
         public Text? tutorialLabel;
         public Text? footerText;
-        public Button? soundButton;
-        public Text? soundLabel;
-        public Button? hapticsButton;
-        public Text? hapticsLabel;
+        public SegmentedToggle? soundToggle;
+        public SegmentedToggle? hapticsToggle;
+        public SegmentedToggle? aimToggle;
+        public SegmentedToggle? colorblindToggle;
+        public SegmentedToggle? batteryToggle;
+        public SegmentedToggle? languageToggle;
         public Text? countdownText;
         public Button? archiveButton;
         public GameObject? archivePanel;
@@ -48,14 +50,16 @@ namespace PuttSeed.Unity
         public RectTransform? deco1;
         public RectTransform? deco2;
         public Text? taglineText;
-        public Button? aimButton;
-        public Text? aimLabel;
-        public Button? ballSkinButton;
-        public Text? ballSkinLabel;
-        public Button? colorblindButton;
-        public Text? colorblindLabel;
-        public Button? batteryButton;
-        public Text? batteryLabel;
+        public Image[] archiveRowStars = new Image[0];
+        public Button? settingsButton;
+        public GameObject? settingsPanel;
+        public Button? settingsCloseButton;
+        public Button? collectionButton;
+        public GameObject? collectionPanel;
+        public Button? collectionCloseButton;
+        public Button[] collectionRowButtons = new Button[0];
+        public Text[] collectionRowLabels = new Text[0];
+        public Image[] collectionRowSwatches = new Image[0];
         public InputField? saveField;
         public Button? importSaveButton;
         public Text? importSaveLabel;
@@ -90,6 +94,7 @@ namespace PuttSeed.Unity
             UiSounds.Enabled = stats.Data.soundEnabled;
             PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
             Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
+            UiPolish.EnsureButtonFeedback();
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
@@ -110,8 +115,8 @@ namespace PuttSeed.Unity
             if (dailyLabel != null)
             {
                 dailyLabel.text = todayRecord.completed
-                    ? $"Daily {utc:MMM d} — done in {todayRecord.bestStrokes}"
-                    : $"Play today's hole · {utc:MMM d}";
+                    ? string.Format(Loc.Tr("Daily {0} — done in {1}"), $"{utc:MMM d}", todayRecord.bestStrokes)
+                    : string.Format(Loc.Tr("Play today's hole · {0}"), $"{utc:MMM d}");
             }
 
             // Today's hole is done — the loop's next beat is the countdown.
@@ -120,12 +125,12 @@ namespace PuttSeed.Unity
 
             if (tutorialLabel != null && firstLaunch)
             {
-                tutorialLabel.text = "Tutorial  ·  start here";
+                tutorialLabel.text = Loc.Tr("Tutorial  ·  start here");
             }
 
             if (difficultyLabel != null)
             {
-                difficultyLabel.text = GameSession.PracticeDifficulty.ToString();
+                difficultyLabel.text = Loc.Tr(GameSession.PracticeDifficulty.ToString());
                 difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
             }
 
@@ -159,40 +164,45 @@ namespace PuttSeed.Unity
             statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
             shareBestButton?.onClick.AddListener(ShareTodaysBest);
 
-            RefreshSettingsLabels(stats);
-            soundButton?.onClick.AddListener(() =>
+            RefreshSettings();
+            WireToggle(soundToggle, selected =>
             {
-                stats.SetSoundEnabled(!stats.Data.soundEnabled);
-                UiSounds.Enabled = stats.Data.soundEnabled;
-                RefreshSettingsLabels(stats);
+                stats.SetSoundEnabled(selected);
+                UiSounds.Enabled = selected;
             });
-            hapticsButton?.onClick.AddListener(() =>
+            WireToggle(hapticsToggle, selected => stats.SetHapticsEnabled(selected));
+            WireToggle(aimToggle, selected => stats.SetAimDirect(!selected)); // A = Sling
+            WireToggle(colorblindToggle, selected =>
             {
-                stats.SetHapticsEnabled(!stats.Data.hapticsEnabled);
-                RefreshSettingsLabels(stats);
-            });
-            aimButton?.onClick.AddListener(() =>
-            {
-                stats.SetAimDirect(!stats.Data.aimDirect);
-                RefreshSettingsLabels(stats);
-            });
-            ballSkinButton?.onClick.AddListener(() =>
-            {
-                stats.SetBallSkin(BallSkins.NextUnlocked(stats.Data.ballSkin, stats.Data).Id);
-                RefreshSettingsLabels(stats);
-            });
-            colorblindButton?.onClick.AddListener(() =>
-            {
-                stats.SetColorblindMode(!stats.Data.colorblindMode);
+                stats.SetColorblindMode(!selected); // A = Std
                 PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
-                RefreshSettingsLabels(stats);
             });
-            batteryButton?.onClick.AddListener(() =>
+            WireToggle(batteryToggle, selected =>
             {
-                stats.SetBatterySaver(!stats.Data.batterySaver);
+                stats.SetBatterySaver(!selected); // A = 120 fps
                 Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
-                RefreshSettingsLabels(stats);
             });
+            WireToggle(languageToggle, selected =>
+            {
+                stats.SetLanguage(selected ? "en" : "tr"); // A = EN
+                Loc.Apply(stats.Data.language);
+                SceneFader.LoadScene("Menu"); // every baked label re-localizes
+            });
+            settingsButton?.onClick.AddListener(() =>
+            {
+                if (settingsPanel != null)
+                {
+                    UiFx.PopIn(this, settingsPanel);
+                }
+            });
+            settingsCloseButton?.onClick.AddListener(() => settingsPanel?.SetActive(false));
+            collectionButton?.onClick.AddListener(OpenCollection);
+            collectionCloseButton?.onClick.AddListener(() => collectionPanel?.SetActive(false));
+            for (int i = 0; i < collectionRowButtons.Length; i++)
+            {
+                int row = i; // capture per row
+                collectionRowButtons[i]?.onClick.AddListener(() => EquipSkin(row));
+            }
             exportSaveButton?.onClick.AddListener(ExportSave);
             importSaveButton?.onClick.AddListener(ImportSave);
         }
@@ -202,7 +212,7 @@ namespace PuttSeed.Unity
             GUIUtility.systemCopyBuffer = SaveCodec.Export(_stats.Data);
             if (exportSaveLabel != null)
             {
-                exportSaveLabel.text = "Copied!";
+                exportSaveLabel.text = Loc.Tr("Copied!");
             }
         }
 
@@ -213,7 +223,7 @@ namespace PuttSeed.Unity
             {
                 if (importSaveLabel != null)
                 {
-                    importSaveLabel.text = "Invalid code";
+                    importSaveLabel.text = Loc.Tr("Invalid code");
                     _importArmed = false;
                 }
 
@@ -226,7 +236,7 @@ namespace PuttSeed.Unity
                 _importArmed = true;
                 if (importSaveLabel != null)
                 {
-                    importSaveLabel.text = "Tap to confirm";
+                    importSaveLabel.text = Loc.Tr("Tap to confirm");
                 }
 
                 return;
@@ -236,42 +246,35 @@ namespace PuttSeed.Unity
             SceneFader.LoadScene("Menu"); // rebuild every label from the new save
         }
 
-        private void RefreshSettingsLabels(StatsStore stats)
+        /// <summary>Wires both segments: A selects true, B selects false.</summary>
+        private void WireToggle(SegmentedToggle? toggle, System.Action<bool> selectA)
         {
-            if (soundLabel != null)
+            if (toggle == null)
             {
-                soundLabel.text = stats.Data.soundEnabled ? "Sound On" : "Sound Off";
-                soundLabel.color = stats.Data.soundEnabled ? UIStyle.Cream : UIStyle.CreamDim;
+                return;
             }
 
-            if (hapticsLabel != null)
+            toggle.optionAButton?.onClick.AddListener(() =>
             {
-                hapticsLabel.text = stats.Data.hapticsEnabled ? "Haptics On" : "Haptics Off";
-                hapticsLabel.color = stats.Data.hapticsEnabled ? UIStyle.Cream : UIStyle.CreamDim;
-            }
+                selectA(true);
+                RefreshSettings();
+            });
+            toggle.optionBButton?.onClick.AddListener(() =>
+            {
+                selectA(false);
+                RefreshSettings();
+            });
+        }
 
-            if (aimLabel != null)
-            {
-                aimLabel.text = stats.Data.aimDirect ? "Aim Direct" : "Aim Sling";
-            }
-
-            if (ballSkinLabel != null)
-            {
-                var skin = BallSkins.Resolve(stats.Data.ballSkin);
-                int unlocked = BallSkins.UnlockedCount(stats.Data);
-                ballSkinLabel.text = $"Ball: {skin.Name}  ({unlocked}/{BallSkins.All.Length})";
-                ballSkinLabel.color = skin.Color;
-            }
-
-            if (colorblindLabel != null)
-            {
-                colorblindLabel.text = stats.Data.colorblindMode ? "Colors CB" : "Colors Std";
-            }
-
-            if (batteryLabel != null)
-            {
-                batteryLabel.text = stats.Data.batterySaver ? "60 FPS" : "120 FPS";
-            }
+        private void RefreshSettings()
+        {
+            var data = _stats.Data;
+            soundToggle?.SetSelected(data.soundEnabled);
+            hapticsToggle?.SetSelected(data.hapticsEnabled);
+            aimToggle?.SetSelected(!data.aimDirect);        // A = Sling
+            colorblindToggle?.SetSelected(!data.colorblindMode); // A = Std
+            batteryToggle?.SetSelected(!data.batterySaver); // A = 120 fps
+            languageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
         }
 
         private void Update()
@@ -309,6 +312,16 @@ namespace PuttSeed.Unity
                     UiSounds.ClickDown();
                     statsPanel.SetActive(false);
                 }
+                else if (settingsPanel != null && settingsPanel.activeSelf)
+                {
+                    UiSounds.ClickDown();
+                    settingsPanel.SetActive(false);
+                }
+                else if (collectionPanel != null && collectionPanel.activeSelf)
+                {
+                    UiSounds.ClickDown();
+                    collectionPanel.SetActive(false);
+                }
                 else
                 {
                     Application.Quit();
@@ -322,8 +335,8 @@ namespace PuttSeed.Unity
 
             var remaining = DailyCountdown.UntilNextHole(DateTime.UtcNow);
             countdownText.text = remaining.TotalSeconds <= 0
-                ? "New hole is ready — restart to play!"
-                : $"next hole in {DailyCountdown.Format(remaining)}";
+                ? Loc.Tr("New hole is ready — restart to play!")
+                : string.Format(Loc.Tr("next hole in {0}"), DailyCountdown.Format(remaining));
         }
 
         /// <summary>
@@ -394,12 +407,12 @@ namespace PuttSeed.Unity
             {
                 string Pb(int best) => best == 0 ? "—" : best.ToString();
                 statsBlock.text =
-                    $"Streak {data.streak}  (best {data.bestStreak})\n" +
-                    $"Dailies completed  {Achievements.CompletedDailyCount(data)}\n" +
-                    $"3-star {s3}  ·  2-star {s2}  ·  1-star {s1}\n" +
-                    $"Daily attempts  {attempts}  ·  Practice  {data.practicePlayed}\n" +
-                    $"Practice best   E {Pb(data.bestPracticeEasy)}  ·  " +
-                    $"N {Pb(data.bestPracticeNormal)}  ·  H {Pb(data.bestPracticeHard)}";
+                    string.Format(Loc.Tr("Streak {0}  (best {1})"), data.streak, data.bestStreak) + "\n"
+                    + string.Format(Loc.Tr("Dailies completed  {0}"), Achievements.CompletedDailyCount(data)) + "\n"
+                    + string.Format(Loc.Tr("3-star {0}  ·  2-star {1}  ·  1-star {2}"), s3, s2, s1) + "\n"
+                    + string.Format(Loc.Tr("Daily attempts  {0}  ·  Practice  {1}"), attempts, data.practicePlayed) + "\n"
+                    + string.Format(Loc.Tr("Practice best   E {0}  ·  N {1}  ·  H {2}"),
+                        Pb(data.bestPracticeEasy), Pb(data.bestPracticeNormal), Pb(data.bestPracticeHard));
             }
 
             if (achievementsBlock != null)
@@ -422,17 +435,17 @@ namespace PuttSeed.Unity
                 todayBest != null && todayBest.completed && todayBest.bestReplay.Length > 0);
             if (shareBestLabel != null)
             {
-                shareBestLabel.text = "Share best";
+                shareBestLabel.text = Loc.Tr("Share best");
             }
 
             if (exportSaveLabel != null)
             {
-                exportSaveLabel.text = "Export save";
+                exportSaveLabel.text = Loc.Tr("Export save");
             }
 
             if (importSaveLabel != null)
             {
-                importSaveLabel.text = "Import";
+                importSaveLabel.text = Loc.Tr("Import");
             }
 
             _importArmed = false;
@@ -452,12 +465,76 @@ namespace PuttSeed.Unity
                 return;
             }
 
+            // Share payloads stay English on purpose — they travel to anyone.
             string text = $"PUTTSEED day {today} — {record.bestStrokes} strokes. Watch: {record.bestReplay}";
             GUIUtility.systemCopyBuffer = text;
             bool sheet = NativeShare.Share(text);
             if (shareBestLabel != null)
             {
-                shareBestLabel.text = sheet ? "Sharing…" : "Copied!";
+                shareBestLabel.text = Loc.Tr(sheet ? "Sharing…" : "Copied!");
+            }
+        }
+
+        private void OpenCollection()
+        {
+            RefreshCollection();
+            if (collectionPanel != null)
+            {
+                UiFx.PopIn(this, collectionPanel);
+            }
+        }
+
+        private void RefreshCollection()
+        {
+            var data = _stats.Data;
+            for (int i = 0; i < collectionRowLabels.Length && i < BallSkins.All.Length; i++)
+            {
+                var skin = BallSkins.All[i];
+                bool unlocked = BallSkins.IsUnlocked(skin, data);
+                bool equipped = data.ballSkin == skin.Id;
+
+                if (collectionRowSwatches[i] != null)
+                {
+                    collectionRowSwatches[i].color = unlocked
+                        ? skin.Color
+                        : new Color(skin.Color.r, skin.Color.g, skin.Color.b, 0.22f);
+                }
+
+                if (collectionRowLabels[i] != null)
+                {
+                    string hint = skin.RequiredAchievement != null
+                        ? Loc.Tr(Achievements.Find(skin.RequiredAchievement)?.Detail ?? "")
+                        : "";
+                    string name = Loc.Tr(skin.Name);
+                    collectionRowLabels[i].text = equipped
+                        ? string.Format(Loc.Tr("{0}  —  equipped"), name)
+                        : unlocked
+                            ? string.Format(Loc.Tr("{0}  —  tap to equip"), name)
+                            : string.Format(Loc.Tr("{0}  —  locked: {1}"), name, hint);
+                    collectionRowLabels[i].color = equipped
+                        ? UIStyle.Accent
+                        : unlocked ? UIStyle.Cream : UIStyle.CreamDim;
+                }
+
+                if (collectionRowButtons[i] != null)
+                {
+                    collectionRowButtons[i].interactable = unlocked;
+                }
+            }
+        }
+
+        private void EquipSkin(int row)
+        {
+            if (row >= BallSkins.All.Length)
+            {
+                return;
+            }
+
+            var skin = BallSkins.All[row];
+            if (BallSkins.IsUnlocked(skin, _stats.Data))
+            {
+                _stats.SetBallSkin(skin.Id);
+                RefreshCollection();
             }
         }
 
@@ -489,19 +566,35 @@ namespace PuttSeed.Unity
 
                 var date = ModeController.DateOfDay(day);
                 var record = _stats.FindDay(day);
-                archiveRowLabels[i].text = record != null && record.completed
-                    ? $"{date:MMM d}  ·  best {record.bestStrokes}"
-                      + (record.bestStars > 0 ? $"  ·  {record.bestStars}-star" : "")
-                    : $"{date:MMM d}  ·  not played";
-                archiveRowLabels[i].color = record != null && record.completed
-                    ? UIStyle.Cream
-                    : UIStyle.CreamDim;
+                bool played = record != null && record.completed;
+                archiveRowLabels[i].text = played
+                    ? string.Format(Loc.Tr("{0}  ·  best {1}"), $"{date:MMM d}", record!.bestStrokes)
+                    : string.Format(Loc.Tr("{0}  ·  not played"), $"{date:MMM d}");
+                archiveRowLabels[i].color = played ? UIStyle.Cream : UIStyle.CreamDim;
+
+                // Star icons on the row's right: earned amber, the rest dim.
+                for (int s = 0; s < 3; s++)
+                {
+                    var star = archiveRowStars[i * 3 + s];
+                    if (star == null)
+                    {
+                        continue;
+                    }
+
+                    star.gameObject.SetActive(played);
+                    if (played)
+                    {
+                        star.color = s < record!.bestStars
+                            ? UIStyle.Accent
+                            : new Color(1f, 1f, 1f, 0.14f);
+                    }
+                }
             }
 
             if (archivePageLabel != null)
             {
                 int first = _archivePage * 7 + 1;
-                archivePageLabel.text = $"{first}–{first + 6} days ago";
+                archivePageLabel.text = string.Format(Loc.Tr("{0}–{1} days ago"), first, first + 6);
             }
 
             if (archiveOlderButton != null)
@@ -531,9 +624,15 @@ namespace PuttSeed.Unity
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)
         {
-            string streak = stats.Data.streak > 0 ? $"Streak {stats.Data.streak}" : "No streak yet";
-            string attempts = today.attempts > 0 ? $" · Today: {today.attempts} attempt(s)" : "";
-            string practice = stats.Data.practicePlayed > 0 ? $" · Practice: {stats.Data.practicePlayed}" : "";
+            string streak = stats.Data.streak > 0
+                ? string.Format(Loc.Tr("Streak {0}"), stats.Data.streak)
+                : Loc.Tr("No streak yet");
+            string attempts = today.attempts > 0
+                ? string.Format(Loc.Tr(" · Today: {0} attempt(s)"), today.attempts)
+                : "";
+            string practice = stats.Data.practicePlayed > 0
+                ? string.Format(Loc.Tr(" · Practice: {0}"), stats.Data.practicePlayed)
+                : "";
             return streak + attempts + practice;
         }
 
@@ -542,7 +641,7 @@ namespace PuttSeed.Unity
             GameSession.PracticeDifficulty = (Difficulty)(((int)GameSession.PracticeDifficulty + 1) % 3);
             if (difficultyLabel != null)
             {
-                difficultyLabel.text = GameSession.PracticeDifficulty.ToString();
+                difficultyLabel.text = Loc.Tr(GameSession.PracticeDifficulty.ToString());
                 difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
             }
         }

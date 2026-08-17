@@ -49,7 +49,9 @@ namespace PuttSeed.Unity
         public bool IsArchiveDay { get; private set; }
 
         /// <summary>HUD label for daily mode ("Daily", or dated for archive days).</summary>
-        public string DailyModeLabel => IsArchiveDay ? $"Daily · {_activeDayDate:MMM d}" : "Daily";
+        public string DailyModeLabel => IsArchiveDay
+            ? string.Format(Loc.Tr("Daily · {0}"), $"{_activeDayDate:MMM d}")
+            : Loc.Tr("Daily");
 
         /// <summary>The active mode.</summary>
         public GameMode Mode { get; private set; } = GameMode.Daily;
@@ -252,7 +254,7 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay?.Show("Generating course");
+            _overlay?.Show(Loc.Tr("Generating course"));
             ModeChanged?.Invoke();
             yield return null; // let the overlay render first
 
@@ -333,7 +335,7 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay?.Show("Generating course");
+            _overlay?.Show(Loc.Tr("Generating course"));
             ModeChanged?.Invoke();
 
             // Read Unity-side state (the ScriptableObject) on the main thread;

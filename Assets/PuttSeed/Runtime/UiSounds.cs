@@ -45,46 +45,28 @@ namespace PuttSeed.Unity
     }
 
     /// <summary>
-    /// Scene-serializable click hookup: UnityEvent listeners added while
-    /// BAKING a scene do not survive serialization, so every generated button
-    /// carries this component and wires the click sound at runtime instead.
-    /// Close/back buttons mark <see cref="downTone"/> for the descending tick.
+    /// The no-silent-buttons guarantee: bootstraps sweep the scene (inactive
+    /// panels included) and fit every Button that slipped through generation
+    /// with the click sound and press scale. Idempotent.
     /// </summary>
-    public sealed class UiClickSound : MonoBehaviour
+    public static class UiPolish
     {
-        /// <summary>True on closing controls — plays the pitched-down tick.</summary>
-        public bool downTone;
-
-        private void Awake()
+        public static void EnsureButtonFeedback()
         {
-            var button = GetComponent<UnityEngine.UI.Button>();
-            if (button != null)
+            var buttons = Object.FindObjectsByType<UnityEngine.UI.Button>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var button in buttons)
             {
-                button.onClick.AddListener(() =>
+                if (button.GetComponent<UiClickSound>() == null)
                 {
-                    if (downTone)
-                    {
-                        UiSounds.ClickDown();
-                    }
-                    else
-                    {
-                        UiSounds.Click();
-                    }
-                });
+                    button.gameObject.AddComponent<UiClickSound>();
+                }
+
+                if (button.GetComponent<ButtonPressScale>() == null)
+                {
+                    button.gameObject.AddComponent<ButtonPressScale>();
+                }
             }
         }
-    }
-
-    /// <summary>
-    /// Scene-serializable press feedback: the button dips to 96% while held.
-    /// </summary>
-    public sealed class ButtonPressScale : MonoBehaviour,
-        UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
-    {
-        public void OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
-            => transform.localScale = Vector3.one * 0.96f;
-
-        public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
-            => transform.localScale = Vector3.one;
     }
 }

@@ -65,8 +65,8 @@ namespace PuttSeed.Unity
             undoButton?.onClick.AddListener(OnUndo);
             runner.StateChanged += Refresh;
             modes.ModeChanged += Refresh;
-            modes.AchievementUnlocked += def => ShowToast($"Achievement — {def.Title}!");
-            modes.PracticeBestImproved += strokes => ShowToast($"New practice best — {strokes}!");
+            modes.AchievementUnlocked += def => ShowToast(string.Format(Loc.Tr("Achievement — {0}!"), Loc.Tr(def.Title)));
+            modes.PracticeBestImproved += strokes => ShowToast(string.Format(Loc.Tr("New practice best — {0}!"), strokes));
             OfferClipboardReplay();
             Refresh();
         }
@@ -92,7 +92,7 @@ namespace PuttSeed.Unity
             var gen = _runner.Generation;
             if (hintText != null)
             {
-                hintText.text = _modes.CurrentHint;
+                hintText.text = Loc.Tr(_modes.CurrentHint);
             }
 
             hintChip?.SetActive(_modes.CurrentHint.Length > 0);
@@ -107,20 +107,21 @@ namespace PuttSeed.Unity
 
             if (sim == null || gen == null)
             {
-                counterText.text = "generating…";
+                counterText.text = Loc.Tr("generating…");
                 return;
             }
 
             string modeLabel = _modes.Mode switch
             {
                 GameMode.Daily => _modes.DailyModeLabel,
-                GameMode.Practice => $"Practice · {gen.Difficulty}",
-                _ => $"Tutorial {_modes.TutorialIndex + 1}/{TutorialConfig.Stages.Length}",
+                GameMode.Practice => string.Format(Loc.Tr("Practice · {0}"), Loc.Tr(gen.Difficulty.ToString())),
+                _ => string.Format(Loc.Tr("Tutorial {0}/{1}"), _modes.TutorialIndex + 1, TutorialConfig.Stages.Length),
             };
 
             int streak = _modes.Stats.Data.streak;
-            string streakLabel = streak > 0 ? $"   Streak {streak}" : "";
-            counterText.text = $"{modeLabel}   Strokes {sim.Strokes}/{sim.StrokeLimit}   Par {gen.Course.Par}{streakLabel}";
+            string streakLabel = streak > 0 ? string.Format(Loc.Tr("   Streak {0}"), streak) : "";
+            counterText.text = string.Format(Loc.Tr("{0}   Strokes {1}/{2}   Par {3}{4}"),
+                modeLabel, sim.Strokes, sim.StrokeLimit, gen.Course.Par, streakLabel);
             if (sim.Strokes > _lastStrokesShown)
             {
                 if (_counterPulse != null)
@@ -135,7 +136,7 @@ namespace PuttSeed.Unity
             if (statusText != null)
             {
                 // The fail state gets its own panel; the status line is for success.
-                statusText.text = sim.IsHoled ? GolfTerms.SuccessLine(sim.Strokes, gen.Course.Par) : "";
+                statusText.text = sim.IsHoled ? Loc.Tr(GolfTerms.SuccessLine(sim.Strokes, gen.Course.Par)) : "";
             }
 
             if (failPanel != null && failPanel.activeSelf != sim.IsFailed)
@@ -275,7 +276,7 @@ namespace PuttSeed.Unity
             if (importField != null)
             {
                 importField.text = token;
-                ShowToast("Replay code found in clipboard — tap Watch.");
+                ShowToast(Loc.Tr("Replay code found in clipboard — tap Watch."));
             }
         }
 
@@ -283,7 +284,7 @@ namespace PuttSeed.Unity
         {
             if (_runner.TryUndoShot())
             {
-                ShowToast("Shot undone.");
+                ShowToast(Loc.Tr("Shot undone."));
             }
         }
 
@@ -299,11 +300,11 @@ namespace PuttSeed.Unity
                     var courseCode = ReplayCodec.Encode(_runner.Seed, System.Array.Empty<PuttSeed.Core.Sim.ShotInput>());
                     string invite = $"PUTTSEED — can you beat par {_runner.Generation.Course.Par}? Play: {courseCode}";
                     GUIUtility.systemCopyBuffer = invite;
-                    ShowToast(NativeShare.Share(invite) ? "Sharing course…" : "Course code copied!");
+                    ShowToast(Loc.Tr(NativeShare.Share(invite) ? "Sharing course…" : "Course code copied!"));
                     return;
                 }
 
-                ShowToast("Finish the hole to share your run.");
+                ShowToast(Loc.Tr("Finish the hole to share your run."));
                 return;
             }
 
@@ -316,7 +317,7 @@ namespace PuttSeed.Unity
             var code = ReplayCodec.Encode(_runner.Seed, shots);
             string text = _modes.BuildShareText(sim.Strokes, _runner.Generation!.Course.Par, code);
             GUIUtility.systemCopyBuffer = text; // clipboard as well, on every platform
-            ShowToast(NativeShare.Share(text) ? "Sharing…" : "Copied to clipboard!");
+            ShowToast(Loc.Tr(NativeShare.Share(text) ? "Sharing…" : "Copied to clipboard!"));
         }
 
         private void OnToggleAuthorGhost()
@@ -331,12 +332,12 @@ namespace PuttSeed.Unity
             if (_runner.HasGhost("author"))
             {
                 _runner.RemoveGhosts("author");
-                ShowToast("Author ghost off.");
+                ShowToast(Loc.Tr("Author ghost off."));
             }
             else
             {
                 _runner.AddAuthorGhost();
-                ShowToast("Author ghost on (amber).");
+                ShowToast(Loc.Tr("Author ghost on (amber)."));
             }
         }
 
@@ -349,11 +350,11 @@ namespace PuttSeed.Unity
 
             if (_modes.ImportReplay(importField.text.Trim()))
             {
-                ShowToast("Ghost playing (pink).");
+                ShowToast(Loc.Tr("Ghost playing (pink)."));
             }
             else
             {
-                ShowToast("Not a valid PUTT- code.");
+                ShowToast(Loc.Tr("Not a valid PUTT- code."));
             }
         }
 

@@ -174,14 +174,29 @@ namespace PuttSeed.Unity
                 _previewValid = true;
             }
 
-            for (int i = 0; i < _dots.Length; i++)
+            // The trajectory dots pick up BEYOND the power arrow's tip — the
+            // two dotted lines must never overlap and blur into each other.
+            float power = InputQuantizer.PowerFraction(_aim, maxDrag, exponent);
+            float cutoff = 0.4f + power * 1.8f + 0.18f;
+            float cutoffSq = cutoff * cutoff;
+            var ball = _runner.BallRenderPosition;
+            int visible = 0;
+            for (int i = 0; i < _previewPoints.Count && visible < _dots.Length; i++)
             {
-                bool on = i < _previewPoints.Count;
-                _dots[i].SetActive(on);
-                if (on)
+                var p = new Vector2(_previewPoints[i].x, _previewPoints[i].y);
+                if ((p - ball).sqrMagnitude <= cutoffSq)
                 {
-                    _dots[i].transform.position = _previewPoints[i];
+                    continue;
                 }
+
+                _dots[visible].SetActive(true);
+                _dots[visible].transform.position = _previewPoints[i];
+                visible++;
+            }
+
+            for (int i = visible; i < _dots.Length; i++)
+            {
+                _dots[i].SetActive(false);
             }
         }
 
