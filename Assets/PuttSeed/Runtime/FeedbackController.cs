@@ -271,6 +271,7 @@ namespace PuttSeed.Unity
         private void OnShotFired()
         {
             Play(shotClip, 1f);
+            Tick(); // the stroke itself gets the lightest touch
             if (_swingRoutine != null)
             {
                 StopCoroutine(_swingRoutine);
@@ -533,6 +534,7 @@ namespace PuttSeed.Unity
                     _source.PlayOneShot(starClip, volume * 0.7f);
                 }
 
+                Tick(); // each star lands in the hand too
                 yield return new WaitForSeconds(0.16f);
             }
 
@@ -591,6 +593,14 @@ namespace PuttSeed.Unity
             {
                 _source.pitch = Random.Range(0.96f, 1.04f);
                 _source.PlayOneShot(clip, volume * gain);
+            }
+        }
+
+        private void Tick()
+        {
+            if (_settings == null || _settings.Data.hapticsEnabled)
+            {
+                HapticsPlayer.Tick();
             }
         }
 
@@ -710,6 +720,9 @@ namespace PuttSeed.Unity
     /// </summary>
     public static class HapticsPlayer
     {
+        /// <summary>The lightest touch (shot release, star count).</summary>
+        public static void Tick() => Vibrate(12, 70);
+
         /// <summary>A light tick (bumper hit, water entry).</summary>
         public static void Tap() => Vibrate(20, 110);
 
