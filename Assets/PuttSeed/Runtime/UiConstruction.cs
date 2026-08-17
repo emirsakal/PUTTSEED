@@ -88,14 +88,14 @@ namespace PuttSeed.Unity
             menu.archiveButton = archiveLabel.GetComponentInParent<Button>();
 
             UIFactory.CreatePanel(canvas.transform, "FooterChip",
-                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), UIStyle.PanelSoft);
+                new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f), UIStyle.PanelSoft);
             menu.footerText = UIFactory.CreateText(canvas.transform, "Footer",
-                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f), 30, TextAnchor.MiddleCenter);
+                new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f), 30, TextAnchor.MiddleCenter);
             menu.footerText.color = UIStyle.CreamDim;
 
             // Invisible hit area: tapping the stats chip opens the stats panel.
             var footerHit = UIFactory.CreateRect(canvas.transform, "FooterHit",
-                new Vector2(0.14f, 0.205f), new Vector2(0.86f, 0.25f));
+                new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f));
             var footerHitImage = footerHit.gameObject.AddComponent<Image>();
             footerHitImage.color = Color.clear;
             footerHitImage.raycastTarget = true;
@@ -105,10 +105,10 @@ namespace PuttSeed.Unity
             // The menu stays clean: everything configurable lives behind two
             // buttons — Settings (toggles) and Collection (ball skins).
             var settingsLabel = UIFactory.CreateButton(canvas.transform, "Settings",
-                new Vector2(0.10f, 0.14f), new Vector2(0.48f, 0.195f), NoOp, 30);
+                new Vector2(0.10f, 0.13f), new Vector2(0.48f, 0.185f), NoOp, 30);
             menu.settingsButton = settingsLabel.GetComponentInParent<Button>();
             var collectionLabel = UIFactory.CreateButton(canvas.transform, "Collection",
-                new Vector2(0.52f, 0.14f), new Vector2(0.90f, 0.195f), NoOp, 30);
+                new Vector2(0.52f, 0.13f), new Vector2(0.90f, 0.185f), NoOp, 30);
             menu.collectionButton = collectionLabel.GetComponentInParent<Button>();
 
             // Pop-ups mount on the CANVAS root, not the safe-area root: their
@@ -152,9 +152,9 @@ namespace PuttSeed.Unity
                 {
                     int cell = r * columns + c;
                     float x0 = 0.12f + c * 0.1565f;
-                    float yMax = 0.695f - r * 0.089f;
+                    float yMax = 0.70f - r * 0.082f;
                     var cellLabel = UIFactory.CreateButton(dim, "—",
-                        new Vector2(x0, yMax - 0.074f), new Vector2(x0 + 0.134f, yMax), NoOp, 30);
+                        new Vector2(x0, yMax - 0.068f), new Vector2(x0 + 0.134f, yMax), NoOp, 28);
                     var labelRect = cellLabel.rectTransform;
                     labelRect.anchorMin = new Vector2(0f, 0.38f);
                     labelRect.anchorMax = new Vector2(1f, 1f);
@@ -177,17 +177,17 @@ namespace PuttSeed.Unity
             }
 
             var older = UIFactory.CreateButton(dim, "1–25",
-                new Vector2(0.12f, 0.225f), new Vector2(0.34f, 0.28f), NoOp, 26);
+                new Vector2(0.12f, 0.235f), new Vector2(0.34f, 0.288f), NoOp, 26);
             menu.journeyPrevButton = older.GetComponentInParent<Button>();
             menu.journeyPageLabel = UIFactory.CreateText(dim, "Page",
-                new Vector2(0.35f, 0.225f), new Vector2(0.65f, 0.28f), 26, TextAnchor.MiddleCenter);
+                new Vector2(0.35f, 0.235f), new Vector2(0.65f, 0.288f), 26, TextAnchor.MiddleCenter);
             menu.journeyPageLabel.color = UIStyle.CreamDim;
             var newer = UIFactory.CreateButton(dim, "26–50",
-                new Vector2(0.66f, 0.225f), new Vector2(0.88f, 0.28f), NoOp, 26);
+                new Vector2(0.66f, 0.235f), new Vector2(0.88f, 0.288f), NoOp, 26);
             menu.journeyNextButton = newer.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.155f), new Vector2(0.7f, 0.215f), NoOp, 30, primary: true);
             menu.journeyCloseButton = close.GetComponentInParent<Button>();
             menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
 
