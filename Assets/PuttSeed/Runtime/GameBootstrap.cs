@@ -64,7 +64,6 @@ namespace PuttSeed.Unity
             // One store instance serves gameplay stats and the settings toggles.
             var stats = new StatsStore(MenuBootstrap.StatsPath());
             UiSounds.Enabled = stats.Data.soundEnabled;
-            Ambient.EnsurePlaying();
 
             var feedbackGo = new GameObject("Feedback");
             var feedback = feedbackGo.AddComponent<FeedbackController>();

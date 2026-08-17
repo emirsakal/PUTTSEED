@@ -73,7 +73,6 @@ namespace PuttSeed.Unity
             var stats = new StatsStore(StatsPath());
             _stats = stats;
             UiSounds.Enabled = stats.Data.soundEnabled;
-            Ambient.EnsurePlaying();
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
