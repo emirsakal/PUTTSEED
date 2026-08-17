@@ -30,6 +30,11 @@ keystore.properties
 *.keystore
 *.jks
 
+# Raw Game-view captures (PuttSeed -> Capture Screenshot). A shot earns a
+# stable name in docs/media once it is curated into the README; everything
+# still called shot-<timestamp> is a working file.
+docs/media/shot-*.png
+
 # OS
 Thumbs.db
 .DS_Store

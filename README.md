@@ -15,6 +15,21 @@ device — no backend, no accounts, no uploads.
 PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
 ```
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/menu.png" width="200" alt="Main menu: today's hole, the journey campaign, practice and archive"></td>
+    <td align="center"><img src="docs/media/daily-hole.png" width="200" alt="A daily hole: sand and ice zones, bumpers, the cup tucked into sand"></td>
+    <td align="center"><img src="docs/media/journey.png" width="200" alt="Journey level select: a paged grid of 100 levels with per-level stars"></td>
+    <td align="center"><img src="docs/media/collection.png" width="200" alt="Collection: ball skins in a grid, the equipped one wearing an accent ring"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Today's hole</b><br>one course, everyone</td>
+    <td align="center"><b>The elements</b><br>sand, ice, bumpers</td>
+    <td align="center"><b>Journey</b><br>100 curated seeds</td>
+    <td align="center"><b>Collection</b><br>progression-gated skins</td>
+  </tr>
+</table>
+
 ## A course, as the debug viewer prints it
 
 ```
@@ -125,6 +140,7 @@ mechanically, not by care:
 | Core test suite (219 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
 | Unity EditMode tests (83 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
+| Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
 | Release .aab (signed) | `scripts\build-release.bat` |
 
