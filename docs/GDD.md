@@ -39,16 +39,24 @@ share your run as a ~20-character replay code. Wordle loop, golf body.
 ## Modes
 
 - **Daily:** seed = f(UTC date). One course. Stats: strokes, attempts,
-  best replay saved locally.
+  best replay saved locally. The archive (added 2026-08-16) reopens any
+  past date — courses regenerate from the date, so it needs no storage.
 - **Practice:** random seed courses, unlimited. Same generator, labeled
   difficulty (generator's difficulty score → Easy/Normal/Hard).
+- **Journey** (added 2026-08-17 at 50 levels, doubled the same day): a
+  campaign of curated fixed seeds unlocked in order, three stars per
+  level. Levels are ordinary generator seeds hand-picked from scan CSVs
+  on a difficulty ramp — no new content pipeline, no new rules.
+- **Tutorial:** four fixed courses (see FTUE).
 
 ## Scoring & retention surface
 
 - Stars: 3 = under par, 2 = par, 1 = finished within limit.
 - Local streak counter (played N days in a row) and per-day best.
-- Ghost: yesterday's best run and any imported replay render as a
+- Ghost: the day's best run and any imported replay render as a
   translucent ghost ball with trail.
+- Cosmetics (added post-MVP): ten ball skins unlocked by achievements
+  and Journey progress — pure progression rewards, never purchases.
 
 ## Share format (UX)
 
@@ -58,11 +66,18 @@ Pasting a code into the app's import field plays the ghost.
 
 ## FTUE
 
-First launch: 3 fixed tutorial courses (hand-authored seeds), teaching
-shot, bumper, sand. No text walls; one hint line per course.
+First launch: fixed tutorial courses (hand-authored seeds) teaching
+shot, bumper, sand — grown to four when ice shipped. No text walls; one
+hint line per course.
 
 ## Out of scope (do not build in MVP)
 
 Online leaderboards, accounts, cloud save, IAP/skins, iOS release,
 additional element types, level editor, multiplayer of any kind,
 notifications. If a task drifts toward these, stop.
+
+Two entries have since graduated deliberately, without breaking the
+spirit of the list: ice became a fifth element post-MVP (2026-08-16),
+and skins shipped as local progression-gated cosmetics — the **IAP**
+half of "IAP/skins" remains permanently out. Everything else above is
+still out; new ideas go to LATER.md.

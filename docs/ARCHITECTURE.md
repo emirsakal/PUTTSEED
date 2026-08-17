@@ -4,7 +4,8 @@
 
 ```
 +--------------------------------------------------+
-| unity/  (render, input, UI, audio, interpolation)|
+| Assets/ (Unity project at the repo root:         |
+|          render, input, UI, audio, interpolation)|
 |   -> quantizes input, forwards to core           |
 |   -> reads sim state snapshots, never mutates    |
 +--------------------------------------------------+
@@ -36,7 +37,8 @@
 
 - Fixed dt = 1/120 s (`Fix64` constant). `GolfSim.Tick()` advances one step.
 - Ball: circle, semi-implicit Euler; rolling friction as exponential
-  velocity damping (stronger inside sand polygons).
+  velocity damping (stronger inside sand polygons, near-zero inside ice
+  polygons — ice landed post-MVP, 2026-08-16).
 - Collision: circle vs segment. Use sub-stepping (split a tick if the
   travel distance exceeds a fraction of ball radius) instead of full swept
   collision — simpler, deterministic, sufficient at 120 Hz.
@@ -54,8 +56,8 @@
 1. Corridor growth: from a start pad, grow a polyline of 4–8 segments with
    min/max turn-angle and length constraints inside a bounding box; widen
    into wall pairs; place hole at the end.
-2. Decorate: 0–3 bumpers, 0–2 sand zones, 0–1 water zone, respecting
-   clearance rules (never block the corridor fully).
+2. Decorate: 0–3 bumpers, 0–2 sand zones, 0–2 ice zones, 0–1 water zone,
+   respecting clearance rules (never block the corridor fully).
 3. **SolvabilityChecker:** breadth-first over shot sequences up to `par`
    depth. From each rest state, sample the quantized shot space on a
    coarse grid (e.g. every 8th angle × every 16th power), simulate with a
@@ -105,5 +107,10 @@ locally, no backend. Practice mode draws random seeds from device entropy
   every accepted course is solvable; replay codec round-trips; author
   solution replayed reaches the hole.
 - **Golden replays:** fixture files with expected final hashes.
-- Unity EditMode tests only for the quantization boundary and SimRunner
-  stepping logic.
+- Unity EditMode tests: originally just the quantization boundary and
+  SimRunner stepping; the suite grew with the meta layer (81 tests as of
+  2026-08-17) to cover pure Unity-side logic — save codec and stats
+  rules, star records, achievement and skin gates, journey unlock order,
+  hole-out golf terms, the daily countdown, feel-config sanity and
+  localization table integrity. Still no play-mode tests: anything that
+  needs a scene is exercised on-device instead.
