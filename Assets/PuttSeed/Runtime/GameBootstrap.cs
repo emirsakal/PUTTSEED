@@ -60,6 +60,7 @@ namespace PuttSeed.Unity
             // One store instance serves gameplay stats and the settings toggles.
             var stats = new StatsStore(MenuBootstrap.StatsPath());
             UiSounds.Enabled = stats.Data.soundEnabled;
+            PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
 
             var ballGo = new GameObject("Ball");
             var ballView = ballGo.AddComponent<BallView>();
@@ -113,7 +114,7 @@ namespace PuttSeed.Unity
 
             modes.StartFromSession();
 
-            Application.targetFrameRate = 120;
+            Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
         }
     }
 }

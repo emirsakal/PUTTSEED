@@ -62,5 +62,29 @@ namespace PuttSeed.Unity
 
         /// <summary>Ghost ball (translucent).</summary>
         public static readonly Color Ghost = new Color(0.97f, 0.97f, 0.95f, 0.35f);
+
+        /// <summary>
+        /// Colorblind palette toggle (set from the saved setting before a
+        /// course renders). The alternates push sand toward strong yellow,
+        /// water toward deep blue, ice toward white, and the red-on-green
+        /// bumper/flag pair toward orange — the classic deutan trouble spots.
+        /// The zone textures (speckles, sheen, waves) carry shape cues too.
+        /// </summary>
+        public static bool ColorblindMode;
+
+        /// <summary>Active sand fill.</summary>
+        public static Color SandColor => ColorblindMode ? new Color(0.95f, 0.82f, 0.30f) : Sand;
+
+        /// <summary>Active water fill.</summary>
+        public static Color WaterColor => ColorblindMode ? new Color(0.13f, 0.38f, 0.86f) : Water;
+
+        /// <summary>Active ice fill.</summary>
+        public static Color IceColor => ColorblindMode ? new Color(0.93f, 0.97f, 1f) : Ice;
+
+        /// <summary>Active bumper fill.</summary>
+        public static Color BumperColor => ColorblindMode ? new Color(0.98f, 0.60f, 0.12f) : Bumper;
+
+        /// <summary>Active flag cloth.</summary>
+        public static Color FlagColor => ColorblindMode ? new Color(0.98f, 0.60f, 0.12f) : Flag;
     }
 }

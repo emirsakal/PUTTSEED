@@ -58,19 +58,19 @@ namespace PuttSeed.Unity
             int zoneIndex = 0;
             foreach (var zone in course.IceZones)
             {
-                MeshFactory.CreateMeshObject(transform, "Ice", MeshFactory.Zone(zone, PaletteMaterials.Ice), -0.008f);
+                MeshFactory.CreateMeshObject(transform, "Ice", MeshFactory.Zone(zone, PaletteMaterials.IceColor), -0.008f);
                 DecorateZone(zone, zoneIndex++, ZoneKind.Ice);
             }
 
             foreach (var zone in course.SandZones)
             {
-                MeshFactory.CreateMeshObject(transform, "Sand", MeshFactory.Zone(zone, PaletteMaterials.Sand), -0.01f);
+                MeshFactory.CreateMeshObject(transform, "Sand", MeshFactory.Zone(zone, PaletteMaterials.SandColor), -0.01f);
                 DecorateZone(zone, zoneIndex++, ZoneKind.Sand);
             }
 
             foreach (var zone in course.WaterZones)
             {
-                MeshFactory.CreateMeshObject(transform, "Water", MeshFactory.Zone(zone, PaletteMaterials.Water), -0.02f);
+                MeshFactory.CreateMeshObject(transform, "Water", MeshFactory.Zone(zone, PaletteMaterials.WaterColor), -0.02f);
                 DecorateZone(zone, zoneIndex++, ZoneKind.Water);
             }
 
@@ -100,7 +100,7 @@ namespace PuttSeed.Unity
                 // Zero-centered mesh + positioned object, so the idle pulse
                 // can scale the disc around its own center.
                 var bumperGo = MeshFactory.CreateMeshObject(transform, "Bumper",
-                    MeshFactory.Disc(Vector2.zero, radius, PaletteMaterials.Bumper), -0.04f);
+                    MeshFactory.Disc(Vector2.zero, radius, PaletteMaterials.BumperColor), -0.04f);
                 bumperGo.transform.localPosition = new Vector3(center.x, center.y, -0.04f);
                 bumperGo.AddComponent<BumperPulse>().phase = bumperIndex++ * 1.7f;
             }
@@ -223,9 +223,9 @@ namespace PuttSeed.Unity
 
             var baseColor = kind switch
             {
-                ZoneKind.Sand => PaletteMaterials.Sand,
-                ZoneKind.Ice => PaletteMaterials.Ice,
-                _ => PaletteMaterials.Water,
+                ZoneKind.Sand => PaletteMaterials.SandColor,
+                ZoneKind.Ice => PaletteMaterials.IceColor,
+                _ => PaletteMaterials.WaterColor,
             };
             var contour = new Color(baseColor.r * 0.72f, baseColor.g * 0.72f, baseColor.b * 0.72f, 0.9f);
             float z = kind == ZoneKind.Water ? -0.021f : kind == ZoneKind.Sand ? -0.011f : -0.009f;

@@ -112,8 +112,14 @@ namespace PuttSeed.Unity
             menu.aimButton = menu.aimLabel.GetComponentInParent<Button>();
 
             menu.ballSkinLabel = UIFactory.CreateButton(canvas.transform, "Ball: Cream",
-                new Vector2(0.30f, 0.088f), new Vector2(0.70f, 0.138f), NoOp, 24);
+                new Vector2(0.10f, 0.088f), new Vector2(0.36f, 0.138f), NoOp, 22);
             menu.ballSkinButton = menu.ballSkinLabel.GetComponentInParent<Button>();
+            menu.colorblindLabel = UIFactory.CreateButton(canvas.transform, "Colors Std",
+                new Vector2(0.38f, 0.088f), new Vector2(0.62f, 0.138f), NoOp, 22);
+            menu.colorblindButton = menu.colorblindLabel.GetComponentInParent<Button>();
+            menu.batteryLabel = UIFactory.CreateButton(canvas.transform, "120 FPS",
+                new Vector2(0.64f, 0.088f), new Vector2(0.90f, 0.138f), NoOp, 22);
+            menu.batteryButton = menu.batteryLabel.GetComponentInParent<Button>();
 
             BuildArchivePanel(canvas.transform, menu);
             BuildStatsPanel(canvas.transform, menu);

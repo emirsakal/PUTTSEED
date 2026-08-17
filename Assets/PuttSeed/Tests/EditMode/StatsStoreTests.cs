@@ -175,6 +175,20 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void ColorblindAndBattery_Persist()
+        {
+            var store = new StatsStore(_path);
+            Assert.That(store.Data.colorblindMode, Is.False);
+            Assert.That(store.Data.batterySaver, Is.False);
+            store.SetColorblindMode(true);
+            store.SetBatterySaver(true);
+
+            var reloaded = new StatsStore(_path);
+            Assert.That(reloaded.Data.colorblindMode, Is.True);
+            Assert.That(reloaded.Data.batterySaver, Is.True);
+        }
+
+        [Test]
         public void AimAndSkin_Persist()
         {
             var store = new StatsStore(_path);

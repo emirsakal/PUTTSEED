@@ -36,6 +36,8 @@ namespace PuttSeed.Unity
         public bool hapticsEnabled = true;
         public bool aimDirect;
         public string ballSkin = "cream";
+        public bool colorblindMode;
+        public bool batterySaver;
 
         // Practice personal bests per difficulty bucket (0 = none yet).
         public int bestPracticeEasy;
@@ -180,6 +182,20 @@ namespace PuttSeed.Unity
         public void SetBallSkin(string id)
         {
             Data.ballSkin = id;
+            Save();
+        }
+
+        /// <summary>Persists the colorblind palette toggle.</summary>
+        public void SetColorblindMode(bool enabled)
+        {
+            Data.colorblindMode = enabled;
+            Save();
+        }
+
+        /// <summary>Persists the 60 fps battery saver toggle.</summary>
+        public void SetBatterySaver(bool enabled)
+        {
+            Data.batterySaver = enabled;
             Save();
         }
 

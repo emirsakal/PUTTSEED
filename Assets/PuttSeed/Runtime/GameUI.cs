@@ -45,6 +45,9 @@ namespace PuttSeed.Unity
         private int _lastStrokesShown;
         private Coroutine? _counterPulse;
 
+        // Prompt each clipboard code once per app run, not per scene entry.
+        private static string? _promptedClipboardCode;
+
         /// <summary>Wires behavior onto the scene-authored controls.</summary>
         public void Initialize(SimRunner runner, ModeController modes)
         {
@@ -64,6 +67,7 @@ namespace PuttSeed.Unity
             modes.ModeChanged += Refresh;
             modes.AchievementUnlocked += def => ShowToast($"Achievement — {def.Title}!");
             modes.PracticeBestImproved += strokes => ShowToast($"New practice best — {strokes}!");
+            OfferClipboardReplay();
             Refresh();
         }
 
@@ -238,6 +242,41 @@ namespace PuttSeed.Unity
         private static void OnMenu()
         {
             SceneFader.LoadScene("Menu");
+        }
+
+        /// <summary>
+        /// If the clipboard holds a valid PUTT- code, prefill the import field
+        /// and point at Watch — pasting by hand becomes a single tap. Each
+        /// code is offered once per app run.
+        /// </summary>
+        private void OfferClipboardReplay()
+        {
+            string clip = GUIUtility.systemCopyBuffer ?? "";
+            int at = clip.IndexOf("PUTT-", System.StringComparison.Ordinal);
+            if (at < 0)
+            {
+                return;
+            }
+
+            int end = at;
+            while (end < clip.Length && !char.IsWhiteSpace(clip[end]))
+            {
+                end++;
+            }
+
+            string token = clip.Substring(at, end - at);
+            if (token == _promptedClipboardCode
+                || !ReplayCodec.TryDecode(token, out _, out _))
+            {
+                return;
+            }
+
+            _promptedClipboardCode = token;
+            if (importField != null)
+            {
+                importField.text = token;
+                ShowToast("Replay code found in clipboard — tap Watch.");
+            }
         }
 
         private void OnUndo()

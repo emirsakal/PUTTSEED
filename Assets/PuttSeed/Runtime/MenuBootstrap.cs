@@ -52,6 +52,10 @@ namespace PuttSeed.Unity
         public Text? aimLabel;
         public Button? ballSkinButton;
         public Text? ballSkinLabel;
+        public Button? colorblindButton;
+        public Text? colorblindLabel;
+        public Button? batteryButton;
+        public Text? batteryLabel;
         public InputField? saveField;
         public Button? importSaveButton;
         public Text? importSaveLabel;
@@ -84,6 +88,8 @@ namespace PuttSeed.Unity
             var stats = new StatsStore(StatsPath());
             _stats = stats;
             UiSounds.Enabled = stats.Data.soundEnabled;
+            PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
+            Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
@@ -175,6 +181,18 @@ namespace PuttSeed.Unity
                 stats.SetBallSkin(BallSkins.NextUnlocked(stats.Data.ballSkin, stats.Data).Id);
                 RefreshSettingsLabels(stats);
             });
+            colorblindButton?.onClick.AddListener(() =>
+            {
+                stats.SetColorblindMode(!stats.Data.colorblindMode);
+                PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
+                RefreshSettingsLabels(stats);
+            });
+            batteryButton?.onClick.AddListener(() =>
+            {
+                stats.SetBatterySaver(!stats.Data.batterySaver);
+                Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
+                RefreshSettingsLabels(stats);
+            });
             exportSaveButton?.onClick.AddListener(ExportSave);
             importSaveButton?.onClick.AddListener(ImportSave);
         }
@@ -243,6 +261,16 @@ namespace PuttSeed.Unity
                 int unlocked = BallSkins.UnlockedCount(stats.Data);
                 ballSkinLabel.text = $"Ball: {skin.Name}  ({unlocked}/{BallSkins.All.Length})";
                 ballSkinLabel.color = skin.Color;
+            }
+
+            if (colorblindLabel != null)
+            {
+                colorblindLabel.text = stats.Data.colorblindMode ? "Colors CB" : "Colors Std";
+            }
+
+            if (batteryLabel != null)
+            {
+                batteryLabel.text = stats.Data.batterySaver ? "60 FPS" : "120 FPS";
             }
         }
 

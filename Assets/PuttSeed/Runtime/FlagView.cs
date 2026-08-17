@@ -119,7 +119,7 @@ namespace PuttSeed.Unity
                 MeshFactory.Triangle(
                     new Vector2(0f, 0.11f),
                     new Vector2(0.4f, 0f),
-                    new Vector2(0f, -0.11f), PaletteMaterials.Flag), -0.002f);
+                    new Vector2(0f, -0.11f), PaletteMaterials.FlagColor), -0.002f);
             pennant.transform.localPosition = new Vector3(0.018f, 0.74f, -0.002f);
             _pennant = pennant.transform;
 
