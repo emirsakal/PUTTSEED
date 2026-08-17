@@ -28,6 +28,29 @@ namespace PuttSeed.Unity
             => Current == Language.Turkish && Turkish.TryGetValue(english, out var tr) ? tr : english;
 
         /// <summary>
+        /// The culture dates are rendered in: the UI language, never the
+        /// device's. Formatting with the ambient culture used to put a Turkish
+        /// month into an English sentence ("Daily Ağu 17") on a Turkish device.
+        /// </summary>
+        private static System.Globalization.CultureInfo DateCulture
+            => Current == Language.Turkish
+                ? TurkishCulture
+                : System.Globalization.CultureInfo.InvariantCulture;
+
+        private static readonly System.Globalization.CultureInfo TurkishCulture =
+            new System.Globalization.CultureInfo("tr-TR");
+
+        /// <summary>
+        /// A short date for UI labels, in the UI language. Both halves follow
+        /// the language: the month name from the culture, and the ORDER from
+        /// convention — English puts the month first ("Aug 17"), Turkish the
+        /// day ("17 Ağu"). A fixed pattern would have localized only the word.
+        /// Every date shown to the player goes through here.
+        /// </summary>
+        public static string ShortDate(System.DateTime date)
+            => date.ToString(Current == Language.Turkish ? "d MMM" : "MMM d", DateCulture);
+
+        /// <summary>
         /// Applies a saved language code: "en"/"tr" explicit, anything else
         /// follows the device language.
         /// </summary>

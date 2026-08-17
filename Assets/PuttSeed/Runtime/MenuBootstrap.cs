@@ -131,8 +131,8 @@ namespace PuttSeed.Unity
             if (dailyLabel != null)
             {
                 dailyLabel.text = todayRecord.completed
-                    ? string.Format(Loc.Tr("Daily {0} — done in {1}"), $"{utc:MMM d}", todayRecord.bestStrokes)
-                    : string.Format(Loc.Tr("Play today's hole · {0}"), $"{utc:MMM d}");
+                    ? string.Format(Loc.Tr("Daily {0} — done in {1}"), Loc.ShortDate(utc), todayRecord.bestStrokes)
+                    : string.Format(Loc.Tr("Play today's hole · {0}"), Loc.ShortDate(utc));
             }
 
             // Today's hole is done — the loop's next beat is the countdown.
@@ -768,8 +768,8 @@ namespace PuttSeed.Unity
                 var record = _stats.FindDay(day);
                 bool played = record != null && record.completed;
                 archiveRowLabels[i].text = played
-                    ? string.Format(Loc.Tr("{0}  ·  best {1}"), $"{date:MMM d}", record!.bestStrokes)
-                    : string.Format(Loc.Tr("{0}  ·  not played"), $"{date:MMM d}");
+                    ? string.Format(Loc.Tr("{0}  ·  best {1}"), Loc.ShortDate(date), record!.bestStrokes)
+                    : string.Format(Loc.Tr("{0}  ·  not played"), Loc.ShortDate(date));
                 archiveRowLabels[i].color = played ? UIStyle.Cream : UIStyle.CreamDim;
 
                 // Star icons on the row's right: earned amber, the rest dim.

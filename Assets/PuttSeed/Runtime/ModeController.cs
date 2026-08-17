@@ -61,7 +61,7 @@ namespace PuttSeed.Unity
 
         /// <summary>HUD label for daily mode ("Daily", or dated for archive days).</summary>
         public string DailyModeLabel => IsArchiveDay
-            ? string.Format(Loc.Tr("Daily · {0}"), $"{_activeDayDate:MMM d}")
+            ? string.Format(Loc.Tr("Daily · {0}"), Loc.ShortDate(_activeDayDate))
             : Loc.Tr("Daily");
 
         /// <summary>The active mode.</summary>
