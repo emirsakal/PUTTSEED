@@ -19,6 +19,13 @@ namespace PuttSeed.Core.Sim
         private Vec2Fix _lastRestPosition;
         private int _restTicks;
 
+        // Ticks since the current shot began — the windmill phase clock. Reset
+        // by Shoot and RestoreRest, so dynamics never depend on absolute
+        // TickCount (the solver's rest-state BFS and the timing-free replay
+        // codec both rely on that). Deliberately NOT part of StateHash: it is
+        // fully derived from the input stream the hash comparisons already fix.
+        private int _ticksSinceShot;
+
         /// <summary>Current ball state snapshot.</summary>
         public BallState Ball => new BallState(_position, _velocity);
 
@@ -66,6 +73,9 @@ namespace PuttSeed.Core.Sim
         /// <summary>Portal transits so far (see <see cref="WallHitCount"/> caveat).</summary>
         public int PortalTransitCount { get; private set; }
 
+        /// <summary>Windmill blade bounces so far (see <see cref="WallHitCount"/> caveat).</summary>
+        public int WindmillHitCount { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
@@ -90,6 +100,7 @@ namespace PuttSeed.Core.Sim
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = position;
             _restTicks = 0;
+            _ticksSinceShot = 0;
             Strokes = strokes;
             IsAtRest = true;
             IsHoled = false;
@@ -111,6 +122,7 @@ namespace PuttSeed.Core.Sim
             Strokes++;
             IsAtRest = false;
             _restTicks = 0;
+            _ticksSinceShot = 0; // windmill blades re-arm to their base phase
         }
 
         /// <summary>
@@ -153,6 +165,7 @@ namespace PuttSeed.Core.Sim
                 ResolveBumperCollisions();
                 ResolveWallCollisions();
                 ResolveGateCollisions();
+                ResolveWindmillCollisions();
                 ResolvePortalTransits();
                 if (CheckWaterHazard() || CheckHoleCapture())
                 {
@@ -165,6 +178,7 @@ namespace PuttSeed.Core.Sim
                 UpdateRestDetection();
             }
 
+            _ticksSinceShot++;
             TickCount++;
         }
 
@@ -297,6 +311,37 @@ namespace PuttSeed.Core.Sim
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Collides the ball against every blade at its current phase. Blades
+        /// are segments from the pivot outward; phase advances with ticks since
+        /// the current shot. A blade sweeping into a slow ball shoves it via
+        /// the shared positional push-out (no surface-velocity transfer — a
+        /// deliberate simplification the courses are designed around).
+        /// </summary>
+        private void ResolveWindmillCollisions()
+        {
+            var mills = _course.Windmills;
+            for (int i = 0; i < mills.Length; i++)
+            {
+                int baseAngle = mills[i].Phase0 + mills[i].OmegaSteps * _ticksSinceShot;
+                int spacing = FixTrig.AngleSteps / mills[i].BladeCount;
+                for (int b = 0; b < mills[i].BladeCount; b++)
+                {
+                    int angle = (baseAngle + b * spacing) % FixTrig.AngleSteps;
+                    if (angle < 0)
+                    {
+                        angle += FixTrig.AngleSteps;
+                    }
+
+                    var tip = mills[i].Pivot + FixTrig.UnitVector(angle) * mills[i].BladeLength;
+                    if (ResolveSegmentCollision(mills[i].Pivot, tip))
+                    {
+                        WindmillHitCount++;
+                    }
+                }
+            }
         }
 
         /// <summary>
