@@ -72,7 +72,9 @@ namespace PuttSeed.Unity
             var go = new GameObject($"Ghost{index}");
             go.transform.SetParent(transform, false);
             go.AddComponent<MeshFilter>().sharedMesh = MeshFactory.Disc(Vector2.zero, 0.1f, color);
-            go.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            var ghostRenderer = go.AddComponent<MeshRenderer>();
+            ghostRenderer.sharedMaterial = PaletteMaterials.Shared;
+            ghostRenderer.sortingOrder = SortingLayers.GhostBall;
 
             var trail = go.AddComponent<TrailRenderer>();
             trail.time = 0.4f;
@@ -81,7 +83,7 @@ namespace PuttSeed.Unity
             trail.material = PaletteMaterials.Shared;
             trail.startColor = new Color(color.r, color.g, color.b, 0.2f);
             trail.endColor = new Color(color.r, color.g, color.b, 0f);
-            trail.sortingOrder = -2;
+            trail.sortingOrder = SortingLayers.GhostTrail;
             return go;
         }
     }

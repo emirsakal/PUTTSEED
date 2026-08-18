@@ -53,6 +53,7 @@ namespace PuttSeed.Unity
             bodyGo.AddComponent<MeshFilter>().sharedMesh = mesh;
             _renderer = bodyGo.AddComponent<MeshRenderer>();
             _renderer.sharedMaterial = PaletteMaterials.Shared;
+            _renderer.sortingOrder = SortingLayers.Ball;
             // Invisible until the first course is actually loaded — a ball
             // floating over an empty field must never render.
             _renderer.enabled = false;
@@ -64,7 +65,7 @@ namespace PuttSeed.Unity
             _trail.material = PaletteMaterials.Shared;
             _trail.startColor = new Color(1f, 1f, 1f, 0.5f);
             _trail.endColor = new Color(1f, 1f, 1f, 0f);
-            _trail.sortingOrder = -1;
+            _trail.sortingOrder = SortingLayers.BallTrail;
 
             _trail.enabled = false;
 
@@ -84,7 +85,9 @@ namespace PuttSeed.Unity
                     Mathf.Cos(angle) * 0.048f, Mathf.Sin(angle) * 0.048f, 0f);
                 dotGo.AddComponent<MeshFilter>().sharedMesh =
                     MeshFactory.Disc(Vector2.zero, 0.02f, dimple);
-                dotGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+                var dotRenderer = dotGo.AddComponent<MeshRenderer>();
+                dotRenderer.sharedMaterial = PaletteMaterials.Shared;
+                dotRenderer.sortingOrder = SortingLayers.Ball;
             }
 
             // A fixed up-left highlight completes the sphere read (it stays
@@ -94,7 +97,9 @@ namespace PuttSeed.Unity
             highlightGo.transform.localPosition = new Vector3(-0.032f, 0.032f, -0.006f);
             highlightGo.AddComponent<MeshFilter>().sharedMesh =
                 MeshFactory.Disc(Vector2.zero, 0.028f, new Color(1f, 1f, 1f, 0.75f));
-            highlightGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            var highlightRenderer = highlightGo.AddComponent<MeshRenderer>();
+            highlightRenderer.sharedMaterial = PaletteMaterials.Shared;
+            highlightRenderer.sortingOrder = SortingLayers.Ball;
 
             // Soft drop shadow trailing the ball down-right, one layer behind.
             var shadowGo = new GameObject("BallShadow");
@@ -102,7 +107,9 @@ namespace PuttSeed.Unity
             shadowGo.transform.localPosition = new Vector3(0.04f, -0.05f, 0.012f);
             shadowGo.AddComponent<MeshFilter>().sharedMesh =
                 MeshFactory.Disc(Vector2.zero, 0.1f, PaletteMaterials.Shadow);
-            shadowGo.AddComponent<MeshRenderer>().sharedMaterial = PaletteMaterials.Shared;
+            var shadowRenderer = shadowGo.AddComponent<MeshRenderer>();
+            shadowRenderer.sharedMaterial = PaletteMaterials.Shared;
+            shadowRenderer.sortingOrder = SortingLayers.BallTrail;
             shadowGo.SetActive(false);
 
             runner.RunReset += () =>
