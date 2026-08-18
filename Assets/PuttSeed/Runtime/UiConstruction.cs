@@ -400,6 +400,12 @@ namespace PuttSeed.Unity
         /// regenerates its course from the date alone, so browsing needs no
         /// storage — MenuBootstrap only fills labels from the local records.
         /// </summary>
+        /// <summary>
+        /// The archive as a month calendar: a 7x6 grid where every square is a
+        /// day, played days wear their stars, and the gaps are the point — an
+        /// unplayed square is a course still waiting, and any past date
+        /// regenerates from the date alone.
+        /// </summary>
         private static void BuildArchivePanel(Transform canvas, MenuBootstrap menu)
         {
             var dim = UIFactory.CreateRect(canvas, "ArchivePanel", Vector2.zero, Vector2.one);
@@ -414,46 +420,71 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Archive";
 
-            menu.archiveRowButtons = new Button[7];
-            menu.archiveRowLabels = new Text[7];
-            menu.archiveRowStars = new Image[7 * 3];
-            for (int i = 0; i < 7; i++)
-            {
-                float yMax = 0.72f - i * 0.062f;
-                var rowLabel = UIFactory.CreateButton(dim, "—",
-                    new Vector2(0.12f, yMax - 0.055f), new Vector2(0.88f, yMax), NoOp, 30);
-                rowLabel.alignment = TextAnchor.MiddleLeft;
-                var labelRect = rowLabel.rectTransform;
-                labelRect.anchorMin = new Vector2(0.06f, 0f);
-                labelRect.anchorMax = new Vector2(0.70f, 1f);
-                menu.archiveRowLabels[i] = rowLabel;
-                menu.archiveRowButtons[i] = rowLabel.GetComponentInParent<Button>();
+            // Month header: arrows either side of the month name.
+            var prev = UIFactory.CreateButton(dim, "\u2039",
+                new Vector2(0.12f, 0.695f), new Vector2(0.24f, 0.745f), NoOp, 30);
+            menu.archivePrevMonthButton = prev.GetComponentInParent<Button>();
+            menu.archiveMonthLabel = UIFactory.CreateText(dim, "Month",
+                new Vector2(0.26f, 0.695f), new Vector2(0.74f, 0.745f), 30, TextAnchor.MiddleCenter);
+            var next = UIFactory.CreateButton(dim, "\u203a",
+                new Vector2(0.76f, 0.695f), new Vector2(0.88f, 0.745f), NoOp, 30);
+            menu.archiveNextMonthButton = next.GetComponentInParent<Button>();
 
-                // Played days show their stars as icons on the row's right.
-                for (int s = 0; s < 3; s++)
-                {
-                    var starRect = UIFactory.CreateRect(menu.archiveRowButtons[i].transform,
-                        $"Star{s + 1}",
-                        new Vector2(0.72f + s * 0.09f, 0.22f),
-                        new Vector2(0.79f + s * 0.09f, 0.78f));
-                    var starImage = starRect.gameObject.AddComponent<Image>();
-                    starImage.sprite = UIFactory.StarSprite();
-                    starImage.preserveAspect = true;
-                    starImage.raycastTarget = false;
-                    starRect.gameObject.SetActive(false);
-                    menu.archiveRowStars[i * 3 + s] = starImage;
-                }
+            const int columns = 7;
+            const int rows = 6;
+            const float gridLeft = 0.10f;
+            const float columnStep = 0.11428f;
+            const float cellWidth = 0.104f;
+            const float gridTop = 0.645f;
+            const float rowStep = 0.074f;
+            const float cellHeight = 0.066f;
+
+            // Weekday initials, filled at refresh so a language switch reorders
+            // them (Monday-first in Turkish, Sunday-first in English).
+            menu.archiveWeekdayLabels = new Text[columns];
+            for (int c = 0; c < columns; c++)
+            {
+                float x0 = gridLeft + c * columnStep;
+                var day = UIFactory.CreateText(dim, $"Weekday{c}",
+                    new Vector2(x0, 0.652f), new Vector2(x0 + cellWidth, 0.682f), 20,
+                    TextAnchor.MiddleCenter);
+                day.color = UIStyle.CreamDim;
+                menu.archiveWeekdayLabels[c] = day;
             }
 
-            var older = UIFactory.CreateButton(dim, "Older",
-                new Vector2(0.12f, 0.20f), new Vector2(0.34f, 0.26f), NoOp, 28);
-            menu.archiveOlderButton = older.GetComponentInParent<Button>();
-            menu.archivePageLabel = UIFactory.CreateText(dim, "Page",
-                new Vector2(0.35f, 0.20f), new Vector2(0.65f, 0.26f), 26, TextAnchor.MiddleCenter);
-            menu.archivePageLabel.color = UIStyle.CreamDim;
-            var newer = UIFactory.CreateButton(dim, "Newer",
-                new Vector2(0.66f, 0.20f), new Vector2(0.88f, 0.26f), NoOp, 28);
-            menu.archiveNewerButton = newer.GetComponentInParent<Button>();
+            menu.archiveCellButtons = new Button[columns * rows];
+            menu.archiveCellLabels = new Text[columns * rows];
+            menu.archiveCellStars = new Image[columns * rows * 3];
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < columns; c++)
+                {
+                    int cell = r * columns + c;
+                    float x0 = gridLeft + c * columnStep;
+                    float yMax = gridTop - r * rowStep;
+                    var cellLabel = UIFactory.CreateButton(dim, "—",
+                        new Vector2(x0, yMax - cellHeight), new Vector2(x0 + cellWidth, yMax), NoOp, 22);
+                    var labelRect = cellLabel.rectTransform;
+                    labelRect.anchorMin = new Vector2(0f, 0.40f);
+                    labelRect.anchorMax = new Vector2(1f, 1f);
+                    menu.archiveCellLabels[cell] = cellLabel;
+                    menu.archiveCellButtons[cell] = cellLabel.GetComponentInParent<Button>();
+
+                    for (int st = 0; st < 3; st++)
+                    {
+                        var starRect = UIFactory.CreateRect(menu.archiveCellButtons[cell].transform,
+                            $"Star{st + 1}",
+                            new Vector2(0.14f + st * 0.25f, 0.10f),
+                            new Vector2(0.32f + st * 0.25f, 0.36f));
+                        var starImage = starRect.gameObject.AddComponent<Image>();
+                        starImage.sprite = UIFactory.StarSprite();
+                        starImage.preserveAspect = true;
+                        starImage.raycastTarget = false;
+                        starRect.gameObject.SetActive(false);
+                        menu.archiveCellStars[cell * 3 + st] = starImage;
+                    }
+                }
+            }
 
             var randomLabel = UIFactory.CreateButton(dim, "Random day",
                 new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, 26);

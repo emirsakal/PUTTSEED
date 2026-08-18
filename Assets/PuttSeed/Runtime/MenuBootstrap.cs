@@ -33,12 +33,13 @@ namespace PuttSeed.Unity
         public Text? countdownText;
         public Button? archiveButton;
         public GameObject? archivePanel;
-        public Button[] archiveRowButtons = new Button[0];
-        public Text[] archiveRowLabels = new Text[0];
-        public Button? archiveOlderButton;
-        public Button? archiveNewerButton;
+        public Button[] archiveCellButtons = new Button[0];
+        public Text[] archiveCellLabels = new Text[0];
+        public Text[] archiveWeekdayLabels = new Text[0];
+        public Button? archivePrevMonthButton;
+        public Button? archiveNextMonthButton;
         public Button? archiveCloseButton;
-        public Text? archivePageLabel;
+        public Text? archiveMonthLabel;
         public Button? statsButton;
         public GameObject? statsPanel;
         public Text? statsBlock;
@@ -50,7 +51,7 @@ namespace PuttSeed.Unity
         public RectTransform? deco1;
         public RectTransform? deco2;
         public Text? taglineText;
-        public Image[] archiveRowStars = new Image[0];
+        public Image[] archiveCellStars = new Image[0];
         public Button? archiveRandomButton;
         public Text? histogramBlock;
         public Button? journeyButton;
@@ -81,6 +82,11 @@ namespace PuttSeed.Unity
         /// <summary>False = the grid shows ball skins, true = trails.</summary>
         private bool _collectionShowsTrails;
 
+        // Calendar day cells: a finished day sits lit, a day still to come
+        // is nearly invisible. Today takes the accent and needs no constant.
+        private static readonly Color PlayedDayCell = new Color(0.10f, 0.22f, 0.13f, 0.95f);
+        private static readonly Color FutureDayCell = new Color(0.03f, 0.06f, 0.04f, 0.55f);
+
         // Collection cell backgrounds carry the state: a locked cell sinks
         // almost to black, an equipped one lifts toward the felt. The swatch
         // and label are left alone — the tile behind them does the talking.
@@ -96,7 +102,8 @@ namespace PuttSeed.Unity
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
-        private int _archivePage;
+        // First day of the month the calendar is showing.
+        private DateTime _archiveMonth;
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
         {
@@ -199,16 +206,12 @@ namespace PuttSeed.Unity
             archiveButton?.onClick.AddListener(OpenArchive);
             archiveRandomButton?.onClick.AddListener(PlayRandomUnplayedDay);
             archiveCloseButton?.onClick.AddListener(() => archivePanel?.SetActive(false));
-            archiveOlderButton?.onClick.AddListener(() => { _archivePage++; RefreshArchive(); });
-            archiveNewerButton?.onClick.AddListener(() =>
+            archivePrevMonthButton?.onClick.AddListener(() => StepArchiveMonth(-1));
+            archiveNextMonthButton?.onClick.AddListener(() => StepArchiveMonth(1));
+            for (int i = 0; i < archiveCellButtons.Length; i++)
             {
-                _archivePage = Mathf.Max(0, _archivePage - 1);
-                RefreshArchive();
-            });
-            for (int i = 0; i < archiveRowButtons.Length; i++)
-            {
-                int row = i; // capture per row, not the loop variable
-                archiveRowButtons[i]?.onClick.AddListener(() => LaunchArchiveRow(row));
+                int cell = i; // capture per cell, not the loop variable
+                archiveCellButtons[i]?.onClick.AddListener(() => LaunchArchiveCell(cell));
             }
 
             StartCoroutine(EmblemIdle());
@@ -826,7 +829,8 @@ namespace PuttSeed.Unity
 
         private void OpenArchive()
         {
-            _archivePage = 0;
+            var utc = DateTime.UtcNow.Date;
+            _archiveMonth = new DateTime(utc.Year, utc.Month, 1);
             RefreshArchive();
             if (archivePanel != null)
             {
@@ -834,34 +838,96 @@ namespace PuttSeed.Unity
             }
         }
 
-        /// <summary>Day number shown on a row: yesterday backward, 7 per page.</summary>
-        private int RowDayNumber(int row)
-            => ModeController.DayNumber(DateTime.UtcNow) - 1 - _archivePage * 7 - row;
+        /// <summary>The first month the archive can show (the daily epoch).</summary>
+        private static DateTime EpochMonth => new DateTime(2020, 1, 1);
+
+        private void StepArchiveMonth(int delta)
+        {
+            var target = _archiveMonth.AddMonths(delta);
+            var utc = DateTime.UtcNow.Date;
+            var newest = new DateTime(utc.Year, utc.Month, 1);
+            if (target < EpochMonth || target > newest)
+            {
+                return; // no months exist outside the daily's lifetime
+            }
+
+            _archiveMonth = target;
+            RefreshArchive();
+        }
+
+        /// <summary>The day number a calendar cell stands for (-1 outside the month).</summary>
+        private int CellDayNumber(int cell)
+        {
+            int lead = ((int)_archiveMonth.DayOfWeek - (int)Loc.FirstDayOfWeek + 7) % 7;
+            int dayOfMonth = cell - lead + 1;
+            int daysInMonth = DateTime.DaysInMonth(_archiveMonth.Year, _archiveMonth.Month);
+            if (dayOfMonth < 1 || dayOfMonth > daysInMonth)
+            {
+                return -1;
+            }
+
+            return ModeController.DayNumber(_archiveMonth.AddDays(dayOfMonth - 1));
+        }
 
         private void RefreshArchive()
         {
-            for (int i = 0; i < archiveRowLabels.Length; i++)
+            if (archiveMonthLabel != null)
             {
-                int day = RowDayNumber(i);
-                bool valid = day >= 1;
-                archiveRowButtons[i]?.gameObject.SetActive(valid);
-                if (!valid || archiveRowLabels[i] == null)
+                archiveMonthLabel.text = Loc.MonthLabel(_archiveMonth);
+            }
+
+            var initials = Loc.WeekdayInitials();
+            for (int i = 0; i < archiveWeekdayLabels.Length && i < initials.Length; i++)
+            {
+                if (archiveWeekdayLabels[i] != null)
+                {
+                    archiveWeekdayLabels[i].text = initials[i];
+                }
+            }
+
+            int today = ModeController.DayNumber(DateTime.UtcNow);
+            int daysInMonth = DateTime.DaysInMonth(_archiveMonth.Year, _archiveMonth.Month);
+            int lead = ((int)_archiveMonth.DayOfWeek - (int)Loc.FirstDayOfWeek + 7) % 7;
+
+            for (int i = 0; i < archiveCellButtons.Length; i++)
+            {
+                int dayOfMonth = i - lead + 1;
+                bool inMonth = dayOfMonth >= 1 && dayOfMonth <= daysInMonth;
+                archiveCellButtons[i]?.gameObject.SetActive(inMonth);
+                if (!inMonth)
                 {
                     continue;
                 }
 
-                var date = ModeController.DateOfDay(day);
+                int day = CellDayNumber(i);
+                bool playable = day >= 1 && day <= today;
+                bool isToday = day == today;
                 var record = _stats.FindDay(day);
                 bool played = record != null && record.completed;
-                archiveRowLabels[i].text = played
-                    ? string.Format(Loc.Tr("{0}  ·  best {1}"), Loc.ShortDate(date), record!.bestStrokes)
-                    : string.Format(Loc.Tr("{0}  ·  not played"), Loc.ShortDate(date));
-                archiveRowLabels[i].color = played ? UIStyle.Cream : UIStyle.CreamDim;
 
-                // Star icons on the row's right: earned amber, the rest dim.
-                for (int s = 0; s < 3; s++)
+                if (archiveCellLabels[i] != null)
                 {
-                    var star = archiveRowStars[i * 3 + s];
+                    archiveCellLabels[i].text = dayOfMonth.ToString();
+                    archiveCellLabels[i].color = isToday ? UIStyle.AccentInk
+                        : playable ? UIStyle.Cream
+                        : UIStyle.CreamDim;
+                }
+
+                if (archiveCellButtons[i] != null)
+                {
+                    archiveCellButtons[i].interactable = playable;
+
+                    // Today shouts, a finished day sits lit, an unplayed one
+                    // waits at the normal tone, and the future is nearly gone.
+                    archiveCellButtons[i].image.color = isToday ? UIStyle.Accent
+                        : played ? PlayedDayCell
+                        : playable ? UIStyle.PanelDark
+                        : FutureDayCell;
+                }
+
+                for (int st = 0; st < 3; st++)
+                {
+                    var star = archiveCellStars[i * 3 + st];
                     if (star == null)
                     {
                         continue;
@@ -870,34 +936,43 @@ namespace PuttSeed.Unity
                     star.gameObject.SetActive(played);
                     if (played)
                     {
-                        star.color = s < record!.bestStars
-                            ? UIStyle.Accent
-                            : new Color(1f, 1f, 1f, 0.14f);
+                        star.color = st < record!.bestStars
+                            ? (isToday ? UIStyle.AccentInk : UIStyle.Accent)
+                            : new Color(1f, 1f, 1f, 0.16f);
                     }
                 }
             }
 
-            if (archivePageLabel != null)
+            if (archivePrevMonthButton != null)
             {
-                int first = _archivePage * 7 + 1;
-                archivePageLabel.text = string.Format(Loc.Tr("{0}–{1} days ago"), first, first + 6);
+                archivePrevMonthButton.interactable = _archiveMonth > EpochMonth;
             }
 
-            if (archiveOlderButton != null)
+            if (archiveNextMonthButton != null)
             {
-                archiveOlderButton.interactable = RowDayNumber(7) >= 1;
-            }
-
-            if (archiveNewerButton != null)
-            {
-                archiveNewerButton.interactable = _archivePage > 0;
+                var utc = DateTime.UtcNow.Date;
+                archiveNextMonthButton.interactable =
+                    _archiveMonth < new DateTime(utc.Year, utc.Month, 1);
             }
         }
 
-        /// <summary>
-        /// Jumps into a random past day the player has not completed yet —
-        /// sampled, with a fair fallback when history is (nearly) exhausted.
-        /// </summary>
+        private void LaunchArchiveCell(int cell)
+        {
+            int day = CellDayNumber(cell);
+            int today = ModeController.DayNumber(DateTime.UtcNow);
+            if (day < 1 || day > today)
+            {
+                return;
+            }
+
+            // Today from the calendar is still today: it must run as the daily
+            // so the streak and the day's record are earned normally.
+            GameSession.ArchiveDayNumber = day == today ? -1 : day;
+            GameSession.Mode = GameMode.Daily;
+            GameSession.UseFixedSeed = false;
+            SceneFader.LoadScene("Game");
+        }
+
         private void PlayRandomUnplayedDay()
         {
             int today = ModeController.DayNumber(DateTime.UtcNow);
@@ -916,20 +991,6 @@ namespace PuttSeed.Unity
                     day = candidate;
                     break;
                 }
-            }
-
-            GameSession.Mode = GameMode.Daily;
-            GameSession.ArchiveDayNumber = day;
-            GameSession.UseFixedSeed = false;
-            SceneFader.LoadScene("Game");
-        }
-
-        private void LaunchArchiveRow(int row)
-        {
-            int day = RowDayNumber(row);
-            if (day < 1)
-            {
-                return;
             }
 
             GameSession.Mode = GameMode.Daily;

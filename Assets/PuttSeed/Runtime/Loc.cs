@@ -50,6 +50,36 @@ namespace PuttSeed.Unity
         public static string ShortDate(System.DateTime date)
             => date.ToString(Current == Language.Turkish ? "d MMM" : "MMM d", DateCulture);
 
+        /// <summary>A month and year for the calendar header, in the UI language.</summary>
+        public static string MonthLabel(System.DateTime date)
+            => date.ToString("MMMM yyyy", DateCulture);
+
+        /// <summary>
+        /// The weekday the calendar's first column shows. Cultures disagree —
+        /// Turkish weeks start on Monday, English ones on Sunday — so the grid
+        /// asks rather than assumes.
+        /// </summary>
+        public static System.DayOfWeek FirstDayOfWeek => DateCulture.DateTimeFormat.FirstDayOfWeek;
+
+        /// <summary>
+        /// The seven column headings, starting at <see cref="FirstDayOfWeek"/>.
+        /// Abbreviated, not "shortest": Unity's Turkish data collapses the
+        /// shortest names to single letters with only four distinct values
+        /// (P, P, S, Ç, P, C, C), which is no heading at all.
+        /// </summary>
+        public static string[] WeekdayInitials()
+        {
+            var names = DateCulture.DateTimeFormat.AbbreviatedDayNames;
+            var ordered = new string[7];
+            int first = (int)FirstDayOfWeek;
+            for (int i = 0; i < 7; i++)
+            {
+                ordered[i] = names[(first + i) % 7];
+            }
+
+            return ordered;
+        }
+
         /// <summary>
         /// Applies a saved language code: "en"/"tr" explicit, anything else
         /// follows the device language.

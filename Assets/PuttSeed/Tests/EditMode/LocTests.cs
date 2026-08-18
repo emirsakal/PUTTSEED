@@ -108,6 +108,58 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void MonthLabel_FollowsTheUiLanguage()
+        {
+            var august = new System.DateTime(2026, 8, 1);
+
+            Loc.Apply("en");
+            Assert.That(Loc.MonthLabel(august), Is.EqualTo("August 2026"));
+
+            Loc.Apply("tr");
+            Assert.That(Loc.MonthLabel(august), Is.EqualTo("Ağustos 2026"));
+        }
+
+        [Test]
+        public void WeekdayInitials_StartOnTheCulturesFirstDay()
+        {
+            // The calendar grid lays days out in this order, so getting it
+            // wrong shifts every square by one column.
+            Loc.Apply("en");
+            Assert.That(Loc.FirstDayOfWeek, Is.EqualTo(System.DayOfWeek.Sunday));
+            var en = Loc.WeekdayInitials();
+            Assert.That(en.Length, Is.EqualTo(7));
+            Assert.That(en[0], Is.EqualTo("Sun"));
+            Assert.That(en[6], Is.EqualTo("Sat"));
+
+            Loc.Apply("tr");
+            Assert.That(Loc.FirstDayOfWeek, Is.EqualTo(System.DayOfWeek.Monday),
+                "Turkish weeks start on Monday");
+            Assert.That(Loc.WeekdayInitials().Length, Is.EqualTo(7));
+        }
+
+        [Test]
+        public void WeekdayInitials_AreAFullWeek_NoRepeats()
+        {
+            // The bug this caught: Unity's Turkish "shortest" day names are
+            // single letters with four distinct values, so three columns of
+            // the calendar shared a heading. Exact spellings differ between
+            // runtimes, so the assertion is structural.
+            foreach (var code in new[] { "en", "tr" })
+            {
+                Loc.Apply(code);
+                var days = Loc.WeekdayInitials();
+                Assert.That(days.Length, Is.EqualTo(7), code);
+                foreach (var day in days)
+                {
+                    Assert.That(day, Is.Not.Empty, code);
+                }
+
+                Assert.That(new System.Collections.Generic.HashSet<string>(days).Count,
+                    Is.EqualTo(7), $"{code} repeats a weekday heading");
+            }
+        }
+
+        [Test]
         public void EveryTutorialHint_HasATurkishEntry()
         {
             foreach (var stage in TutorialConfig.Stages)
