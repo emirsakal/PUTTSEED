@@ -35,8 +35,11 @@ namespace PuttSeed.Unity.Editor
             Write("ready", ReadyPluck());
             Write("star", StarNote());
             Write("jingle", Jingle());
+            Write("ramp", RampEntry());
+            Write("gate", GatePass());
+            Write("mill", MillHit());
             AssetDatabase.Refresh();
-            Debug.Log($"PuttSeed: synthesized 12 SFX clips into {OutDir}.");
+            Debug.Log($"PuttSeed: synthesized 15 SFX clips into {OutDir}.");
         }
 
         // --- sound recipes -------------------------------------------------
@@ -182,6 +185,74 @@ namespace PuttSeed.Unity.Editor
                 float freq = Mathf.Lerp(1500f, 2300f, k) * (1f + 0.015f * Mathf.Sin(2f * Mathf.PI * 40f * t));
                 phase += 2f * Mathf.PI * freq / SampleRate;
                 s[i] = (Mathf.Sin(phase) * 0.2f + Mathf.Sin(2f * phase) * 0.06f) * Mathf.Exp(-t * 9f);
+            }
+
+            return s;
+        }
+
+        /// <summary>Ramp entry: noise opening under a rising tone — the slope
+        /// taking hold of the ball. The one element that shipped silent.</summary>
+        private static float[] RampEntry()
+        {
+            var s = NewBuffer(0.2f);
+            var rng = new System.Random(707);
+            float lp = 0f;
+            float phase = 0f;
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float k = t / 0.2f;
+
+                // The low-pass opens as the ramp accelerates: a swell, not a hit.
+                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
+                lp = lp * Mathf.Lerp(0.93f, 0.72f, k) + white * Mathf.Lerp(0.07f, 0.28f, k);
+
+                float freq = Mathf.Lerp(190f, 330f, k * k);
+                phase += 2f * Mathf.PI * freq / SampleRate;
+                float body = Mathf.Sin(phase) * 0.28f;
+
+                float env = Mathf.Min(1f, t * 40f) * Mathf.Exp(-t * 9f);
+                s[i] = (body + lp * 0.5f) * env;
+            }
+
+            return s;
+        }
+
+        /// <summary>One-way gate: a dry wooden turnstile clack, two ticks in
+        /// quick succession so it never reads as a wall.</summary>
+        private static float[] GatePass()
+        {
+            var s = NewBuffer(0.09f);
+            var rng = new System.Random(808);
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float tick1 = Mathf.Sin(2f * Mathf.PI * 880f * t) * Mathf.Exp(-t * 150f) * 0.42f;
+                float tick2 = t > 0.028f
+                    ? Mathf.Sin(2f * Mathf.PI * 620f * (t - 0.028f)) * Mathf.Exp(-(t - 0.028f) * 130f) * 0.3f
+                    : 0f;
+                float grain = (float)(rng.NextDouble() * 2.0 - 1.0) * Mathf.Exp(-t * 320f) * 0.18f;
+                s[i] = tick1 + tick2 + grain;
+            }
+
+            return s;
+        }
+
+        /// <summary>Windmill blade: a heavy wooden thwack with a falling body —
+        /// the same family as the wall, one weight class up.</summary>
+        private static float[] MillHit()
+        {
+            var s = NewBuffer(0.16f);
+            var rng = new System.Random(909);
+            float phase = 0f;
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float freq = Mathf.Lerp(150f, 96f, Mathf.Clamp01(t / 0.16f));
+                phase += 2f * Mathf.PI * freq / SampleRate;
+                float body = Mathf.Sin(phase) * Mathf.Exp(-t * 26f) * 0.62f;
+                float knock = (float)(rng.NextDouble() * 2.0 - 1.0) * Mathf.Exp(-t * 260f) * 0.3f;
+                s[i] = body + knock;
             }
 
             return s;

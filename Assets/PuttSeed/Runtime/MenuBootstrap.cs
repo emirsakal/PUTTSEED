@@ -600,10 +600,44 @@ namespace PuttSeed.Unity
             _collectionShowsTrails = trails;
             collectionTab?.SetSelected(!trails);
             RefreshCollection();
-            SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"),
-                Loc.Tr(trails
-                    ? BallTrails.Resolve(_stats.Data.ballTrail).Name
-                    : BallSkins.Resolve(_stats.Data.ballSkin).Name)));
+            SetCollectionHint(CollectionRestingHint(trails));
+        }
+
+        /// <summary>
+        /// The hint line at rest names the nearest LOCKED item and its price.
+        /// Locked cells that explain themselves only when tapped cannot pull
+        /// anyone forward, and the equipped item already announces itself with
+        /// its ring and its accent label. Everything unlocked falls back to
+        /// naming what is worn.
+        /// </summary>
+        private string CollectionRestingHint(bool trails)
+        {
+            if (trails)
+            {
+                foreach (var trail in BallTrails.All)
+                {
+                    if (!BallTrails.IsUnlocked(trail, _stats.Data))
+                    {
+                        return string.Format(Loc.Tr("{0}  —  locked: {1}"),
+                            Loc.Tr(trail.Name), BallTrails.UnlockHint(trail));
+                    }
+                }
+
+                return string.Format(Loc.Tr("{0}  —  equipped"),
+                    Loc.Tr(BallTrails.Resolve(_stats.Data.ballTrail).Name));
+            }
+
+            foreach (var skin in BallSkins.All)
+            {
+                if (!BallSkins.IsUnlocked(skin, _stats.Data))
+                {
+                    return string.Format(Loc.Tr("{0}  —  locked: {1}"),
+                        Loc.Tr(skin.Name), BallSkins.UnlockHint(skin));
+                }
+            }
+
+            return string.Format(Loc.Tr("{0}  —  equipped"),
+                Loc.Tr(BallSkins.Resolve(_stats.Data.ballSkin).Name));
         }
 
         /// <summary>How many cells the active tab fills.</summary>
@@ -648,10 +682,13 @@ namespace PuttSeed.Unity
                 if (collectionCellSwatches[i] != null)
                 {
                     // Trail tints carry their own alpha; the swatch shows the
-                    // color at full strength so a locked cell is the only dim one.
+                    // color at full strength so a locked cell is the only dim
+                    // one. Locked still shows the REAL color, just quieter —
+                    // at 0.22 the reward was invisible, and a reward you
+                    // cannot see cannot be wanted.
                     collectionCellSwatches[i].color = unlocked
                         ? new Color(color.r, color.g, color.b, 1f)
-                        : new Color(color.r, color.g, color.b, 0.22f);
+                        : new Color(color.r, color.g, color.b, 0.38f);
                 }
 
                 if (collectionCellButtons[i] != null)

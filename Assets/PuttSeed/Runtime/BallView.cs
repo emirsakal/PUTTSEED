@@ -49,6 +49,22 @@ namespace PuttSeed.Unity
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(transform, false);
             _body = bodyGo.transform;
+
+            // A dark contour one layer behind the disc. The ball is the
+            // smallest thing on screen and shares a hue band with the bumpers
+            // on some skins; a rim wins that contrast fight on every surface,
+            // and it squashes with the body because it rides the same
+            // transform.
+            var rimGo = new GameObject("Rim");
+            rimGo.transform.SetParent(bodyGo.transform, false);
+            rimGo.transform.localPosition = new Vector3(0f, 0f, 0.004f);
+            rimGo.AddComponent<MeshFilter>().sharedMesh =
+                MeshFactory.Disc(Vector2.zero, 0.118f, new Color(0.09f, 0.12f, 0.10f, 0.55f));
+            var rimRenderer = rimGo.AddComponent<MeshRenderer>();
+            rimRenderer.sharedMaterial = PaletteMaterials.Shared;
+            rimRenderer.sortingOrder = SortingLayers.Ball;
+            rimRenderer.enabled = false; // follows the body's first-course rule
+
             var mesh = MeshFactory.Disc(Vector2.zero, 0.1f, ballColor);
             bodyGo.AddComponent<MeshFilter>().sharedMesh = mesh;
             _renderer = bodyGo.AddComponent<MeshRenderer>();
@@ -115,6 +131,7 @@ namespace PuttSeed.Unity
             runner.RunReset += () =>
             {
                 _renderer.enabled = true;
+                rimRenderer.enabled = true;
                 _trail.enabled = true;
                 _trail.Clear();
                 shadowGo.SetActive(true);

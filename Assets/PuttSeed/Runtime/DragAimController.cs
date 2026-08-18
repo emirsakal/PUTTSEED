@@ -45,8 +45,13 @@ namespace PuttSeed.Unity
         private const int MaxAimDashes = 14;
         private GameObject[] _aimDashes = System.Array.Empty<GameObject>();
         private MeshRenderer[] _aimDashRenderers = System.Array.Empty<MeshRenderer>();
+
         private MaterialPropertyBlock _tintBlock = null!; // Unity API — created in Initialize, never in the ctor
 
+        // The aim colour rides power continuously. A stepped ladder (notches
+        // at 25/50/75/100%, then the same quarters as colour snaps) was built
+        // and tried on device: the bars fought the arrow and the snapping read
+        // worse than the smooth climb. Kept smooth deliberately (2026-08-18).
         private static readonly Color LowPower = new Color(0.55f, 0.9f, 0.55f);
         private static readonly Color HighPower = new Color(0.95f, 0.35f, 0.3f);
 

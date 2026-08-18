@@ -23,6 +23,7 @@ namespace PuttSeed.Unity
         private LineRenderer? _holePulse;
         private Vector2 _holePosition;
         private float _raise;
+        private float _droop;
         private float _pulsePhase;
         private object? _builtFor;
 
@@ -50,18 +51,28 @@ namespace PuttSeed.Unity
                 || Vector2.Distance(_runner.BallRenderPosition, _holePosition) < RaiseDistance;
             float target = ballClose ? 1f : 0f;
             _raise = Mathf.MoveTowards(_raise, target, Time.deltaTime * RaiseSpeed);
+
+            // Out of strokes: the flag gives up. It leans off the cup and the
+            // pennant stops waving — the failure moment had nothing to look at.
+            _droop = Mathf.MoveTowards(_droop, sim.IsFailed ? 1f : 0f,
+                Time.deltaTime * (sim.IsFailed ? 2.4f : 6f));
+            float drooped = Mathf.SmoothStep(0f, 1f, _droop);
+
             if (_flagRoot != null)
             {
                 float eased = Mathf.SmoothStep(0f, 1f, _raise);
                 _flagRoot.transform.position = new Vector3(
-                    _holePosition.x, _holePosition.y + eased * RaiseHeight, -0.055f);
+                    _holePosition.x,
+                    _holePosition.y + eased * RaiseHeight - drooped * 0.05f,
+                    -0.055f);
+                _flagRoot.transform.localEulerAngles = new Vector3(0f, 0f, -16f * drooped);
             }
 
             // The pennant waves gently, a touch livelier while raised.
             if (_pennant != null)
             {
-                float wave = Mathf.Sin(Time.time * 2.4f) * (3f + _raise * 3f)
-                    + Mathf.Sin(Time.time * 5.1f) * 1.2f;
+                float wave = (Mathf.Sin(Time.time * 2.4f) * (3f + _raise * 3f)
+                    + Mathf.Sin(Time.time * 5.1f) * 1.2f) * (1f - drooped);
                 _pennant.localEulerAngles = new Vector3(0f, 0f, wave);
             }
 
@@ -95,6 +106,7 @@ namespace PuttSeed.Unity
             _builtFor = gen;
             _holePosition = FixView.ToVector2(gen.Course.HolePosition);
             _raise = 0f;
+            _droop = 0f;
 
             if (_flagRoot != null)
             {

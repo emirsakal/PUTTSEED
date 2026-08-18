@@ -161,7 +161,12 @@ namespace PuttSeed.Unity
 
             string modeLabel = _modes.Mode switch
             {
-                GameMode.Daily => _modes.DailyModeLabel,
+                // The daily names its rating because the cup's rule follows
+                // it: below Hard any touch drops, on Hard the speed threshold
+                // stands. A day that changes that silently reads as physics
+                // misbehaving.
+                GameMode.Daily => string.Format(Loc.Tr("{0} · {1}"),
+                    _modes.DailyModeLabel, Loc.Tr(gen.Difficulty.ToString())),
                 GameMode.Practice => string.Format(Loc.Tr("Practice · {0}"), Loc.Tr(gen.Difficulty.ToString())),
                 GameMode.Journey => string.Format(Loc.Tr("Level {0}/{1}"),
                     _modes.JourneyLevel + 1, JourneyConfig.Seeds.Length),

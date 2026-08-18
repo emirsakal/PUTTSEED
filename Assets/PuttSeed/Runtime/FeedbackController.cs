@@ -25,6 +25,9 @@ namespace PuttSeed.Unity
         public AudioClip? readyClip;
         public AudioClip? starClip;
         public AudioClip? jingleClip;
+        public AudioClip? rampClip;
+        public AudioClip? gateClip;
+        public AudioClip? millClip;
 
         [Header("Tuning")]
         [Range(0f, 1f)] public float volume = 0.9f;
@@ -59,13 +62,18 @@ namespace PuttSeed.Unity
         private GameObject? _letterbox;
 
         private bool _wasInIce;
+        private bool _wasInRamp;
         private bool _wasReady;
+        private Coroutine? _failWashRoutine;
+        private GameObject? _failWashGo;
+        private Mesh? _failWashMesh;
         private Coroutine? _starRoutine;
         private float _iceSparkleTimer;
         private float _sandDustTimer;
 
         private static readonly Color SandPuff = new Color(0.85f, 0.78f, 0.55f);
         private static readonly Color WaterSplash = new Color(0.42f, 0.62f, 0.88f);
+        private static readonly Color RampRush = new Color(0.96f, 0.94f, 0.84f, 0.9f);
         private static readonly Color[] ConfettiColors =
         {
             new Color(0.99f, 0.76f, 0.29f), // accent amber
@@ -91,6 +99,9 @@ namespace PuttSeed.Unity
             if (readyClip == null) { readyClip = Resources.Load<AudioClip>("Sfx/ready"); }
             if (starClip == null) { starClip = Resources.Load<AudioClip>("Sfx/star"); }
             if (jingleClip == null) { jingleClip = Resources.Load<AudioClip>("Sfx/jingle"); }
+            if (rampClip == null) { rampClip = Resources.Load<AudioClip>("Sfx/ramp"); }
+            if (gateClip == null) { gateClip = Resources.Load<AudioClip>("Sfx/gate"); }
+            if (millClip == null) { millClip = Resources.Load<AudioClip>("Sfx/mill"); }
         }
 
         /// <summary>Plays the achievement arpeggio (wired by the bootstrap).</summary>
@@ -168,6 +179,7 @@ namespace PuttSeed.Unity
             _lastFailed = sim.IsFailed;
             _wasInSand = false;
             _wasInIce = false;
+            _wasInRamp = false;
             _wasReady = true; // no settle-pluck for the freshly placed ball
             _lastBallPos = FixView.ToVector2(sim.Ball.Position);
 
@@ -207,6 +219,12 @@ namespace PuttSeed.Unity
                 Destroy(_letterbox);
                 _letterbox = null;
             }
+
+            if (_failWashRoutine != null)
+            {
+                StopCoroutine(_failWashRoutine);
+                ClearFailWash();
+            }
         }
 
         /// <summary>Read-only zone lookup for presentation (core's own test).</summary>
@@ -221,6 +239,26 @@ namespace PuttSeed.Unity
             for (int i = 0; i < zones.Length; i++)
             {
                 if (zones[i].Contains(sim.Ball.Position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Read-only ramp lookup — ramps carry their polygon inside.</summary>
+        private bool BallIsOnRamp(PuttSeed.Core.Sim.RampZone[]? ramps)
+        {
+            var sim = _runner.Sim;
+            if (ramps == null || sim == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < ramps.Length; i++)
+            {
+                if (ramps[i].Area.Contains(sim.Ball.Position))
                 {
                     return true;
                 }
@@ -265,7 +303,7 @@ namespace PuttSeed.Unity
 
         private void OnShotFired()
         {
-            Play(shotClip, 1f);
+            PlayShot();
             Tick(); // the stroke itself gets the lightest touch
             if (_swingRoutine != null)
             {
@@ -334,18 +372,19 @@ namespace PuttSeed.Unity
                 FlashNearestBumper(FixView.ToVector2(sim.Ball.Position));
             }
 
-            // Gate blocks and windmill slaps are wall-family hits: same voice,
-            // their own spark tints.
+            // Gate blocks and windmill slaps are wall-family hits, but each
+            // gets its own voice — a gate that sounds like a wall teaches the
+            // player nothing about what just refused them.
             if (sim.GateHitCount > _lastGateHits)
             {
-                OnBounce(wallClip);
+                OnBounce(gateClip);
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
                     new Color(0.99f, 0.80f, 0.38f, 0.9f), count: 5, speed: 1.3f, life: 0.25f);
             }
 
             if (sim.WindmillHitCount > _lastMillHits)
             {
-                OnBounce(wallClip);
+                OnBounce(millClip);
                 Tap();
                 _cameraJuice?.Shake(0.04f, 0.15f);
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
@@ -391,6 +430,19 @@ namespace PuttSeed.Unity
 
             _wasInIce = inIce;
 
+            // The ramp was the one element a ball could cross in total
+            // silence: no sound, no particle, no haptic. It gets all three.
+            bool onRamp = BallIsOnRamp(course?.Ramps);
+            if (onRamp && !_wasInRamp)
+            {
+                Play(rampClip, 0.85f);
+                Tick();
+                EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
+                    RampRush, count: 7, speed: 1f, life: 0.3f);
+            }
+
+            _wasInRamp = onRamp;
+
             if (sim.IsHoled && !_lastHoled)
             {
                 Play(captureClip, 1f);
@@ -422,7 +474,19 @@ namespace PuttSeed.Unity
 
             if (sim.IsFailed && !_lastFailed)
             {
-                Play(failClip, 0.8f);
+                // Running out of strokes used to be one quiet clip against a
+                // hole-out that gets a ring, a flash, a zoom and confetti.
+                // It now lands: a tone lower, a thump in the hand, the lights
+                // dropping over the green.
+                PlayPitched(failClip, 0.85f, 0.88f);
+                Tap(strong: true);
+                if (_failWashRoutine != null)
+                {
+                    StopCoroutine(_failWashRoutine);
+                    ClearFailWash();
+                }
+
+                _failWashRoutine = StartCoroutine(FailWash());
             }
 
             // The settle moment: shot resolved, aiming open again — pluck.
@@ -548,6 +612,63 @@ namespace PuttSeed.Unity
             Destroy(go);
         }
 
+        /// <summary>
+        /// The lights going down over the green when the strokes run out: a
+        /// slow dark wash, deliberately the mirror of the capture flash. A
+        /// retry cancels it — see <see cref="SyncCounters"/>.
+        /// </summary>
+        private IEnumerator FailWash()
+        {
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                yield break;
+            }
+
+            _failWashMesh = MeshFactory.Quad(new Vector2(-60f, -60f), new Vector2(60f, 60f), Color.white);
+            _failWashGo = new GameObject("FailWash");
+            _failWashGo.AddComponent<MeshFilter>().sharedMesh = _failWashMesh;
+            var renderer = _failWashGo.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = PaletteMaterials.Shared;
+
+            var block = new MaterialPropertyBlock();
+            const float fadeIn = 0.14f;
+            const float hold = 0.12f;
+            const float fadeOut = 0.3f;
+            const float peak = 0.34f;
+            for (float t = 0f; t < fadeIn + hold + fadeOut; t += Time.deltaTime)
+            {
+                float alpha = t < fadeIn ? peak * (t / fadeIn)
+                    : t < fadeIn + hold ? peak
+                    : peak * (1f - (t - fadeIn - hold) / fadeOut);
+                var c = cam.transform.position;
+                _failWashGo.transform.position = new Vector3(c.x, c.y, -0.9f);
+                block.SetColor("_Color", new Color(0.02f, 0.05f, 0.04f, alpha));
+                renderer.SetPropertyBlock(block);
+                yield return null;
+            }
+
+            ClearFailWash();
+        }
+
+        /// <summary>Destroys the wash quad and its mesh, whenever it ends.</summary>
+        private void ClearFailWash()
+        {
+            if (_failWashGo != null)
+            {
+                Destroy(_failWashGo);
+                _failWashGo = null;
+            }
+
+            if (_failWashMesh != null)
+            {
+                Destroy(_failWashMesh);
+                _failWashMesh = null;
+            }
+
+            _failWashRoutine = null;
+        }
+
         /// <summary>A rising note per earned star (major-triad steps).</summary>
         private IEnumerator StarNotes(int stars)
         {
@@ -635,6 +756,27 @@ namespace PuttSeed.Unity
                 _source.pitch = Random.Range(0.96f, 1.04f);
                 _source.PlayOneShot(clip, volume * gain);
             }
+        }
+
+        /// <summary>Plays a clip around a deliberate pitch centre.</summary>
+        private void PlayPitched(AudioClip? clip, float gain, float pitch)
+        {
+            if (clip != null && (_settings == null || _settings.Data.soundEnabled))
+            {
+                _source.pitch = pitch * Random.Range(0.98f, 1.02f);
+                _source.PlayOneShot(clip, volume * gain);
+            }
+        }
+
+        /// <summary>
+        /// The putter voice rides the shot: a 10% tap is high and light, a
+        /// full swing low and loud. One clip fired at a fixed pitch made every
+        /// stroke in the game sound like the same stroke.
+        /// </summary>
+        private void PlayShot()
+        {
+            float power = Mathf.Clamp01(_runner.LastShot.PowerIndex / 255f);
+            PlayPitched(shotClip, Mathf.Lerp(0.5f, 1f, power), Mathf.Lerp(1.16f, 0.88f, power));
         }
 
         private void Tick()
