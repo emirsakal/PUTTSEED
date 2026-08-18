@@ -175,50 +175,6 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
-        public void HardMode_KeepsItsOwnMedalAndBest()
-        {
-            var store = new StatsStore(_path);
-            store.RecordDailyCompletion(10, 4, 1, "PUTT-x");
-            Assert.That(store.GetOrCreateDay(10).hardCompleted, Is.False,
-                "a normal run never earns the hard medal");
-
-            store.RecordDailyHardCompletion(10, 3);
-            var record = store.GetOrCreateDay(10);
-            Assert.That(record.hardCompleted, Is.True);
-            Assert.That(record.hardBestStrokes, Is.EqualTo(3));
-            Assert.That(record.bestStrokes, Is.EqualTo(4), "the normal best is untouched");
-
-            store.RecordDailyHardCompletion(10, 2);
-            Assert.That(store.GetOrCreateDay(10).hardBestStrokes, Is.EqualTo(2), "better is kept");
-            store.RecordDailyHardCompletion(10, 5);
-            Assert.That(store.GetOrCreateDay(10).hardBestStrokes, Is.EqualTo(2), "worse never downgrades");
-        }
-
-        [Test]
-        public void HardMode_NeverTouchesTheStreak()
-        {
-            // The streak is the daily loop's spine; a second, harder run at
-            // the same day must not extend or restart it.
-            var store = new StatsStore(_path);
-            store.RecordDailyCompletion(10, 3, 2, "PUTT-x");
-            int streakAfterNormal = store.Data.streak;
-
-            store.RecordDailyHardCompletion(11, 2); // a day never played normally
-            Assert.That(store.Data.streak, Is.EqualTo(streakAfterNormal));
-            Assert.That(store.Data.lastCompletedDay, Is.EqualTo(10));
-        }
-
-        [Test]
-        public void HardMode_SurvivesAReload()
-        {
-            var store = new StatsStore(_path);
-            store.RecordDailyHardCompletion(7, 3);
-            var reloaded = new StatsStore(_path);
-            Assert.That(reloaded.GetOrCreateDay(7).hardCompleted, Is.True);
-            Assert.That(reloaded.GetOrCreateDay(7).hardBestStrokes, Is.EqualTo(3));
-        }
-
-        [Test]
         public void Journey_ProgressUnlocksAndKeepsBestStars()
         {
             var store = new StatsStore(_path);

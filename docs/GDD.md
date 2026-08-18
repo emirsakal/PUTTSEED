@@ -48,13 +48,24 @@ The 2026-08-18 wave (generator v2 — see below):
 | One-way gate (segment) | a valve: crossed freely along its pass normal, a solid wall against it |
 | Ramp zone (polygon) | constant acceleration while inside — downhill lengthens the roll, uphill repels gentle shots |
 | Portal pair (two discs) | entering one mouth reappears at its twin, velocity untouched |
-| Windmill (rotating blades) | blades sweep a pivot; the phase advances with ticks since the current shot and re-arms every stroke, so the mill turns only while the ball rolls |
+| Windmill (rotating blades) | blades sweep a pivot on a free-running clock — they keep turning while you line up, so WHEN you shoot is part of the shot |
 
-The windmill is the one that had to bend to fit: a real-time obstacle
-would break both the solver (a rest state would no longer determine the
-future) and the replay codec (codes would need timing). Tying its phase
-to the shot clock keeps it a planning puzzle rather than a reflex test,
-and keeps every guarantee intact.
+The windmill is the one that cost something. It first shipped with its
+phase re-armed on every stroke, which kept replays timing-free but left
+the blades frozen while a player lined up — a windmill that stops is a
+broken windmill. It now runs on a free clock, and the price is paid in
+two places, deliberately:
+
+- **Replays carry timing.** A code records the blade phase each shot was
+  taken at (codec v3, one extra byte per shot). Playback still
+  re-simulates; it just also reproduces the pauses that mattered.
+- **The solver still proves par without waiting.** Expanding a rest
+  state re-arms the clock, so generation certifies a solution that shoots
+  immediately. A player who waits for a better blade angle has strictly
+  more options than the proof used, so the guarantee holds.
+
+The clock wraps every 1024 ticks, which is why ten bits per shot is
+enough and why a ghost never idles longer than one turn of the blades.
 
 ## Generator versions
 

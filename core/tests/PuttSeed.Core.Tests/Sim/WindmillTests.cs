@@ -67,41 +67,87 @@ namespace PuttSeed.Core.Tests.Sim
         }
 
         [Test]
-        public void Phase_DependsOnlyOnTicksSinceShot()
+        public void WaitingBeforeTheShot_ChangesTheOutcome()
         {
-            // The solver's BFS treats a rest state as the whole state. That is
-            // only sound if a shot's outcome never depends on how many ticks
-            // the sim ran before it — i.e. blades re-arm to phase0 per shot.
-            var direct = new GolfSim(CourseWithMill(omegaSteps: 4), SimConfig.Default);
-            var detoured = new GolfSim(CourseWithMill(omegaSteps: 4), SimConfig.Default);
+            // The point of a free-running mill: blades keep turning while you
+            // line up, so the angle you launch into is the one you waited for.
+            var immediate = new GolfSim(CourseWithMill(omegaSteps: 4), SimConfig.Default);
+            var patient = new GolfSim(CourseWithMill(omegaSteps: 4), SimConfig.Default);
 
-            // The detoured sim burns a wildly different tick history first.
-            detoured.Shoot(new ShotInput(768, 40)); // a little hop in -y
-            for (int i = 0; i < 3000 && !detoured.IsAtRest; i++)
+            for (int i = 0; i < 37; i++)
             {
-                detoured.Tick();
+                patient.Tick(); // at rest: only the blades move
             }
 
-            for (int i = 0; i < 500; i++)
-            {
-                detoured.Tick(); // extra idle ticks at rest
-            }
+            immediate.Shoot(new ShotInput(0, 255));
+            patient.Shoot(new ShotInput(0, 255));
 
-            var restart = new Vec2Fix(Fix64.Zero, Fix64.Zero);
-            direct.RestoreRest(restart, 0);
-            detoured.RestoreRest(restart, 0);
-
-            direct.Shoot(new ShotInput(0, 255));
-            detoured.Shoot(new ShotInput(0, 255));
+            bool diverged = false;
             for (int i = 0; i < 2400; i++)
             {
-                direct.Tick();
-                detoured.Tick();
-                Assert.That(detoured.Ball.Position.X.Raw, Is.EqualTo(direct.Ball.Position.X.Raw),
-                    $"trajectory must not depend on prior tick history (tick {i})");
-                Assert.That(detoured.Ball.Position.Y.Raw, Is.EqualTo(direct.Ball.Position.Y.Raw),
-                    $"trajectory must not depend on prior tick history (tick {i})");
+                immediate.Tick();
+                patient.Tick();
+                if (immediate.StateHash() != patient.StateHash())
+                {
+                    diverged = true;
+                    break;
+                }
             }
+
+            Assert.That(diverged, Is.True, "the wait must change what the shot meets");
+        }
+
+        [Test]
+        public void SameClockValue_SameTrajectory()
+        {
+            // What lets a replay store 10 bits per shot: the trajectory
+            // depends on the clock VALUE, not on how the clock got there.
+            var a = new GolfSim(CourseWithMill(omegaSteps: 3), SimConfig.Default);
+            var b = new GolfSim(CourseWithMill(omegaSteps: 3), SimConfig.Default);
+
+            for (int i = 0; i < 50; i++)
+            {
+                a.Tick();
+            }
+
+            for (int i = 0; i < 50 + GolfSim.MillClockPeriod; i++)
+            {
+                b.Tick(); // a full extra wrap of waiting
+            }
+
+            Assert.That(b.MillClock, Is.EqualTo(a.MillClock), "setup: same phase");
+
+            a.Shoot(new ShotInput(0, 255));
+            b.Shoot(new ShotInput(0, 255));
+            for (int i = 0; i < 2400; i++)
+            {
+                a.Tick();
+                b.Tick();
+
+                // Positions, not StateHash: the hash folds in TickCount, and
+                // b deliberately waited a full extra turn to get here.
+                Assert.That(b.Ball.Position.X.Raw, Is.EqualTo(a.Ball.Position.X.Raw), $"tick {i}");
+                Assert.That(b.Ball.Position.Y.Raw, Is.EqualTo(a.Ball.Position.Y.Raw), $"tick {i}");
+                Assert.That(b.Ball.Velocity.X.Raw, Is.EqualTo(a.Ball.Velocity.X.Raw), $"tick {i}");
+                Assert.That(b.Ball.Velocity.Y.Raw, Is.EqualTo(a.Ball.Velocity.Y.Raw), $"tick {i}");
+            }
+        }
+
+        [Test]
+        public void RestoreRest_ReArmsTheClock_KeepingSolverNodesReproducible()
+        {
+            // The solver expands rest states with RestoreRest; if the clock
+            // survived, the same node would explore different blade angles
+            // depending on how the search reached it.
+            var sim = new GolfSim(CourseWithMill(omegaSteps: 4), SimConfig.Default);
+            for (int i = 0; i < 77; i++)
+            {
+                sim.Tick();
+            }
+
+            Assert.That(sim.MillClock, Is.Not.Zero);
+            sim.RestoreRest(Vec2Fix.Zero, 0);
+            Assert.That(sim.MillClock, Is.Zero);
         }
 
         [Test]
@@ -131,24 +177,25 @@ namespace PuttSeed.Core.Tests.Sim
         }
 
         [Test]
-        public void TicksSinceShot_TracksTheShotClock()
+        public void MillClock_AdvancesAtRest_AndWrapsAtThePeriod()
         {
             var sim = new GolfSim(BareCourse(), SimConfig.Default);
-            Assert.That(sim.TicksSinceShot, Is.Zero);
+            Assert.That(sim.MillClock, Is.Zero);
 
-            sim.Shoot(new ShotInput(0, 100));
             for (int i = 0; i < 7; i++)
+            {
+                sim.Tick(); // never shot: the ball is at rest the whole time
+            }
+
+            Assert.That(sim.MillClock, Is.EqualTo(7), "blades turn while you think");
+
+            for (int i = 0; i < GolfSim.MillClockPeriod; i++)
             {
                 sim.Tick();
             }
 
-            Assert.That(sim.TicksSinceShot, Is.EqualTo(7), "the clock counts moving ticks");
-
-            sim.RestoreRest(Vec2Fix.Zero, 0);
-            Assert.That(sim.TicksSinceShot, Is.Zero, "RestoreRest re-arms the clock");
-
-            sim.Shoot(new ShotInput(0, 100));
-            Assert.That(sim.TicksSinceShot, Is.Zero, "Shoot re-arms the clock");
+            Assert.That(sim.MillClock, Is.EqualTo(7), "a full period returns the same phase");
+            Assert.That(sim.MillClock, Is.InRange(0, GolfSim.MillClockPeriod - 1));
         }
     }
 }

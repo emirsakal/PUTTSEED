@@ -82,8 +82,6 @@ namespace PuttSeed.Unity
             ["Tutorial  ·  start here"] = "Eğitim  ·  buradan başla",
             ["Archive"] = "Arşiv",
             // "Hard" itself is translated further down with the difficulty names.
-            ["★ Hard {0}"] = "★ Zor {0}",
-            ["{0} · HARD"] = "{0} · ZOR",
             ["Journey"] = "Yolculuk",
             ["Journey · {0}/{1}"] = "Yolculuk · {0}/{1}",
             ["Level {0}/{1}"] = "Bölüm {0}/{1}",
@@ -210,13 +208,11 @@ namespace PuttSeed.Unity
             ["play 25 practice courses"] = "25 antrenman kursu oyna",
             ["Bank Shot"] = "Bandodan",
             ["Untouched"] = "Değmeden",
-            ["Hard Day"] = "Zor Gün",
             ["Millwright"] = "Değirmenci",
             ["Down to the Wire"] = "Son Vuruşta",
             ["Perfectionist"] = "Mükemmeliyetçi",
             ["hole out on a shot off three walls"] = "üç duvara çarpan bir vuruşla deliği bitir",
             ["hole out without touching a hazard"] = "hiçbir engele değmeden deliği bitir",
-            ["finish a daily under hard rules"] = "bir günlüğü zor kurallarla bitir",
             ["hole out on a windmill course, blades untouched"] =
                 "değirmenli bir kursu kanatlara değmeden bitir",
             ["hole out on your final allowed stroke"] = "son hakkınla deliği bitir",

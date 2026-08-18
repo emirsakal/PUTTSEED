@@ -19,16 +19,28 @@ namespace PuttSeed.Core.Tests.CourseGen
     {
         private const int SeedCount = 1000;
 
-        private static bool Replays(CourseData course, ShotInput[] shots, out int strokes)
+        /// <summary>
+        /// Replays a solution, honouring the mill clock each shot was taken at.
+        /// Windmills turn while the ball rests, so a shot fired at the wrong
+        /// moment meets a different blade angle — the author solution is only
+        /// valid at the phases the solver proved it at.
+        /// </summary>
+        private static bool Replays(CourseData course, ShotInput[] shots, int[] shotClocks,
+            out int strokes)
         {
+            bool timed = course.Windmills.Length > 0;
             var sim = new GolfSim(course, SimConfig.Default);
             int shotIdx = 0;
             for (int tick = 0; tick < 200_000 && !sim.IsHoled; tick++)
             {
                 if (sim.IsAtRest && shotIdx < shots.Length)
                 {
-                    sim.Shoot(shots[shotIdx]);
-                    shotIdx++;
+                    bool onPhase = !timed || sim.MillClock == shotClocks[shotIdx];
+                    if (onPhase)
+                    {
+                        sim.Shoot(shots[shotIdx]);
+                        shotIdx++;
+                    }
                 }
                 else if (sim.IsAtRest)
                 {
@@ -78,7 +90,8 @@ namespace PuttSeed.Core.Tests.CourseGen
                         failures.Add($"seed {seed}: par {result.Course.Par} out of range");
                     }
 
-                    if (!Replays(result.Course, result.AuthorSolution, out var strokes))
+                    if (!Replays(result.Course, result.AuthorSolution, result.AuthorShotClocks,
+                        out var strokes))
                     {
                         failures.Add($"seed {seed}: author solution does not capture");
                     }

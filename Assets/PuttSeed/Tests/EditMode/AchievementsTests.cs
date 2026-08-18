@@ -15,7 +15,6 @@ namespace PuttSeed.Unity.Tests
         private static Achievements.RunFacts Run(
             GameMode mode = GameMode.Practice,
             bool isArchiveDay = false,
-            bool isHardMode = false,
             int strokes = 4,
             int par = 3,
             int strokeLimit = 6,
@@ -24,7 +23,7 @@ namespace PuttSeed.Unity.Tests
             bool touchedHazard = true,
             bool hasWindmill = false,
             int windmillHits = 0)
-            => new Achievements.RunFacts(mode, isArchiveDay, isHardMode, strokes, par, strokeLimit,
+            => new Achievements.RunFacts(mode, isArchiveDay, strokes, par, strokeLimit,
                 wallHits, wallHitsFinalShot, touchedHazard, hasWindmill, windmillHits);
 
         [Test]
@@ -110,27 +109,16 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
-        public void DownToTheWire_ReadsTheACTIVELimit_SoHardModeCounts()
+        public void DownToTheWire_ReadsTheLimit_NotAFixedStrokeCount()
         {
-            // Hard mode allows par + 1: holing on stroke 3 of a par 2 is the
-            // wire there, and merely comfortable under normal rules.
+            // Par varies, so the badge must compare against the run's own
+            // limit rather than any hardcoded number.
             Assert.That(Achievements.EvaluateRun(Fresh(),
-                    Run(mode: GameMode.Daily, isHardMode: true, strokes: 3, par: 2, strokeLimit: 3)),
+                    Run(mode: GameMode.Daily, strokes: 5, par: 2, strokeLimit: 5)),
                 Does.Contain("last_stroke"));
             Assert.That(Achievements.EvaluateRun(Fresh(),
                     Run(mode: GameMode.Daily, strokes: 3, par: 2, strokeLimit: 5)),
                 Does.Not.Contain("last_stroke"));
-        }
-
-        [Test]
-        public void HardDay_OnlyOnHardDailies()
-        {
-            Assert.That(Achievements.EvaluateRun(Fresh(), Run(mode: GameMode.Daily, isHardMode: true)),
-                Does.Contain("hard_daily"));
-            Assert.That(Achievements.EvaluateRun(Fresh(), Run(mode: GameMode.Daily)),
-                Does.Not.Contain("hard_daily"));
-            Assert.That(Achievements.EvaluateRun(Fresh(), Run(mode: GameMode.Practice, isHardMode: true)),
-                Does.Not.Contain("hard_daily"), "hard rules only exist on the daily");
         }
 
         [Test]

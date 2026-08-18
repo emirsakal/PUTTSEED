@@ -75,51 +75,6 @@ namespace PuttSeed.Core.Tests.Sim
         }
 
         [Test]
-        public void StrokeAllowance_DefaultsToTheGddThree()
-        {
-            var sim = new GolfSim(OpenCourse(2), SimConfig.Default);
-            Assert.That(sim.StrokeLimit, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void StrokeAllowance_TightensTheLimit()
-        {
-            // Daily hard mode: same course, same seed, par + 1 to finish.
-            var sim = new GolfSim(OpenCourse(2), SimConfig.Default, strokeAllowance: 1);
-            Assert.That(sim.StrokeLimit, Is.EqualTo(3));
-
-            for (int s = 0; s < 3; s++)
-            {
-                sim.Shoot(new ShotInput(s * 100, 10));
-                RunToRest(sim);
-            }
-
-            Assert.That(sim.Strokes, Is.EqualTo(3));
-            sim.Shoot(new ShotInput(0, 200));
-            Assert.That(sim.Strokes, Is.EqualTo(3), "a fourth shot is refused under allowance 1");
-            Assert.That(sim.IsFailed, Is.True);
-        }
-
-        [Test]
-        public void StrokeAllowance_DoesNotTouchPhysics()
-        {
-            // The allowance is a RULE, not a force: the same shots must
-            // produce bit-identical states until the limit intervenes.
-            var course = new CourseData(Vec2Fix.Zero, V(100, 100), par: 2,
-                walls: System.Array.Empty<WallSegment>());
-            var lenient = new GolfSim(course, SimConfig.Default, strokeAllowance: 3);
-            var strict = new GolfSim(course, SimConfig.Default, strokeAllowance: 1);
-            lenient.Shoot(new ShotInput(64, 200));
-            strict.Shoot(new ShotInput(64, 200));
-            for (int i = 0; i < 1200; i++)
-            {
-                lenient.Tick();
-                strict.Tick();
-                Assert.That(strict.StateHash(), Is.EqualTo(lenient.StateHash()), $"tick {i}");
-            }
-        }
-
-        [Test]
         public void SimConfigCreate_RoundTripsAllParameters()
         {
             var c = SimConfig.Create(

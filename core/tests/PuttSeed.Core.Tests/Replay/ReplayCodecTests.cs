@@ -176,7 +176,61 @@ namespace PuttSeed.Core.Tests.Replay
         public void Encode_RejectsUnknownConfigVersion()
         {
             Assert.Throws<System.ArgumentException>(
-                () => ReplayCodec.Encode(1UL, System.Array.Empty<ShotInput>(), configVersion: 3));
+                () => ReplayCodec.Encode(1UL, System.Array.Empty<ShotInput>(), configVersion: 4));
+        }
+
+        [Test]
+        public void V3RoundTrip_CarriesEachShotsMillClock()
+        {
+            var shots = new[] { new ShotInput(300, 77), new ShotInput(1023, 0) };
+            var clocks = new[] { 5, 1023 };
+            var code = ReplayCodec.Encode(42UL, shots, clocks, configVersion: 3);
+
+            Assert.That(ReplayCodec.TryDecode(code, out var seed, out var decoded,
+                out int version, out var decodedClocks), Is.True);
+            Assert.That(version, Is.EqualTo(3));
+            Assert.That(seed, Is.EqualTo(42UL));
+            Assert.That(decodedClocks, Is.EqualTo(clocks));
+            for (int i = 0; i < shots.Length; i++)
+            {
+                Assert.That(decoded[i].AngleIndex, Is.EqualTo(shots[i].AngleIndex), $"angle {i}");
+                Assert.That(decoded[i].PowerIndex, Is.EqualTo(shots[i].PowerIndex), $"power {i}");
+            }
+        }
+
+        [Test]
+        public void V3_NeedsOneClockPerShot()
+        {
+            var shots = new[] { new ShotInput(1, 1), new ShotInput(2, 2) };
+            Assert.Throws<System.ArgumentException>(
+                () => ReplayCodec.Encode(1UL, shots, new[] { 3 }, configVersion: 3));
+            Assert.Throws<System.ArgumentException>(
+                () => ReplayCodec.Encode(1UL, shots, null, configVersion: 3));
+        }
+
+        [Test]
+        public void UntimedVersions_DecodeToZeroClocks()
+        {
+            var shots = new[] { new ShotInput(300, 77) };
+            var code = ReplayCodec.Encode(42UL, shots, configVersion: 2);
+
+            Assert.That(ReplayCodec.TryDecode(code, out _, out _, out int version,
+                out var clocks), Is.True);
+            Assert.That(version, Is.EqualTo(2));
+            Assert.That(clocks.Length, Is.EqualTo(1));
+            Assert.That(clocks[0], Is.Zero, "a v2 code has no timing to carry");
+        }
+
+        [Test]
+        public void V3_IsOneByteLongerPerShot_ThanV2()
+        {
+            // The cost of timing, stated plainly so it cannot creep.
+            var shots = new[] { new ShotInput(300, 77), new ShotInput(1, 2), new ShotInput(3, 4) };
+            var v2 = ReplayCodec.Encode(42UL, shots, configVersion: 2);
+            var v3 = ReplayCodec.Encode(42UL, shots, new[] { 0, 0, 0 }, configVersion: 3);
+            Assert.That(v3.Length, Is.GreaterThan(v2.Length));
+            Assert.That(v3.Length - v2.Length, Is.LessThanOrEqualTo(4),
+                "three shots cost three bytes, which is four base64 characters at most");
         }
     }
 }

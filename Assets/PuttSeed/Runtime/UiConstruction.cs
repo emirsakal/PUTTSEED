@@ -62,18 +62,10 @@ namespace PuttSeed.Unity
             menu.dailyButton = menu.dailyLabel.GetComponentInParent<Button>();
 
             // Next-hole countdown; MenuBootstrap fills it once today is done.
-            // It shares its row with the hard-mode chip, so it stops short of
-            // the right edge (the chip owns 0.62 onward).
             menu.countdownText = UIFactory.CreateText(canvas.transform, "Countdown",
-                new Vector2(0.1f, 0.517f), new Vector2(0.60f, 0.545f), 26, TextAnchor.MiddleLeft);
+                new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), 26, TextAnchor.MiddleCenter);
             menu.countdownText.color = UIStyle.CreamDim;
             menu.countdownText.gameObject.SetActive(false);
-
-            // Hard mode: today's seed at par + 1. Sits in the gap between the
-            // daily button (bottom 0.545) and Journey (top 0.508).
-            menu.dailyHardLabel = UIFactory.CreateButton(canvas.transform, "Hard",
-                new Vector2(0.62f, 0.512f), new Vector2(0.9f, 0.542f), NoOp, 24);
-            menu.dailyHardButton = menu.dailyHardLabel.GetComponentInParent<Button>();
 
             menu.journeyLabel = UIFactory.CreateButton(canvas.transform, "Journey",
                 new Vector2(0.1f, 0.435f), new Vector2(0.9f, 0.508f), NoOp, 38);
@@ -524,12 +516,10 @@ namespace PuttSeed.Unity
             var failTitle = UIFactory.CreateText(failPanel.transform, "FailTitle",
                 new Vector2(0.05f, 0.6f), new Vector2(0.95f, 0.94f), 56, TextAnchor.MiddleCenter, shadow: true);
             failTitle.text = "Out of strokes!";
-            // GameUI rewrites this with the ACTIVE allowance — hard mode plays
-            // the same course at par + 1.
-            ui.failSubtitle = UIFactory.CreateText(failPanel.transform, "FailSubtitle",
+            var failSub = UIFactory.CreateText(failPanel.transform, "FailSubtitle",
                 new Vector2(0.05f, 0.42f), new Vector2(0.95f, 0.6f), 28, TextAnchor.MiddleCenter);
-            ui.failSubtitle.text = "The limit is par + 3 — line up and go again.";
-            ui.failSubtitle.color = UIStyle.CreamDim;
+            failSub.text = "The limit is par + 3 — line up and go again.";
+            failSub.color = UIStyle.CreamDim;
             ui.failRetryButton = ButtonOf(UIFactory.CreateButton(failPanel.transform, "Retry",
                 new Vector2(0.28f, 0.08f), new Vector2(0.72f, 0.36f), NoOp, 36, primary: true));
             ui.failPanel.SetActive(false);

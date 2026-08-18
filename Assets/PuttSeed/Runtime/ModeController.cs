@@ -53,29 +53,39 @@ namespace PuttSeed.Unity
         // the newest; replay codes carry theirs.
         private int _activeConfigVersion = 1;
 
+        // Timing for a ghost that arrives with the course it belongs to.
+        private int[] _pendingGhostClocks = System.Array.Empty<int>();
+
         /// <summary>Generator config version of the loaded course (share codes carry it).</summary>
         public int ActiveConfigVersion => _activeConfigVersion;
+
+        /// <summary>
+        /// Wire version NEW codes are written at. Courses that can hold a
+        /// windmill are shared at v3, which records the clock each shot was
+        /// taken at; v1 courses have no mills and stay on the short layout.
+        /// </summary>
+        public int ShareVersion =>
+            GeneratorConfig.ForVersion(_activeConfigVersion) == GeneratorConfig.V1 ? 1 : 3;
+
+        /// <summary>The clocks to encode alongside the played shots.</summary>
+        public int[] ShareShotClocks()
+        {
+            var clocks = new int[_runner.PlayedShotClocks.Count];
+            for (int i = 0; i < clocks.Length; i++)
+            {
+                clocks[i] = _runner.PlayedShotClocks[i];
+            }
+
+            return clocks;
+        }
 
         /// <summary>True when the loaded daily is a past day from the archive.</summary>
         public bool IsArchiveDay { get; private set; }
 
-        /// <summary>True when the loaded daily runs under hard rules (par + 1).</summary>
-        public bool IsHardMode { get; private set; }
-
-        /// <summary>Strokes over par the current mode allows.</summary>
-        public const int HardAllowance = 1;
-
-        /// <summary>HUD label for daily mode ("Daily", dated for archive days, marked when hard).</summary>
-        public string DailyModeLabel
-        {
-            get
-            {
-                string label = IsArchiveDay
-                    ? string.Format(Loc.Tr("Daily · {0}"), Loc.ShortDate(_activeDayDate))
-                    : Loc.Tr("Daily");
-                return IsHardMode ? string.Format(Loc.Tr("{0} · HARD"), label) : label;
-            }
-        }
+        /// <summary>HUD label for daily mode ("Daily", or dated for archive days).</summary>
+        public string DailyModeLabel => IsArchiveDay
+            ? string.Format(Loc.Tr("Daily · {0}"), Loc.ShortDate(_activeDayDate))
+            : Loc.Tr("Daily");
 
         /// <summary>The active mode.</summary>
         public GameMode Mode { get; private set; } = GameMode.Daily;
@@ -166,24 +176,20 @@ namespace PuttSeed.Unity
                     }
                     else
                     {
-                        StartDaily(GameSession.DailyHardMode);
+                        StartDaily();
                     }
 
                     break;
             }
         }
 
-        /// <summary>
-        /// Loads today's daily course. <paramref name="hard"/> plays the same
-        /// seed under par + 1 — a rule layer over identical content.
-        /// </summary>
-        public void StartDaily(bool hard = false)
+        /// <summary>Loads today's daily course.</summary>
+        public void StartDaily()
         {
             Mode = GameMode.Daily;
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = -1;
-            SetStrokeAllowance(hard);
             var utc = DateTime.UtcNow;
             _activeDayNumber = DayNumber(utc);
             _activeDayDate = utc.Date;
@@ -202,7 +208,6 @@ namespace PuttSeed.Unity
             CurrentHint = "";
             IsArchiveDay = true;
             JourneyLevel = -1;
-            SetStrokeAllowance(false);
             _activeDayNumber = dayNumber;
             _activeDayDate = DateOfDay(dayNumber);
             _dailySeed = DailySeed.FromUtcDate(
@@ -218,19 +223,7 @@ namespace PuttSeed.Unity
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = -1;
-            SetStrokeAllowance(false);
             StartCoroutine(GeneratePracticeCourse());
-        }
-
-        /// <summary>
-        /// Applies the mode's stroke allowance to the runner. Hard rules live
-        /// ONLY on today's daily; every other entry point resets to the GDD
-        /// default, so a hard run can never leak into the next course.
-        /// </summary>
-        private void SetStrokeAllowance(bool hard)
-        {
-            IsHardMode = hard;
-            _runner.StrokeAllowance = hard ? HardAllowance : 3;
         }
 
         /// <summary>Loads a tutorial stage.</summary>
@@ -239,7 +232,6 @@ namespace PuttSeed.Unity
             Mode = GameMode.Tutorial;
             IsArchiveDay = false;
             JourneyLevel = -1;
-            SetStrokeAllowance(false);
             TutorialIndex = ((index % TutorialConfig.Stages.Length) + TutorialConfig.Stages.Length)
                 % TutorialConfig.Stages.Length;
             var stage = TutorialConfig.Stages[TutorialIndex];
@@ -259,7 +251,6 @@ namespace PuttSeed.Unity
             Mode = GameMode.Journey;
             CurrentHint = "";
             IsArchiveDay = false;
-            SetStrokeAllowance(false);
             JourneyLevel = Mathf.Clamp(level, 0, _stats.UnlockedJourneyLevels(JourneyConfig.Seeds.Length) - 1);
             // The campaign was curated under v1; its layouts are frozen.
             LoadAndShow(JourneyConfig.Seeds[JourneyLevel], configVersion: 1);
@@ -286,7 +277,6 @@ namespace PuttSeed.Unity
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = -1;
-            SetStrokeAllowance(false);
             LoadAndShow(seed, configVersion: configVersion);
         }
 
@@ -309,25 +299,28 @@ namespace PuttSeed.Unity
             }
 
             if (!ReplayCodec.TryDecode(text.Substring(at, end - at), out var seed, out var shots,
-                out var configVersion))
+                out var configVersion, out var shotClocks))
             {
                 return false;
             }
 
             // Same seed under a different config is a DIFFERENT course — the
-            // ghost would desync. Reload whenever either differs.
-            if (seed != _runner.Seed || configVersion != _activeConfigVersion)
+            // ghost would desync. Compare the resolved CONFIG, not the wire
+            // number: v2 and v3 codes describe the same courses.
+            if (seed != _runner.Seed
+                || GeneratorConfig.ForVersion(configVersion)
+                   != GeneratorConfig.ForVersion(_activeConfigVersion))
             {
                 Mode = seed == _dailySeed && configVersion == GeneratorSchedule.VersionForDay(_activeDayNumber)
                     ? GameMode.Daily
                     : GameMode.Practice;
                 CurrentHint = "";
-                SetStrokeAllowance(false); // a watched replay always plays by GDD rules
+                _pendingGhostClocks = shotClocks;
                 LoadAndShow(seed, ghostShots: shots, configVersion: configVersion);
             }
             else if (shots.Length > 0)
             {
-                _runner.AddGhost(shots, "import");
+                _runner.AddGhost(shots, "import", shotClocks);
             }
 
             return true;
@@ -447,8 +440,10 @@ namespace PuttSeed.Unity
                 // Zero-shot codes are course invitations — no ghost to race.
                 if (ghostShots != null && ghostShots.Length > 0)
                 {
-                    _runner.AddGhost(ghostShots, "import");
+                    _runner.AddGhost(ghostShots, "import", _pendingGhostClocks);
                 }
+
+                _pendingGhostClocks = System.Array.Empty<int>();
 
                 AttachBestGhostIfDaily();
             }
@@ -487,13 +482,7 @@ namespace PuttSeed.Unity
             }
 
             _completionRecorded = true;
-            if (Mode == GameMode.Daily && IsHardMode && _runner.Seed == _dailySeed && _dailySeed != 0)
-            {
-                // The hard medal only: the normal record and the streak are
-                // earned by the once-a-day run, not by a second harder pass.
-                _stats.RecordDailyHardCompletion(_activeDayNumber, sim.Strokes);
-            }
-            else if (Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0)
+            if (Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0)
             {
                 var shots = new ShotInput[_runner.PlayedShots.Count];
                 for (int i = 0; i < shots.Length; i++)
@@ -504,7 +493,7 @@ namespace PuttSeed.Unity
                 _stats.RecordDailyCompletion(
                     _activeDayNumber, sim.Strokes,
                     Scoring.Stars(sim.Strokes, _runner.Generation!.Course.Par),
-                    ReplayCodec.Encode(_runner.Seed, shots, _activeConfigVersion),
+                    ReplayCodec.Encode(_runner.Seed, shots, ShareShotClocks(), ShareVersion),
                     countsForStreak: !IsArchiveDay);
 
                 // The next retry races the (possibly new) best run.
@@ -526,7 +515,7 @@ namespace PuttSeed.Unity
             // already include this run.
             var course = _runner.Generation!.Course;
             var facts = new Achievements.RunFacts(
-                Mode, IsArchiveDay, IsHardMode,
+                Mode, IsArchiveDay,
                 sim.Strokes, course.Par, sim.StrokeLimit,
                 sim.WallHitCount, sim.WallHitsThisShot, sim.TouchedHazard,
                 course.Windmills.Length > 0, sim.WindmillHitCount);
@@ -563,11 +552,13 @@ namespace PuttSeed.Unity
 
             // A best recorded under another generator version is a different
             // course — never race a desyncing ghost.
-            if (ReplayCodec.TryDecode(record.bestReplay, out var seed, out var shots, out var version)
+            if (ReplayCodec.TryDecode(record.bestReplay, out var seed, out var shots, out var version,
+                    out var clocks)
                 && seed == _dailySeed
-                && version == _activeConfigVersion)
+                && GeneratorConfig.ForVersion(version)
+                   == GeneratorConfig.ForVersion(_activeConfigVersion))
             {
-                _runner.AddGhost(shots, "best");
+                _runner.AddGhost(shots, "best", clocks);
             }
         }
 

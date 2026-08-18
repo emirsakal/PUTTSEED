@@ -26,7 +26,7 @@ namespace PuttSeed.Unity
 
         private void Update()
         {
-            Apply(_runner != null && _runner.Sim != null ? _runner.Sim.TicksSinceShot : 0);
+            Apply(_runner != null && _runner.Sim != null ? _runner.Sim.MillClock : 0);
         }
 
         private void Apply(int ticks)

@@ -43,9 +43,6 @@ namespace PuttSeed.Unity
             /// <summary>True when the daily was a past day from the archive.</summary>
             public readonly bool IsArchiveDay;
 
-            /// <summary>True when the daily ran under hard rules (par + 1).</summary>
-            public readonly bool IsHardMode;
-
             /// <summary>Strokes taken to hole out.</summary>
             public readonly int Strokes;
 
@@ -70,13 +67,12 @@ namespace PuttSeed.Unity
             /// <summary>Windmill blade bounces over the whole run.</summary>
             public readonly int WindmillHits;
 
-            public RunFacts(GameMode mode, bool isArchiveDay, bool isHardMode, int strokes, int par,
+            public RunFacts(GameMode mode, bool isArchiveDay, int strokes, int par,
                 int strokeLimit, int wallHits, int wallHitsFinalShot, bool touchedHazard,
                 bool hasWindmill, int windmillHits)
             {
                 Mode = mode;
                 IsArchiveDay = isArchiveDay;
-                IsHardMode = isHardMode;
                 Strokes = strokes;
                 Par = par;
                 StrokeLimit = strokeLimit;
@@ -104,7 +100,6 @@ namespace PuttSeed.Unity
             // already makes, so none of them can fire by accident.
             new AchievementDef("bank_shot", "Bank Shot", "hole out on a shot off three walls"),
             new AchievementDef("untouched", "Untouched", "hole out without touching a hazard"),
-            new AchievementDef("hard_daily", "Hard Day", "finish a daily under hard rules"),
             new AchievementDef("millwright", "Millwright", "hole out on a windmill course, blades untouched"),
             new AchievementDef("last_stroke", "Down to the Wire", "hole out on your final allowed stroke"),
             new AchievementDef("three_star_10", "Perfectionist", "earn three stars on 10 dailies"),
@@ -185,11 +180,6 @@ namespace PuttSeed.Unity
                 if (run.IsArchiveDay)
                 {
                     Earn("archive1");
-                }
-
-                if (run.IsHardMode)
-                {
-                    Earn("hard_daily");
                 }
             }
 

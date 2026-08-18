@@ -27,16 +27,18 @@ namespace PuttSeed.Core.Tests.CourseGen
         }
 
         [Test]
-        public void ConfigForVersion_MapsBothVersions()
+        public void ConfigForVersion_MapsEveryWireVersion()
         {
             Assert.That(GeneratorConfig.ForVersion(1), Is.SameAs(GeneratorConfig.V1));
             Assert.That(GeneratorConfig.ForVersion(2), Is.SameAs(GeneratorConfig.V2));
+            Assert.That(GeneratorConfig.ForVersion(3), Is.SameAs(GeneratorConfig.V2),
+                "v3 is the v2 courses with shot timing, not a new generator");
         }
 
         [Test]
         public void ConfigForVersion_RejectsUnknown()
         {
-            Assert.That(() => GeneratorConfig.ForVersion(3), Throws.ArgumentException);
+            Assert.That(() => GeneratorConfig.ForVersion(4), Throws.ArgumentException);
             Assert.That(() => GeneratorConfig.ForVersion(0), Throws.ArgumentException);
         }
 

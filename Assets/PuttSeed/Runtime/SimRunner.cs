@@ -22,6 +22,13 @@ namespace PuttSeed.Unity
         {
             internal GolfSim Sim = null!;
             internal ShotInput[] Shots = Array.Empty<ShotInput>();
+
+            /// <summary>
+            /// Mill clock each shot was taken at. Empty for untimed (pre-v3)
+            /// codes, which shoot as soon as the ball rests.
+            /// </summary>
+            internal int[] ShotClocks = Array.Empty<int>();
+
             internal int NextShot;
             internal BallState Prev;
             internal BallState Curr;
@@ -39,18 +46,17 @@ namespace PuttSeed.Unity
         private readonly FixedStepper _stepper = new FixedStepper();
         private readonly List<Ghost> _ghosts = new List<Ghost>();
         private readonly List<ShotInput> _playedShots = new List<ShotInput>();
+
+        // The mill clock each accepted shot launched at — the timing half of a
+        // v3 replay. Blades keep turning while the player lines up, so the
+        // angle a shot met is only reproducible with this.
+        private readonly List<int> _playedShotClocks = new List<int>();
         // Per accepted shot: launch rest position + strokes BEFORE the shot
         // (water penalties can push strokes past the shot index).
         private readonly List<(Vec2Fix Origin, int Strokes)> _shotOrigins =
             new List<(Vec2Fix, int)>();
 
         private SimConfig _simConfig = SimConfig.Default;
-
-        /// <summary>
-        /// Strokes allowed over par (GDD default 3; daily hard mode uses 1).
-        /// Set before the course loads — it applies from the next run reset.
-        /// </summary>
-        public int StrokeAllowance { get; set; } = 3;
 
         private GenerationResult? _generation;
         private GolfSim? _sim;
@@ -86,6 +92,9 @@ namespace PuttSeed.Unity
 
         /// <summary>Shots accepted this run, in order (for sharing the replay).</summary>
         public IReadOnlyList<ShotInput> PlayedShots => _playedShots;
+
+        /// <summary>Mill clock of each accepted shot, aligned with <see cref="PlayedShots"/>.</summary>
+        public IReadOnlyList<int> PlayedShotClocks => _playedShotClocks;
 
         /// <summary>The rest position the latest accepted shot launched from.</summary>
         public Vec2Fix LastShotOrigin { get; private set; }
@@ -149,6 +158,11 @@ namespace PuttSeed.Unity
             int last = _playedShots.Count - 1;
             _sim.RestoreRest(_shotOrigins[last].Origin, _shotOrigins[last].Strokes);
             _playedShots.RemoveAt(last);
+            if (_playedShotClocks.Count > last)
+            {
+                _playedShotClocks.RemoveAt(last);
+            }
+
             _shotOrigins.RemoveAt(last);
             _prev = _curr = _sim.Ball;
             for (int i = 0; i < _ghosts.Count; i++)
@@ -168,9 +182,10 @@ namespace PuttSeed.Unity
                 return;
             }
 
-            _sim = new GolfSim(_generation.Course, _simConfig, StrokeAllowance);
+            _sim = new GolfSim(_generation.Course, _simConfig);
             _prev = _curr = _sim.Ball;
             _playedShots.Clear();
+            _playedShotClocks.Clear();
             _shotOrigins.Clear();
             for (int i = 0; i < _ghosts.Count; i++)
             {
@@ -183,13 +198,20 @@ namespace PuttSeed.Unity
 
         /// <summary>Adds a replay ghost stepped in lockstep with the player sim.</summary>
         public Ghost AddGhost(ShotInput[] shots, string label)
+            => AddGhost(shots, label, Array.Empty<int>());
+
+        /// <summary>
+        /// Adds a replay ghost whose shots are held to the mill clocks they
+        /// were taken at (pass an empty array for untimed, pre-v3 replays).
+        /// </summary>
+        public Ghost AddGhost(ShotInput[] shots, string label, int[] shotClocks)
         {
             if (_generation == null)
             {
                 throw new InvalidOperationException("Load a course before adding ghosts.");
             }
 
-            var ghost = new Ghost { Shots = shots, Label = label };
+            var ghost = new Ghost { Shots = shots, Label = label, ShotClocks = shotClocks };
             ResetGhost(ghost);
             _ghosts.Add(ghost);
             StateChanged?.Invoke();
@@ -197,7 +219,8 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>Adds the generator's author solution as a ghost.</summary>
-        public Ghost AddAuthorGhost() => AddGhost(_generation!.AuthorSolution, "author");
+        public Ghost AddAuthorGhost()
+            => AddGhost(_generation!.AuthorSolution, "author", _generation.AuthorShotClocks);
 
         /// <summary>Removes all ghosts.</summary>
         public void ClearGhosts()
@@ -235,6 +258,23 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
+        /// Whether a resting ghost may take its next shot yet. A timed replay
+        /// waits for the blade phase its shot was taken at — the clock wraps,
+        /// so the ghost never idles longer than one full turn, and on a course
+        /// without mills it never waits at all.
+        /// </summary>
+        private bool GhostMayShoot(Ghost ghost)
+        {
+            if (ghost.ShotClocks.Length <= ghost.NextShot
+                || _generation?.Course.Windmills.Length == 0)
+            {
+                return true;
+            }
+
+            return ghost.Sim.MillClock == ghost.ShotClocks[ghost.NextShot];
+        }
+
+        /// <summary>
         /// Forwards a quantized shot to the sim. Returns true when the sim
         /// accepted it (at rest, hole open, strokes left).
         /// </summary>
@@ -256,6 +296,7 @@ namespace PuttSeed.Unity
             LastShotOrigin = origin;
             LastShot = shot;
             _playedShots.Add(shot);
+            _playedShotClocks.Add(_sim.MillClock);
             _shotOrigins.Add((origin, before));
             ShotFired?.Invoke();
             StateChanged?.Invoke();
@@ -280,7 +321,8 @@ namespace PuttSeed.Unity
                 {
                     var ghost = _ghosts[g];
                     ghost.Prev = ghost.Curr;
-                    if (ghost.Sim.IsAtRest && !ghost.Sim.IsHoled && ghost.NextShot < ghost.Shots.Length)
+                    if (ghost.Sim.IsAtRest && !ghost.Sim.IsHoled && ghost.NextShot < ghost.Shots.Length
+                        && GhostMayShoot(ghost))
                     {
                         ghost.Sim.Shoot(ghost.Shots[ghost.NextShot]);
                         ghost.NextShot++;

@@ -90,7 +90,7 @@ PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
 |              SolvabilityChecker (bounded BFS over the        |
 |              quantized shot space) -> DifficultyRater;       |
 |              versioned configs freeze published courses      |
-|  Replay      [seed + shots] <-> PUTT- base64url codes        |
+|  Replay      [seed + timed shots] <-> PUTT- base64url codes  |
 |  Daily       UTC date -> seed (FNV-1a + SplitMix64, salted)  |
 +--------------------------------------------------------------+
 ```
@@ -131,7 +131,9 @@ mechanically, not by care:
   mapping and the frame-time-to-ticks stepper are tested where analog meets
   discrete; floats stop existing at that line.
 - **A replay that desyncs is a bug by definition** — the codec stores only
-  `(seed, shots)`; playback is re-simulation.
+  `(seed, shots)`, plus the blade phase each shot was taken at once
+  windmills started turning while the ball rests; playback is
+  re-simulation, never recorded motion.
 
 ## Running things
 

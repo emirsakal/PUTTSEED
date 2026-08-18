@@ -13,6 +13,16 @@ namespace PuttSeed.Core.CourseGen
         /// <summary>The solver's shot sequence proving solvability (fallback ghost).</summary>
         public ShotInput[] AuthorSolution { get; }
 
+        /// <summary>
+        /// The mill clock every author shot is taken at — always zero, because
+        /// the solver expands each rest state with
+        /// <see cref="Sim.GolfSim.RestoreRest"/>, which re-arms the clock. On a
+        /// windmill course that timing is part of the solution: a replay must
+        /// wait for the blades to come round to phase zero before each shot,
+        /// or it meets a different blade angle and misses the cup.
+        /// </summary>
+        public int[] AuthorShotClocks { get; }
+
         /// <summary>Strokes of the author solution, including penalties.</summary>
         public int AuthorStrokes { get; }
 
@@ -31,6 +41,7 @@ namespace PuttSeed.Core.CourseGen
         {
             Course = course;
             AuthorSolution = authorSolution;
+            AuthorShotClocks = new int[authorSolution.Length];
             AuthorStrokes = authorStrokes;
             Difficulty = difficulty;
             Attempts = attempts;

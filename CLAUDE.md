@@ -3,7 +3,8 @@
 Daily-seed deterministic 2D mini-golf for Android (Unity 6, C#).
 One course per day, generated from a date-derived seed, identical on every
 device. Physics is fixed-point and bit-deterministic; a replay is just
-`(seed + shot inputs)` encoded as a short shareable code.
+`(seed + shot inputs, each with the mill phase it was taken at)` encoded
+as a short shareable code.
 
 This repo is a portfolio piece: engineering quality is a first-class goal.
 Read `docs/ARCHITECTURE.md`, `docs/GDD.md`, `docs/ROADMAP.md` before

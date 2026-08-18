@@ -146,6 +146,7 @@ namespace PuttSeed.Core.CourseGen
         {
             1 => V1,
             2 => V2,
+            3 => V2, // wire v3: the same courses, shots carry their timing
             _ => throw new System.ArgumentException($"Unknown generator version {version}.", nameof(version)),
         };
     }

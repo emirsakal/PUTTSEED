@@ -33,11 +33,5 @@ namespace PuttSeed.Unity
 
         /// <summary>Generator config version for the fixed seed (default v1).</summary>
         public static int FixedSeedConfigVersion = 1;
-
-        /// <summary>
-        /// Start the daily under hard rules: same seed, par + 1 to finish.
-        /// Cleared whenever another mode launches.
-        /// </summary>
-        public static bool DailyHardMode;
     }
 }

@@ -19,12 +19,15 @@ namespace PuttSeed.Core.Sim
         private Vec2Fix _lastRestPosition;
         private int _restTicks;
 
-        // Ticks since the current shot began — the windmill phase clock. Reset
-        // by Shoot and RestoreRest, so dynamics never depend on absolute
-        // TickCount (the solver's rest-state BFS and the timing-free replay
-        // codec both rely on that). Deliberately NOT part of StateHash: it is
-        // fully derived from the input stream the hash comparisons already fix.
-        private int _ticksSinceShot;
+        // The windmill phase clock: a free-running counter that advances on
+        // EVERY tick, at rest included, so blades keep turning while a player
+        // lines up. That makes WHEN you shoot part of the physics, which is
+        // why a replay records each shot's clock value (see ReplayCodec v3).
+        // It wraps at the 1024-step angle space, so the phase of every mill is
+        // a pure function of it. RestoreRest re-arms it to 0, which is what
+        // keeps the solver's rest-state BFS reproducible. Deliberately NOT in
+        // StateHash: two runs compared tick-for-tick share it by construction.
+        private int _millClock;
 
         /// <summary>Current ball state snapshot.</summary>
         public BallState Ball => new BallState(_position, _velocity);
@@ -33,12 +36,14 @@ namespace PuttSeed.Core.Sim
         public int TickCount { get; private set; }
 
         /// <summary>
-        /// Ticks since the current shot began — the windmill phase clock
-        /// (frozen while at rest, reset by <see cref="Shoot"/> and
-        /// <see cref="RestoreRest"/>). Exposed so the render layer can mirror
-        /// blade angles exactly.
+        /// The free-running windmill phase clock, wrapped to the 1024-step
+        /// angle space. Exposed so the render layer can mirror blade angles
+        /// exactly, and so a replay can record the moment a shot was taken.
         /// </summary>
-        public int TicksSinceShot => _ticksSinceShot;
+        public int MillClock => _millClock;
+
+        /// <summary>The clock wrap: blade phases repeat every this many ticks.</summary>
+        public const int MillClockPeriod = 1024;
 
         /// <summary>Strokes played so far.</summary>
         public int Strokes { get; private set; }
@@ -53,15 +58,8 @@ namespace PuttSeed.Core.Sim
         /// <summary>True once the ball has dropped into the hole; the sim is finished.</summary>
         public bool IsHoled { get; private set; }
 
-        /// <summary>
-        /// Strokes allowed over par before the run fails. The GDD default is
-        /// 3; daily hard mode plays the same seed at 1. A rule, not a force —
-        /// it never touches the physics, only whether a shot is accepted.
-        /// </summary>
-        public int StrokeAllowance { get; }
-
-        /// <summary>Stroke limit: par + allowance. Shots beyond it are refused.</summary>
-        public int StrokeLimit => _course.Par + StrokeAllowance;
+        /// <summary>GDD stroke limit: par + 3. Shots beyond it are refused.</summary>
+        public int StrokeLimit => _course.Par + 3;
 
         /// <summary>
         /// True when the run is over without a capture: the stroke limit is
@@ -105,11 +103,10 @@ namespace PuttSeed.Core.Sim
         public bool TouchedHazard { get; private set; }
 
         /// <summary>Creates a simulation for one course.</summary>
-        public GolfSim(CourseData course, SimConfig config, int strokeAllowance = 3)
+        public GolfSim(CourseData course, SimConfig config)
         {
             _course = course;
             _config = config;
-            StrokeAllowance = strokeAllowance;
             _position = course.StartPosition;
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = course.StartPosition;
@@ -129,7 +126,7 @@ namespace PuttSeed.Core.Sim
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = position;
             _restTicks = 0;
-            _ticksSinceShot = 0;
+            _millClock = 0; // solver nodes must expand identically every time
             WallHitsThisShot = 0;
             Strokes = strokes;
             IsAtRest = true;
@@ -152,8 +149,9 @@ namespace PuttSeed.Core.Sim
             Strokes++;
             IsAtRest = false;
             _restTicks = 0;
-            _ticksSinceShot = 0; // windmill blades re-arm to their base phase
             WallHitsThisShot = 0;
+            // The mill clock deliberately keeps running: the blade angle a
+            // shot launches into is whatever the player waited for.
         }
 
         /// <summary>
@@ -165,6 +163,9 @@ namespace PuttSeed.Core.Sim
         {
             if (IsAtRest)
             {
+                // Blades turn while the player lines up, so the clock advances
+                // here too — this branch is the whole point of a free clock.
+                AdvanceMillClock();
                 TickCount++;
                 return;
             }
@@ -212,7 +213,7 @@ namespace PuttSeed.Core.Sim
                 UpdateRestDetection();
             }
 
-            _ticksSinceShot++;
+            AdvanceMillClock();
             TickCount++;
         }
 
@@ -360,7 +361,7 @@ namespace PuttSeed.Core.Sim
             var mills = _course.Windmills;
             for (int i = 0; i < mills.Length; i++)
             {
-                int baseAngle = mills[i].Phase0 + mills[i].OmegaSteps * _ticksSinceShot;
+                int baseAngle = mills[i].Phase0 + mills[i].OmegaSteps * _millClock;
                 int spacing = FixTrig.AngleSteps / mills[i].BladeCount;
                 for (int b = 0; b < mills[i].BladeCount; b++)
                 {
@@ -404,6 +405,16 @@ namespace PuttSeed.Core.Sim
                 _position = portals[i].Exit + dir * (radius + _config.BallRadius);
                 PortalTransitCount++;
                 return; // one transit per sub-step: the ball is elsewhere now
+            }
+        }
+
+        /// <summary>Advances the wrapped mill clock by one tick.</summary>
+        private void AdvanceMillClock()
+        {
+            _millClock++;
+            if (_millClock >= MillClockPeriod)
+            {
+                _millClock = 0;
             }
         }
 

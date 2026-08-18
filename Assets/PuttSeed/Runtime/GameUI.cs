@@ -22,7 +22,6 @@ namespace PuttSeed.Unity
         public GameObject? starsRow;
         public Image[] starImages = new Image[0];
         public GameObject? failPanel;
-        public Text? failSubtitle;
         public Button? failRetryButton;
         public GameObject? toastChip;
         public Text? toastText;
@@ -180,12 +179,6 @@ namespace PuttSeed.Unity
             {
                 if (sim.IsFailed)
                 {
-                    if (failSubtitle != null)
-                    {
-                        failSubtitle.text = string.Format(
-                            Loc.Tr("The limit is par + {0} — line up and go again."),
-                            sim.StrokeAllowance);
-                    }
 
                     UiFx.PopIn(this, failPanel);
                 }
@@ -376,7 +369,8 @@ namespace PuttSeed.Unity
                 if (sim != null && _modes.Mode == GameMode.Practice && _runner.Generation != null)
                 {
                     var courseCode = ReplayCodec.Encode(_runner.Seed,
-                        System.Array.Empty<PuttSeed.Core.Sim.ShotInput>(), _modes.ActiveConfigVersion);
+                        System.Array.Empty<PuttSeed.Core.Sim.ShotInput>(),
+                        System.Array.Empty<int>(), _modes.ShareVersion);
                     string invite = $"PUTTSEED — can you beat par {_runner.Generation.Course.Par}? Play: {courseCode}";
                     GUIUtility.systemCopyBuffer = invite;
                     ShowToast(Loc.Tr(NativeShare.Share(invite) ? "Sharing course…" : "Course code copied!"));
@@ -393,7 +387,7 @@ namespace PuttSeed.Unity
                 shots[i] = _runner.PlayedShots[i];
             }
 
-            var code = ReplayCodec.Encode(_runner.Seed, shots, _modes.ActiveConfigVersion);
+            var code = ReplayCodec.Encode(_runner.Seed, shots, _modes.ShareShotClocks(), _modes.ShareVersion);
             string text = _modes.BuildShareText(sim.Strokes, _runner.Generation!.Course.Par, code);
             GUIUtility.systemCopyBuffer = text; // clipboard as well, on every platform
             ShowToast(Loc.Tr(NativeShare.Share(text) ? "Sharing…" : "Copied to clipboard!"));
