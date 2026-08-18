@@ -356,11 +356,12 @@ namespace PuttSeed.Unity
             title.text = "Stats";
 
             menu.statsBlock = UIFactory.CreateText(dim, "StatsBlock",
-                new Vector2(0.13f, 0.565f), new Vector2(0.58f, 0.76f), 26, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.545f), new Vector2(0.64f, 0.76f), 26, TextAnchor.UpperLeft);
 
-            // Stroke distribution: language-free numbers + bullet bars.
+            // Stroke distribution: a titled column of bullet bars. Narrow, so
+            // the stats column has room to spell its labels out.
             menu.histogramBlock = UIFactory.CreateText(dim, "Histogram",
-                new Vector2(0.61f, 0.565f), new Vector2(0.87f, 0.76f), 24, TextAnchor.UpperLeft);
+                new Vector2(0.66f, 0.545f), new Vector2(0.88f, 0.76f), 24, TextAnchor.UpperLeft);
             menu.histogramBlock.color = UIStyle.CreamDim;
 
             var achTitle = UIFactory.CreateText(dim, "AchTitle",
@@ -641,6 +642,7 @@ namespace PuttSeed.Unity
             overlay.root = canvasGo;
             canvasGo.SetActive(false);
         }
+
 
         private static Button ButtonOf(Text label) => label.GetComponentInParent<Button>(true);
 

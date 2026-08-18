@@ -80,6 +80,12 @@ namespace PuttSeed.Unity
 
         /// <summary>False = the grid shows ball skins, true = trails.</summary>
         private bool _collectionShowsTrails;
+
+        // Collection cell backgrounds carry the state: a locked cell sinks
+        // almost to black, an equipped one lifts toward the felt. The swatch
+        // and label are left alone — the tile behind them does the talking.
+        private static readonly Color LockedCell = new Color(0.01f, 0.03f, 0.02f, 0.94f);
+        private static readonly Color EquippedCell = new Color(0.12f, 0.24f, 0.14f, 0.96f);
         public InputField? saveField;
         public Button? importSaveButton;
         public Text? importSaveLabel;
@@ -448,28 +454,26 @@ namespace PuttSeed.Unity
         private void OpenStats()
         {
             var data = _stats.Data;
-            int s3 = 0, s2 = 0, s1 = 0, attempts = 0;
+            int attempts = 0;
             for (int i = 0; i < data.days.Count; i++)
             {
-                var day = data.days[i];
-                attempts += day.attempts;
-                if (day.completed)
-                {
-                    if (day.bestStars >= 3) { s3++; }
-                    else if (day.bestStars == 2) { s2++; }
-                    else { s1++; }
-                }
+                attempts += data.days[i].attempts;
             }
 
             if (statsBlock != null)
             {
-                string Pb(int best) => best == 0 ? "—" : best.ToString();
+                // "E 3 · N 2 · H —" told nobody anything. Every number now
+                // arrives with the word for what it counts, and the star
+                // tally is gone: the stroke histogram beside it says the same
+                // thing, since par is what turns strokes into stars.
+                string Pb(int best) => best == 0 ? Loc.Tr("not yet") : best.ToString();
                 statsBlock.text =
                     string.Format(Loc.Tr("Streak {0}  (best {1})"), data.streak, data.bestStreak) + "\n"
-                    + string.Format(Loc.Tr("Dailies completed  {0}"), Achievements.CompletedDailyCount(data)) + "\n"
-                    + string.Format(Loc.Tr("3-star {0}  ·  2-star {1}  ·  1-star {2}"), s3, s2, s1) + "\n"
-                    + string.Format(Loc.Tr("Daily attempts  {0}  ·  Practice  {1}"), attempts, data.practicePlayed) + "\n"
-                    + string.Format(Loc.Tr("Practice best   E {0}  ·  N {1}  ·  H {2}"),
+                    + string.Format(Loc.Tr("Dailies finished  {0}"), Achievements.CompletedDailyCount(data)) + "\n"
+                    + string.Format(Loc.Tr("Daily attempts  {0}"), attempts) + "\n"
+                    + string.Format(Loc.Tr("Practice rounds  {0}"), data.practicePlayed) + "\n\n"
+                    + Loc.Tr("Fewest strokes in practice") + "\n"
+                    + string.Format(Loc.Tr("  Easy {0}   ·   Normal {1}   ·   Hard {2}"),
                         Pb(data.bestPracticeEasy), Pb(data.bestPracticeNormal), Pb(data.bestPracticeHard));
             }
 
@@ -506,6 +510,7 @@ namespace PuttSeed.Unity
                 }
 
                 var sb = new System.Text.StringBuilder();
+                sb.AppendLine(Loc.Tr("Strokes taken")).AppendLine();
                 for (int i = 0; i < buckets.Length; i++)
                 {
                     string bucketLabel = i < 5 ? (i + 1).ToString() : "6+";
@@ -638,6 +643,13 @@ namespace PuttSeed.Unity
                     collectionCellSwatches[i].color = unlocked
                         ? new Color(color.r, color.g, color.b, 1f)
                         : new Color(color.r, color.g, color.b, 0.22f);
+                }
+
+                if (collectionCellButtons[i] != null)
+                {
+                    collectionCellButtons[i].image.color = !unlocked ? LockedCell
+                        : equipped ? EquippedCell
+                        : UIStyle.PanelDark;
                 }
 
                 if (collectionCellRings[i] != null)
