@@ -40,8 +40,13 @@ namespace PuttSeed.Unity
                 Destroy(transform.GetChild(i).gameObject);
             }
 
-            // Mowed-grass stripes: the felt gets a subtle two-tone banding
-            // stretched well past the walls so the camera never sees an edge.
+            // Mowed-grass stripes on a MAT that ends: the felt reaches a short
+            // way past the walls, then the rough takes over. Stripes used to
+            // run six units out precisely so the camera never saw an edge,
+            // which cost the hole its shape — the ground inside the walls
+            // looked exactly like the ground outside them. The first attempt
+            // at this overdid the contrast and was reverted; the tone came
+            // back on 2026-08-19 with the two greens far closer together.
             var min = new Vector2(float.MaxValue, float.MaxValue);
             var max = new Vector2(float.MinValue, float.MinValue);
             foreach (var wall in course.Walls)
@@ -52,7 +57,44 @@ namespace PuttSeed.Unity
                 max = Vector2.Max(max, Vector2.Max(a, b));
             }
 
-            var margin = new Vector2(6f, 6f);
+            var margin = new Vector2(0.35f, 0.35f);
+            var courseCenter = (min + max) * 0.5f;
+
+            // The rough gets light without getting busy: two enormous, barely
+            // visible discs, the same trick the menu background uses. Mowing
+            // the rough ACROSS the mat was tried first and cut on sight — two
+            // repeating directions on one screen fight each other, and the
+            // eye ends up with nowhere to rest (2026-08-19).
+            float span = Mathf.Max(max.x - min.x, max.y - min.y);
+            var lift = DailyTint(PaletteMaterials.RoughLight, seed);
+            var blobColor = new Color(lift.r, lift.g, lift.b, 0.6f);
+            for (int i = 0; i < 2; i++)
+            {
+                // Seed-derived: every day's rough sits differently, and every
+                // device draws that day identically.
+                float ax = (((seed >> (i * 13 + 5)) & 0xFF) / 255f - 0.5f) * 2.4f;
+                float ay = (((seed >> (i * 13 + 19)) & 0xFF) / 255f - 0.5f) * 2.8f;
+                MeshFactory.CreateMeshObject(transform, "RoughBlob",
+                    MeshFactory.Disc(courseCenter + new Vector2(ax * span, ay * span),
+                        span * (0.8f + i * 0.4f), blobColor, segments: 64), 0.07f);
+            }
+
+            // The fringe: a collar of longer grass around the green, so the
+            // mat ends in a cut rather than a seam. It is the outermost green
+            // thing, so the drop shadow hangs off IT.
+            var fringe = new Vector2(0.1f, 0.1f);
+            var greenMin = min - margin - fringe;
+            var greenMax = max + margin + fringe;
+
+            var shadowOffset = new Vector2(0.14f, -0.16f);
+            MeshFactory.CreateMeshObject(transform, "MatShadow",
+                MeshFactory.Quad(greenMin + shadowOffset, greenMax + shadowOffset,
+                    new Color(0f, 0f, 0f, 0.16f)), 0.06f);
+
+            MeshFactory.CreateMeshObject(transform, "Fringe",
+                MeshFactory.Quad(greenMin, greenMax,
+                    DailyTint(PaletteMaterials.Fringe, seed)), 0.055f);
+
             MeshFactory.CreateMeshObject(transform, "Stripes",
                 MeshFactory.Stripes(min - margin, max + margin, 0.85f,
                     DailyTint(PaletteMaterials.Felt, seed),
@@ -295,7 +337,8 @@ namespace PuttSeed.Unity
 
         private static float GroupDelay(string name)
         {
-            if (name == "Stripes")
+            if (name == "Stripes" || name == "MatShadow"
+                || name == "RoughBlob" || name == "Fringe")
             {
                 return 0f; // the ground is simply there
             }

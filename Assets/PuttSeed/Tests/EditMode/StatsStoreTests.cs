@@ -69,6 +69,44 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void ParStreak_CountsOnlyDaysWhoseFirstFinishReachedPar()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 2, 3, "a"); // par
+            store.RecordDailyCompletion(101, 2, 3, "b"); // par
+            Assert.That(store.Data.parStreak, Is.EqualTo(2));
+
+            store.RecordDailyCompletion(102, 3, 2, "c"); // bogey — the streak dies
+            Assert.That(store.Data.parStreak, Is.EqualTo(0));
+            Assert.That(store.Data.streak, Is.EqualTo(3), "showing up still counts");
+            Assert.That(store.Data.bestParStreak, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ParStreak_CannotBeRetriedBackToLife()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 2, 3, "a");
+            store.RecordDailyCompletion(101, 3, 2, "first try, bogey");
+            store.RecordDailyCompletion(101, 2, 3, "retried into par");
+
+            Assert.That(store.Data.parStreak, Is.EqualTo(0),
+                "the first finish is the one that counts — that is the whole point");
+            Assert.That(store.GetOrCreateDay(101).bestStars, Is.EqualTo(3),
+                "the personal best still improves");
+        }
+
+        [Test]
+        public void ParStreak_IgnoresArchivePlays()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 2, 3, "a");
+            store.RecordDailyCompletion(50, 2, 3, "old day", countsForStreak: false);
+
+            Assert.That(store.Data.parStreak, Is.EqualTo(1), "history cannot be farmed");
+        }
+
+        [Test]
         public void Streak_ResetsAfterGap()
         {
             var store = new StatsStore(_path);

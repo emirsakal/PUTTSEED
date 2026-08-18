@@ -24,6 +24,12 @@ namespace PuttSeed.Unity
     {
         public int streak;
         public int bestStreak;
+
+        // The streak that can actually break. The played streak only asks
+        // whether you showed up, and with unlimited retries showing up is
+        // enough; this one asks whether the day's FIRST finish reached par.
+        public int parStreak;
+        public int bestParStreak;
         public int lastCompletedDay;
         public int practicePlayed;
         public bool tutorialSeen;
@@ -150,9 +156,20 @@ namespace PuttSeed.Unity
 
             if (countsForStreak && firstCompletionToday && day > Data.lastCompletedDay)
             {
-                Data.streak = day == Data.lastCompletedDay + 1 && Data.lastCompletedDay != 0
-                    ? Data.streak + 1
-                    : 1;
+                bool consecutive = day == Data.lastCompletedDay + 1 && Data.lastCompletedDay != 0;
+                Data.streak = consecutive ? Data.streak + 1 : 1;
+
+                // Par or better on the FIRST finish keeps the par streak
+                // alive; a bogey ends it, and no amount of retrying that day
+                // brings it back. That is the whole point of it — the played
+                // streak already rewards patience, this one rewards the putt.
+                bool parred = stars >= 3;
+                Data.parStreak = parred ? (consecutive ? Data.parStreak + 1 : 1) : 0;
+                if (Data.parStreak > Data.bestParStreak)
+                {
+                    Data.bestParStreak = Data.parStreak;
+                }
+
                 Data.lastCompletedDay = day;
                 if (Data.streak > Data.bestStreak)
                 {

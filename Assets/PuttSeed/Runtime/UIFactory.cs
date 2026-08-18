@@ -19,6 +19,13 @@ namespace PuttSeed.Unity
         /// <summary>Softer panel for chips and secondary surfaces.</summary>
         public static readonly Color PanelSoft = new Color(0.05f, 0.11f, 0.07f, 0.55f);
 
+        /// <summary>
+        /// The interior of a framed pop-up card. It used to be a hard-coded
+        /// (0.035, 0.055, 0.095) — blue-dominant, so every panel in the game
+        /// read as navy against a felt-green product. Same weight, felt hue.
+        /// </summary>
+        public static readonly Color PanelInk = new Color(0.038f, 0.078f, 0.055f, 0.985f);
+
         /// <summary>Accent (warm amber) for the primary action.</summary>
         public static readonly Color Accent = new Color(0.99f, 0.76f, 0.29f);
 
@@ -40,17 +47,19 @@ namespace PuttSeed.Unity
         private static Sprite? _roundedSprite;
         private static Sprite? _circleSprite;
         private static Sprite? _starSprite;
+        private static Sprite? _pennantSprite;
 
         /// <summary>
         /// Uses imported sprite ASSETS instead of transient generated sprites.
         /// The editor scene builder calls this before baking UI into a scene,
         /// so saved scenes reference real assets the user can swap or repaint.
         /// </summary>
-        public static void UseSpriteAssets(Sprite rounded, Sprite circle, Sprite star)
+        public static void UseSpriteAssets(Sprite rounded, Sprite circle, Sprite star, Sprite pennant)
         {
             _roundedSprite = rounded;
             _circleSprite = circle;
             _starSprite = star;
+            _pennantSprite = pennant;
         }
 
         /// <summary>The built-in legacy font.</summary>
@@ -111,6 +120,30 @@ namespace PuttSeed.Unity
         public static byte[] StarSpritePng()
         {
             var tex = BuildStarTexture(64);
+            var png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            return png;
+        }
+
+        /// <summary>
+        /// The menu emblem's pennant: a triangle pointing right, the same
+        /// cloth the hole flies on the course. It used to be a rectangle,
+        /// which is a flag nobody has ever seen on a green.
+        /// </summary>
+        public static Sprite PennantSprite()
+        {
+            if (_pennantSprite == null)
+            {
+                _pennantSprite = BuildPennantSprite(64, 32);
+            }
+
+            return _pennantSprite;
+        }
+
+        /// <summary>Generates the raw PNG bytes for the pennant sprite asset.</summary>
+        public static byte[] PennantSpritePng()
+        {
+            var tex = BuildPennantTexture(64, 32);
             var png = tex.EncodeToPNG();
             Object.DestroyImmediate(tex);
             return png;
@@ -179,7 +212,7 @@ namespace PuttSeed.Unity
             var image = inner.gameObject.AddComponent<Image>();
             image.sprite = RoundedSprite();
             image.type = Image.Type.Sliced;
-            image.color = new Color(0.035f, 0.055f, 0.095f, 0.985f);
+            image.color = UIStyle.PanelInk;
             image.raycastTarget = false;
             return image;
         }
@@ -333,6 +366,33 @@ namespace PuttSeed.Unity
 
         private static Sprite BuildCircleSprite(int size)
             => Sprite.Create(BuildCircleTexture(size), new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+
+        /// <summary>
+        /// A pennant: vertical base on the left (the pole edge), tapering to a
+        /// point on the right. The edge is anti-aliased by the same
+        /// coverage-per-pixel trick the circle uses.
+        /// </summary>
+        private static Texture2D BuildPennantTexture(int width, int height)
+        {
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            float halfHeight = height * 0.5f;
+            for (int y = 0; y < height; y++)
+            {
+                // The further from the middle line, the sooner the cloth ends.
+                float edge = (width - 1f) * (1f - Mathf.Abs(y + 0.5f - halfHeight) / halfHeight);
+                for (int x = 0; x < width; x++)
+                {
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01(edge - (x + 0.5f) + 0.5f)));
+                }
+            }
+
+            tex.Apply();
+            return tex;
+        }
+
+        private static Sprite BuildPennantSprite(int width, int height)
+            => Sprite.Create(BuildPennantTexture(width, height),
+                new Rect(0, 0, width, height), new Vector2(0f, 0.5f));
 
         private static Texture2D BuildStarTexture(int size)
         {

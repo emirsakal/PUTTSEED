@@ -83,6 +83,7 @@ namespace PuttSeed.Unity.Editor
             const string roundedPath = dir + "/rounded.png";
             const string circlePath = dir + "/circle.png";
             const string starPath = dir + "/star.png";
+            const string pennantPath = dir + "/pennant.png";
             Directory.CreateDirectory(dir);
 
             if (!File.Exists(roundedPath))
@@ -116,12 +117,23 @@ namespace PuttSeed.Unity.Editor
                 importer.SaveAndReimport();
             }
 
+            if (!File.Exists(pennantPath))
+            {
+                File.WriteAllBytes(pennantPath, UIFactory.PennantSpritePng());
+                AssetDatabase.ImportAsset(pennantPath);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(pennantPath);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
             var rounded = AssetDatabase.LoadAssetAtPath<Sprite>(roundedPath);
             var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
             var star = AssetDatabase.LoadAssetAtPath<Sprite>(starPath);
-            if (rounded != null && circle != null && star != null)
+            var pennant = AssetDatabase.LoadAssetAtPath<Sprite>(pennantPath);
+            if (rounded != null && circle != null && star != null && pennant != null)
             {
-                UIFactory.UseSpriteAssets(rounded, circle, star);
+                UIFactory.UseSpriteAssets(rounded, circle, star, pennant);
             }
         }
 

@@ -45,7 +45,7 @@ namespace PuttSeed.Unity
         private Coroutine? _toastAnim;
         private int _lastStrokesShown;
         private Coroutine? _counterPulse;
-        private bool? _undoLaidOut;
+        private int _barShape = -1;
 
         // Prompt each clipboard code once per app run, not per scene entry.
         private static string? _promptedClipboardCode;
@@ -142,10 +142,17 @@ namespace PuttSeed.Unity
             // the bar reflows so five buttons share the row when Undo is gone.
             bool showUndo = _modes.Mode == GameMode.Practice || _modes.Mode == GameMode.Tutorial;
             undoButton?.gameObject.SetActive(showUndo);
-            if (_undoLaidOut != showUndo)
+
+            // Share arrives with the run worth sharing. It used to sit there
+            // through every attempt only to answer "finish the hole first".
+            bool showShare = CanShare();
+            shareButton?.gameObject.SetActive(showShare);
+
+            int barShape = (showUndo ? 1 : 0) | (showShare ? 2 : 0);
+            if (_barShape != barShape)
             {
-                _undoLaidOut = showUndo;
-                LayoutBottomBar(showUndo);
+                _barShape = barShape;
+                LayoutBottomBar(showUndo, showShare);
             }
 
             if (counterText == null)
@@ -255,31 +262,57 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// Distributes the bottom-bar buttons evenly across the row — five
-        /// slots when Undo is hidden (daily), six when it shows.
+        /// Lays out the bottom bar by WEIGHT, not by equal shares. Five
+        /// identical buttons said that leaving the course and pasting a
+        /// stranger's replay code matter as much as the button pressed dozens
+        /// of times a day, so Retry now takes better than twice a neighbour's
+        /// width. Share only appears once there is a run to share — before
+        /// that it existed only to refuse.
         /// </summary>
-        private void LayoutBottomBar(bool withUndo)
+        private void LayoutBottomBar(bool withUndo, bool withShare)
         {
-            var buttons = withUndo
-                ? new[] { menuButton, retryButton, shareButton, ghostButton, watchButton, undoButton }
-                : new[] { menuButton, retryButton, shareButton, ghostButton, watchButton };
+            var buttons = new System.Collections.Generic.List<Button?>(6) { menuButton, retryButton };
+            var weights = new System.Collections.Generic.List<float>(6) { 1f, 2.3f };
+            if (withShare)
+            {
+                buttons.Add(shareButton);
+                weights.Add(1.15f);
+            }
+
+            buttons.Add(ghostButton);
+            weights.Add(1f);
+            buttons.Add(watchButton);
+            weights.Add(1f);
+            if (withUndo)
+            {
+                buttons.Add(undoButton);
+                weights.Add(1f);
+            }
+
             const float margin = 0.02f;
             const float gap = 0.012f;
-            float width = (1f - 2f * margin - (buttons.Length - 1) * gap) / buttons.Length;
-
-            for (int i = 0; i < buttons.Length; i++)
+            float total = 0f;
+            for (int i = 0; i < weights.Count; i++)
             {
-                if (buttons[i] == null)
+                total += weights[i];
+            }
+
+            float unit = (1f - 2f * margin - (buttons.Count - 1) * gap) / total;
+
+            float x0 = margin;
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                float width = unit * weights[i];
+                if (buttons[i] != null)
                 {
-                    continue;
+                    var rect = (RectTransform)buttons[i]!.transform;
+                    rect.anchorMin = new Vector2(x0, 0.016f);
+                    rect.anchorMax = new Vector2(x0 + width, 0.077f);
+                    rect.offsetMin = Vector2.zero;
+                    rect.offsetMax = Vector2.zero;
                 }
 
-                var rect = (RectTransform)buttons[i]!.transform;
-                float x0 = margin + i * (width + gap);
-                rect.anchorMin = new Vector2(x0, 0.016f);
-                rect.anchorMax = new Vector2(x0 + width, 0.077f);
-                rect.offsetMin = Vector2.zero;
-                rect.offsetMax = Vector2.zero;
+                x0 += width + gap;
             }
         }
 
@@ -387,6 +420,29 @@ namespace PuttSeed.Unity
             {
                 ShowToast(Loc.Tr("Shot undone."));
             }
+        }
+
+        /// <summary>
+        /// Whether Share has anything to give right now — the same three cases
+        /// <see cref="OnShare"/> acts on, so the bar can never hide a button
+        /// that had something to offer. A practice course shares as an
+        /// invitation before it is finished, and a gauntlet whose last hole ran
+        /// out of strokes still finished its week.
+        /// </summary>
+        private bool CanShare()
+        {
+            var sim = _runner.Sim;
+            if (sim == null)
+            {
+                return false;
+            }
+
+            if (sim.IsHoled || _modes.Mode == GameMode.Practice)
+            {
+                return true;
+            }
+
+            return _modes.Mode == GameMode.Gauntlet && !_modes.HasNextGauntletHole && sim.IsFailed;
         }
 
         private void OnShare()

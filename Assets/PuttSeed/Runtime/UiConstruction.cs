@@ -33,8 +33,17 @@ namespace PuttSeed.Unity
             var poleImage = pole.gameObject.AddComponent<Image>();
             poleImage.color = UIStyle.Cream;
             poleImage.raycastTarget = false;
-            UIFactory.CreatePanel(canvas.transform, "EmblemFlag",
-                new Vector2(0.504f, 0.915f), new Vector2(0.63f, 0.952f), new Color(0.86f, 0.24f, 0.19f));
+            // A pennant, not a rectangle — the same triangle of cloth the cup
+            // flies out on the course. Pivoted at the pole edge so it can wave
+            // from where it is actually tied (MenuBootstrap drives it).
+            var flagRect = UIFactory.CreateRect(canvas.transform, "EmblemFlag",
+                new Vector2(0.504f, 0.915f), new Vector2(0.63f, 0.952f));
+            flagRect.pivot = new Vector2(0f, 0.5f);
+            var flagImage = flagRect.gameObject.AddComponent<Image>();
+            flagImage.sprite = UIFactory.PennantSprite();
+            flagImage.color = PaletteMaterials.Flag;
+            flagImage.raycastTarget = false;
+            menu.emblemFlag = flagRect;
             var ballRect = UIFactory.CreateRect(canvas.transform, "EmblemBall",
                 new Vector2(0.425f, 0.8765f), new Vector2(0.425f, 0.8765f));
             ballRect.sizeDelta = new Vector2(48f, 48f);
@@ -67,31 +76,52 @@ namespace PuttSeed.Unity
             menu.countdownText.color = UIStyle.CreamDim;
             menu.countdownText.gameObject.SetActive(false);
 
+            // Three rows on ONE grid. They used to drift — the Journey row
+            // split its columns at 0.62/0.64 while the two below it split at
+            // 0.60/0.62, and the row heights disagreed in the third decimal —
+            // which is invisible in code and obvious on a phone.
+            const float colLeftMin = 0.10f;
+            const float colLeftMax = 0.60f;
+            const float colRightMin = 0.62f;
+            const float colRightMax = 0.90f;
+            const float rowJourney = 0.434f;
+            const float rowPractice = 0.3505f;
+            const float rowTutorial = 0.267f;
+            const float rowHeight = 0.074f;
+            const int leftFont = 36;
+            const int rightFont = 30;
+
             menu.journeyLabel = UIFactory.CreateButton(canvas.transform, "Journey",
-                new Vector2(0.1f, 0.435f), new Vector2(0.62f, 0.508f), NoOp, 38);
+                new Vector2(colLeftMin, rowJourney), new Vector2(colLeftMax, rowJourney + rowHeight),
+                NoOp, leftFont);
             menu.journeyButton = menu.journeyLabel.GetComponentInParent<Button>();
 
             // The gauntlet is a mode, not an archive tool: it belongs on the
             // menu beside Journey, where a player can find it without first
             // going looking through the calendar.
             menu.gauntletLabel = UIFactory.CreateButton(canvas.transform, "Gauntlet",
-                new Vector2(0.64f, 0.435f), new Vector2(0.9f, 0.508f), NoOp, 30);
+                new Vector2(colRightMin, rowJourney), new Vector2(colRightMax, rowJourney + rowHeight),
+                NoOp, rightFont);
             menu.gauntletButton = menu.gauntletLabel.GetComponentInParent<Button>();
 
             var practiceLabel = UIFactory.CreateButton(canvas.transform, "Practice",
-                new Vector2(0.1f, 0.35f), new Vector2(0.6f, 0.425f), NoOp, 38);
+                new Vector2(colLeftMin, rowPractice), new Vector2(colLeftMax, rowPractice + rowHeight),
+                NoOp, leftFont);
             menu.practiceButton = practiceLabel.GetComponentInParent<Button>();
 
             menu.difficultyLabel = UIFactory.CreateButton(canvas.transform, "Normal",
-                new Vector2(0.62f, 0.35f), new Vector2(0.9f, 0.425f), NoOp, 32);
+                new Vector2(colRightMin, rowPractice), new Vector2(colRightMax, rowPractice + rowHeight),
+                NoOp, rightFont);
             menu.difficultyButton = menu.difficultyLabel.GetComponentInParent<Button>();
 
             menu.tutorialLabel = UIFactory.CreateButton(canvas.transform, "Tutorial",
-                new Vector2(0.1f, 0.267f), new Vector2(0.6f, 0.34f), NoOp, 36);
+                new Vector2(colLeftMin, rowTutorial), new Vector2(colLeftMax, rowTutorial + rowHeight),
+                NoOp, leftFont);
             menu.tutorialButton = menu.tutorialLabel.GetComponentInParent<Button>();
 
             var archiveLabel = UIFactory.CreateButton(canvas.transform, "Archive",
-                new Vector2(0.62f, 0.267f), new Vector2(0.9f, 0.34f), NoOp, 32);
+                new Vector2(colRightMin, rowTutorial), new Vector2(colRightMax, rowTutorial + rowHeight),
+                NoOp, rightFont);
             menu.archiveButton = archiveLabel.GetComponentInParent<Button>();
 
             UIFactory.CreatePanel(canvas.transform, "FooterChip",
@@ -117,6 +147,22 @@ namespace PuttSeed.Unity
             var collectionLabel = UIFactory.CreateButton(canvas.transform, "Collection",
                 new Vector2(0.52f, 0.13f), new Vector2(0.90f, 0.185f), NoOp, 30);
             menu.collectionButton = collectionLabel.GetComponentInParent<Button>();
+
+            // Today's hole, drawn from the day's own seed — the one thing on
+            // this screen that is different every morning, and a second way
+            // into the daily. It sits in the band under Settings/Collection,
+            // the only empty space on the menu, so nothing above it moves.
+            var todayCard = UIFactory.CreateRect(canvas.transform, "TodayCard",
+                new Vector2(0.27f, 0.022f), new Vector2(0.73f, 0.122f));
+            var todayImage = todayCard.gameObject.AddComponent<Image>();
+            todayImage.preserveAspect = true; // the hole's own aspect, never stretched
+            todayImage.raycastTarget = true;
+            menu.todayThumb = todayImage;
+            menu.todayThumbButton = todayCard.gameObject.AddComponent<Button>();
+            menu.todayThumbButton.targetGraphic = todayImage;
+            todayCard.gameObject.AddComponent<UiClickSound>();
+            todayCard.gameObject.AddComponent<ButtonPressScale>();
+            todayCard.gameObject.SetActive(false); // shown when the render lands
 
             // Pop-ups mount on the CANVAS root, not the safe-area root: their
             // dim backdrops must cover the whole screen, notch included (the
@@ -622,7 +668,10 @@ namespace PuttSeed.Unity
 
             var cover = UIFactory.CreateRect(canvasGo.transform, "Cover", Vector2.zero, Vector2.one);
             var image = cover.gameObject.AddComponent<Image>();
-            image.color = PaletteMaterials.Felt;
+            // The rough, not the felt: the cover lifts onto a course whose
+            // ground is a mat on a slightly darker surround, and the two must
+            // meet without a step in brightness.
+            image.color = PaletteMaterials.Rough;
             image.raycastTarget = true;
 
             UIFactory.CreateCircle(cover, "Deco1",

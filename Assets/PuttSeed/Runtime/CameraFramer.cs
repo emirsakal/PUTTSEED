@@ -34,7 +34,7 @@ namespace PuttSeed.Unity
             cam.transform.rotation = Quaternion.identity;
             float aspect = Mathf.Max(cam.aspect, 0.01f);
             cam.orthographicSize = Mathf.Max(halfSize.y + Padding, (halfSize.x + Padding) / aspect);
-            cam.backgroundColor = PaletteMaterials.Felt;
+            cam.backgroundColor = PaletteMaterials.Rough;
             cam.clearFlags = CameraClearFlags.SolidColor;
         }
     }

@@ -1,8 +1,11 @@
 #nullable enable
 using System;
+using System.Collections;
 using System.IO;
+using System.Threading.Tasks;
 using PuttSeed.Core.CourseGen;
 using PuttSeed.Core.Daily;
+using PuttSeed.Core.Sim;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +21,12 @@ namespace PuttSeed.Unity
     {
         [Header("Scene-authored UI (assigned by PuttSeed → Rebuild Scenes)")]
         public Button? dailyButton;
+
+        /// <summary>Today's hole, rendered into the menu card (see <see cref="CourseThumbnail"/>).</summary>
+        public Image? todayThumb;
+
+        /// <summary>Tapping the picture of today's hole plays it.</summary>
+        public Button? todayThumbButton;
         public Text? dailyLabel;
         public Button? practiceButton;
         public Button? difficultyButton;
@@ -49,6 +58,9 @@ namespace PuttSeed.Unity
         public Button? shareBestButton;
         public Text? shareBestLabel;
         public RectTransform? emblemBall;
+
+        /// <summary>The emblem's pennant — waved by <see cref="Update"/>.</summary>
+        public RectTransform? emblemFlag;
         public RectTransform? deco1;
         public RectTransform? deco2;
         public Text? taglineText;
@@ -107,6 +119,49 @@ namespace PuttSeed.Unity
         private StatsStore _stats = null!;
         // First day of the month the calendar is showing.
         private DateTime _archiveMonth;
+
+        /// <summary>
+        /// Draws today's hole into the menu card. Generation runs on a
+        /// background thread (core is pure C#), so the menu keeps animating
+        /// while it works, and the course is built under the SAME config the
+        /// game will use — schedule version and the day's mutator included —
+        /// or the picture would be of a hole nobody plays.
+        ///
+        /// Silence is the failure mode: a seed that will not generate leaves
+        /// the card hidden rather than stalling the menu.
+        /// </summary>
+        private IEnumerator RenderTodaysHole(int today)
+        {
+            if (todayThumb == null)
+            {
+                yield break;
+            }
+
+            var utc = DateTime.UtcNow;
+            ulong seed = DailySeed.FromUtcDate(utc.Year, utc.Month, utc.Day);
+            int version = GeneratorSchedule.VersionForDay(today);
+            var feel = Resources.Load<FeelConfig>("FeelConfig");
+            var simConfig = DailyMutators.Apply(
+                feel != null ? feel.BuildSimConfig() : SimConfig.Default, seed, version);
+            var genConfig = GeneratorConfig.ForVersion(version);
+
+            var task = Task.Run(() => CourseGenerator.Generate(
+                seed, genConfig, simConfig, SolverConfig.Default));
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (task.Status != TaskStatus.RanToCompletion || todayThumb == null)
+            {
+                yield break;
+            }
+
+            var texture = CourseThumbnail.Render(task.Result.Course);
+            todayThumb.sprite = Sprite.Create(texture,
+                new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            UiFx.PopIn(this, todayThumb.gameObject);
+        }
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
         {
@@ -186,6 +241,8 @@ namespace PuttSeed.Unity
             }
 
             dailyButton?.onClick.AddListener(() => Launch(GameMode.Daily));
+            todayThumbButton?.onClick.AddListener(() => Launch(GameMode.Daily));
+            StartCoroutine(RenderTodaysHole(today));
             practiceButton?.onClick.AddListener(() => Launch(GameMode.Practice));
             difficultyButton?.onClick.AddListener(CycleDifficulty);
             tutorialButton?.onClick.AddListener(() => Launch(GameMode.Tutorial));
@@ -367,6 +424,15 @@ namespace PuttSeed.Unity
                 taglineText.color = new Color(c.r, c.g, c.b, 0.5f + 0.14f * Mathf.Sin(time * 0.9f));
             }
 
+            // The pennant waves on two frequencies, the same way the flag on
+            // the course does — one slow swing, one quick flutter over it —
+            // pivoting at the pole where it is tied.
+            if (emblemFlag != null)
+            {
+                float wave = Mathf.Sin(time * 2.2f) * 4.5f + Mathf.Sin(time * 4.9f) * 1.6f;
+                emblemFlag.localEulerAngles = new Vector3(0f, 0f, wave);
+            }
+
             // Android back button (Escape): close an open panel, else quit.
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -478,6 +544,8 @@ namespace PuttSeed.Unity
                 string Pb(int best) => best == 0 ? Loc.Tr("not yet") : best.ToString();
                 statsBlock.text =
                     string.Format(Loc.Tr("Streak {0}  (best {1})"), data.streak, data.bestStreak) + "\n"
+                    + string.Format(Loc.Tr("Par streak {0}  (best {1})"),
+                        data.parStreak, data.bestParStreak) + "\n"
                     + string.Format(Loc.Tr("Dailies finished  {0}"), Achievements.CompletedDailyCount(data)) + "\n"
                     + string.Format(Loc.Tr("Daily attempts  {0}"), attempts) + "\n"
                     + string.Format(Loc.Tr("Practice rounds  {0}"), data.practicePlayed) + "\n\n"

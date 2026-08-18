@@ -33,6 +33,30 @@ namespace PuttSeed.Unity
         /// <summary>Lighter felt band — the mowed-stripe alternate tone.</summary>
         public static readonly Color FeltLight = new Color(0.245f, 0.555f, 0.335f);
 
+        /// <summary>
+        /// The rough: the ground beyond the hole's mat, so the play area has
+        /// an edge instead of running to the screen border. Deliberately only
+        /// a step below the felt — the first pass sat 40% darker and read as a
+        /// different surface entirely; at 16% the mat is legible without the
+        /// course looking like a rectangle dropped on a floor (2026-08-19).
+        /// </summary>
+        public static readonly Color Rough = new Color(0.185f, 0.437f, 0.26f);
+
+        /// <summary>
+        /// The rough's alternate band. The rough is mown ACROSS the mat's
+        /// stripes, so the two surfaces differ by the direction of the cut
+        /// rather than by brightness — which is what lets the two greens stay
+        /// this close together and still read as different ground.
+        /// </summary>
+        public static readonly Color RoughLight = new Color(0.198f, 0.464f, 0.277f);
+
+        /// <summary>
+        /// The fringe: the collar of longer grass around a putting green,
+        /// halfway between the mat and the rough. It turns the mat's edge from
+        /// a seam into a cut.
+        /// </summary>
+        public static readonly Color Fringe = new Color(0.2f, 0.475f, 0.284f);
+
         /// <summary>Flag cloth (matches the menu emblem).</summary>
         public static readonly Color Flag = new Color(0.86f, 0.24f, 0.19f);
 

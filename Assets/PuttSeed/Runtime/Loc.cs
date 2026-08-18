@@ -168,6 +168,7 @@ namespace PuttSeed.Unity
             ["{0}  ·  not played"] = "{0}  ·  oynanmadı",
             ["{0}–{1} days ago"] = "{0}–{1} gün önce",
             ["Streak {0}  (best {1})"] = "Seri {0}  (en iyi {1})",
+            ["Par streak {0}  (best {1})"] = "Par serisi {0}  (en iyi {1})",
             ["Dailies finished  {0}"] = "Bitirilen günlük  {0}",
             ["Daily attempts  {0}"] = "Günlük deneme  {0}",
             ["Practice rounds  {0}"] = "Antrenman turu  {0}",
