@@ -113,14 +113,15 @@ mechanically, not by care:
   fails the build if any appear. All math is `Fix64` — Q32.32 fixed point on
   `long`, with 128-bit multiply intermediates and Newton square root. Trig is
   a committed 1024-entry table; angles only ever exist as table indices.
-- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course of
-  walls, bumpers, sand, ice and water runs a scripted 8-shot,
-  10,000-tick session twice in-process, and the final FNV-1a state hash
-  must equal a committed constant: `12853565983001025895`. Any
-  accidental change to sim math fails it. (The 2026-08 elements — gates,
-  ramps, portals, windmills — are covered by their own per-element
-  suites and the v2 property run; folding them into this fixture is
-  pending, and would deliberately re-cut the constant.)
+- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
+  holding every element — walls, bumpers, sand, ice, water, gates,
+  ramps, portals and windmills — runs a scripted 16-shot, 10,000-tick
+  session twice in-process, and the final FNV-1a state hash must equal a
+  committed constant: `11426007175965104957`. Any accidental change to
+  sim math fails it. A companion test guards the guard: removing any one
+  element must move the hash, so nothing can sit in the fixture without
+  being met. That test found two elements the previous fixture never
+  touched, water among them.
 - **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
   end-to-end — generate, replay the author solution — against frozen final
   hashes and frozen `PUTT-` codes.
@@ -139,8 +140,8 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (219 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (83 tests) | `scripts\unity-tests.bat` |
+| Core test suite (275 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Unity EditMode tests (103 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
