@@ -82,6 +82,18 @@ namespace PuttSeed.Unity
         /// <summary>True when the loaded daily is a past day from the archive.</summary>
         public bool IsArchiveDay { get; private set; }
 
+        /// <summary>The themed twist the loaded course plays under.</summary>
+        public DailyMutator ActiveMutator { get; private set; } = DailyMutator.None;
+
+        /// <summary>Localized name of the active twist, or "" on a plain day.</summary>
+        public string MutatorLabel => ActiveMutator switch
+        {
+            DailyMutator.Icy => Loc.Tr("Icy day"),
+            DailyMutator.Bouncy => Loc.Tr("Bouncy day"),
+            DailyMutator.Windy => Loc.Tr("Windy day"),
+            _ => "",
+        };
+
         /// <summary>HUD label for daily mode ("Daily", or dated for archive days).</summary>
         public string DailyModeLabel => IsArchiveDay
             ? string.Format(Loc.Tr("Daily · {0}"), Loc.ShortDate(_activeDayDate))
@@ -339,8 +351,9 @@ namespace PuttSeed.Unity
             yield return null; // let the overlay render first
 
             var entropy = new System.Random();
-            var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
+            var baseConfig = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
             GenerationResult? best = null;
+            var bestConfig = baseConfig;
             ulong bestSeed = 0;
             int bestDistance = int.MaxValue;
 
@@ -349,6 +362,10 @@ namespace PuttSeed.Unity
                 var buffer = new byte[8];
                 entropy.NextBytes(buffer);
                 ulong seed = BitConverter.ToUInt64(buffer, 0);
+
+                // Each seed carries its own themed twist, so the candidate is
+                // solved under the physics it will be played under.
+                var config = DailyMutators.Apply(baseConfig, seed, 2);
 
                 // Background generation: frames (and the putt vignette) keep
                 // running while each candidate is solved. Practice always runs
@@ -376,6 +393,7 @@ namespace PuttSeed.Unity
                 {
                     best = candidate;
                     bestSeed = seed;
+                    bestConfig = config;
                     bestDistance = distance;
                 }
 
@@ -388,7 +406,8 @@ namespace PuttSeed.Unity
             if (best != null)
             {
                 _activeConfigVersion = 2;
-                _runner.AdoptGeneration(bestSeed, best, config);
+                ActiveMutator = DailyMutators.ForSeed(bestSeed, 2);
+                _runner.AdoptGeneration(bestSeed, best, bestConfig);
                 RebuildView();
                 _stats.RecordPracticePlayed();
             }
@@ -423,7 +442,12 @@ namespace PuttSeed.Unity
 
             // Read Unity-side state (the ScriptableObject) on the main thread;
             // the task only touches pure core types.
-            var config = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
+            // The day's twist is part of the physics BEFORE generation runs:
+            // the solver must prove the course under the same wind or ice the
+            // player will meet, or a themed day could be an unfair one.
+            var config = DailyMutators.Apply(
+                _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default,
+                seed, configVersion);
             var genConfig = GeneratorConfig.ForVersion(configVersion);
             var task = Task.Run(() => CourseGenerator.Generate(
                 seed, genConfig, config, SolverConfig.Default));
@@ -435,6 +459,7 @@ namespace PuttSeed.Unity
             if (task.Status == TaskStatus.RanToCompletion)
             {
                 _activeConfigVersion = configVersion;
+                ActiveMutator = DailyMutators.ForSeed(seed, configVersion);
                 _runner.AdoptGeneration(seed, task.Result, config);
                 RebuildView();
                 // Zero-shot codes are course invitations — no ghost to race.

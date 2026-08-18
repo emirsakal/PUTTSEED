@@ -170,8 +170,11 @@ namespace PuttSeed.Core.Sim
                 return;
             }
 
-            // Ramp acceleration first, then friction damping — damping applies
+            // Wind and ramps push first, then friction damps — damping applies
             // to the boosted velocity, so a slope has a stable terminal speed.
+            // Wind is zero on an ordinary day and adding zero is exact, so this
+            // line costs nothing and changes no existing hash.
+            _velocity += _config.Wind * _config.Dt;
             ApplyRampAcceleration();
 
             // Surface friction priority: sand beats ice beats bare ground

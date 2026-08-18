@@ -67,6 +67,25 @@ two places, deliberately:
 The clock wraps every 1024 ticks, which is why ten bits per shot is
 enough and why a ghost never idles longer than one turn of the blades.
 
+## Themed days
+
+One day in eighteen carries a twist, derived from the seed alone: an
+**icy day** (the whole green plays slick), a **bouncy day** (bumpers
+kick harder) or a **windy day** (a steady crosswind bends every roll).
+The cheapest content in the game — no geometry, no art, just the physics
+knobs the sim already had, turned.
+
+Two rules keep it honest. The twist is a function of the seed, so a
+replay code reproduces it for free and no timing or extra payload is
+needed. And generation runs UNDER the twist: the solver proves the
+course solvable in the same wind the player will meet, so a themed day
+is never an unfair day. The HUD names the day, because ice underfoot
+with no explanation reads as the game misbehaving.
+
+Themed days ride on generator v2, like every other post-MVP rule: v1
+regenerates Journey and the archive, and a twist there would rewrite
+finished history.
+
 ## Generator versions
 
 Adding elements changes what a seed generates — which would silently

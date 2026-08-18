@@ -154,6 +154,14 @@ namespace PuttSeed.Unity
                 _ => string.Format(Loc.Tr("Tutorial {0}/{1}"), _modes.TutorialIndex + 1, TutorialConfig.Stages.Length),
             };
 
+            // A themed day announces itself in the top bar: without it, ice
+            // underfoot or a crosswind just reads as the game misbehaving.
+            string mutator = _modes.MutatorLabel;
+            if (mutator.Length > 0)
+            {
+                modeLabel = string.Format(Loc.Tr("{0} · {1}"), modeLabel, mutator);
+            }
+
             int streak = _modes.Stats.Data.streak;
             string streakLabel = streak > 0 ? string.Format(Loc.Tr("   Streak {0}"), streak) : "";
             counterText.text = string.Format(Loc.Tr("{0}   Strokes {1}/{2}   Par {3}{4}"),

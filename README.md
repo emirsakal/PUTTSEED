@@ -175,8 +175,10 @@ builds unsigned.
 Drag to aim (slingshot or direct — your pick), release to shoot; ball must
 rest before the next stroke. Walls bounce, bumpers boost, sand drags, ice
 slides, water costs a stroke and a reset; gates let you through one way
-only, ramps push, portals teleport, and windmill blades sweep while the
-ball rolls. Capture needs a slow ball over the
+only, ramps push, portals teleport, and windmill blades sweep whether or
+not you are ready. One day in eighteen adds a twist of its own — ice
+underfoot, springier bumpers, or a crosswind — proven solvable under the
+twist before it ships. Capture needs a slow ball over the
 cup — fast attempts rim out. Stroke limit is par + 3; holing out scores
 stars — 3 at par or better, 2 one over, 1 within the limit. Feel tuning
 lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).

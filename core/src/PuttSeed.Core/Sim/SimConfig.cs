@@ -22,6 +22,15 @@ namespace PuttSeed.Core.Sim
         /// <summary>Per-tick exponential velocity damping on normal ground (&lt; 1).</summary>
         public Fix64 RollDamping { get; }
 
+        /// <summary>
+        /// A constant acceleration applied everywhere on the course (units/s²).
+        /// Zero on an ordinary day; a windy day (see
+        /// <see cref="Daily.DailyMutators"/>) gives it a direction. Adding a
+        /// zero vector is exact in fixed point, so a plain day is bit-identical
+        /// to a build that never had wind.
+        /// </summary>
+        public Vec2Fix Wind { get; }
+
         /// <summary>Per-tick damping while the ball center is inside sand (much stronger).</summary>
         public Fix64 SandDamping { get; }
 
@@ -73,8 +82,10 @@ namespace PuttSeed.Core.Sim
             Fix64 holeCaptureSpeedSq,
             Fix64 rimRestitution,
             Fix64 restSpeedEpsSq,
-            int restTicksRequired)
+            int restTicksRequired,
+            Vec2Fix wind = default)
         {
+            Wind = wind;
             Dt = dt;
             BallRadius = ballRadius;
             MaxShotSpeed = maxShotSpeed;
@@ -115,7 +126,29 @@ namespace PuttSeed.Core.Sim
             int restTicksRequired)
             => new SimConfig(dt, ballRadius, maxShotSpeed, rollDamping, sandDamping, iceDamping,
                 wallRestitution, maxTravelPerSubStep, bumperRestitution, bumperMaxExitSpeed,
-                holeRadius, holeCaptureSpeedSq, rimRestitution, restSpeedEpsSq, restTicksRequired);
+                holeRadius, holeCaptureSpeedSq, rimRestitution, restSpeedEpsSq, restTicksRequired,
+                Vec2Fix.Zero);
+
+        /// <summary>This config with a different rolling friction.</summary>
+        public SimConfig WithRollDamping(Fix64 rollDamping)
+            => new SimConfig(Dt, BallRadius, MaxShotSpeed, rollDamping, SandDamping, IceDamping,
+                WallRestitution, MaxTravelPerSubStep, BumperRestitution, BumperMaxExitSpeed,
+                HoleRadius, HoleCaptureSpeedSq, RimRestitution, RestSpeedEpsSq, RestTicksRequired,
+                Wind);
+
+        /// <summary>This config with a different bumper kick.</summary>
+        public SimConfig WithBumperRestitution(Fix64 bumperRestitution)
+            => new SimConfig(Dt, BallRadius, MaxShotSpeed, RollDamping, SandDamping, IceDamping,
+                WallRestitution, MaxTravelPerSubStep, bumperRestitution, BumperMaxExitSpeed,
+                HoleRadius, HoleCaptureSpeedSq, RimRestitution, RestSpeedEpsSq, RestTicksRequired,
+                Wind);
+
+        /// <summary>This config with a different wind.</summary>
+        public SimConfig WithWind(Vec2Fix wind)
+            => new SimConfig(Dt, BallRadius, MaxShotSpeed, RollDamping, SandDamping, IceDamping,
+                WallRestitution, MaxTravelPerSubStep, BumperRestitution, BumperMaxExitSpeed,
+                HoleRadius, HoleCaptureSpeedSq, RimRestitution, RestSpeedEpsSq, RestTicksRequired,
+                wind);
 
         /// <summary>The tuned default configuration.</summary>
         public static SimConfig Default { get; } = new SimConfig(

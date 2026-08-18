@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using PuttSeed.Core.CourseGen;
+using PuttSeed.Core.Daily;
 using PuttSeed.Core.Replay;
 using PuttSeed.Core.Sim;
 
@@ -26,10 +27,10 @@ namespace PuttSeed.Core.Tests.CourseGen
         /// valid at the phases the solver proved it at.
         /// </summary>
         private static bool Replays(CourseData course, ShotInput[] shots, int[] shotClocks,
-            out int strokes)
+            SimConfig config, out int strokes)
         {
             bool timed = course.Windmills.Length > 0;
-            var sim = new GolfSim(course, SimConfig.Default);
+            var sim = new GolfSim(course, config);
             int shotIdx = 0;
             for (int tick = 0; tick < 200_000 && !sim.IsHoled; tick++)
             {
@@ -77,8 +78,12 @@ namespace PuttSeed.Core.Tests.CourseGen
                 ulong seed = (ulong)seedInt;
                 try
                 {
+                    // Themed days are physics: generate under the same twist
+                    // the player will meet, or the proof is about another game.
+                    int version = cfg == GeneratorConfig.V1 ? 1 : 2;
+                    var simConfig = DailyMutators.Apply(SimConfig.Default, seed, version);
                     var result = CourseGenerator.Generate(
-                        seed, cfg, SimConfig.Default, SolverConfig.Default);
+                        seed, cfg, simConfig, SolverConfig.Default);
 
                     if (result.Attempts > maxAttempts)
                     {
@@ -91,7 +96,7 @@ namespace PuttSeed.Core.Tests.CourseGen
                     }
 
                     if (!Replays(result.Course, result.AuthorSolution, result.AuthorShotClocks,
-                        out var strokes))
+                        simConfig, out var strokes))
                     {
                         failures.Add($"seed {seed}: author solution does not capture");
                     }
