@@ -68,8 +68,15 @@ namespace PuttSeed.Unity
             menu.countdownText.gameObject.SetActive(false);
 
             menu.journeyLabel = UIFactory.CreateButton(canvas.transform, "Journey",
-                new Vector2(0.1f, 0.435f), new Vector2(0.9f, 0.508f), NoOp, 38);
+                new Vector2(0.1f, 0.435f), new Vector2(0.62f, 0.508f), NoOp, 38);
             menu.journeyButton = menu.journeyLabel.GetComponentInParent<Button>();
+
+            // The gauntlet is a mode, not an archive tool: it belongs on the
+            // menu beside Journey, where a player can find it without first
+            // going looking through the calendar.
+            menu.gauntletLabel = UIFactory.CreateButton(canvas.transform, "Gauntlet",
+                new Vector2(0.64f, 0.435f), new Vector2(0.9f, 0.508f), NoOp, 30);
+            menu.gauntletButton = menu.gauntletLabel.GetComponentInParent<Button>();
 
             var practiceLabel = UIFactory.CreateButton(canvas.transform, "Practice",
                 new Vector2(0.1f, 0.35f), new Vector2(0.6f, 0.425f), NoOp, 38);
@@ -486,18 +493,12 @@ namespace PuttSeed.Unity
                 }
             }
 
-            // The gauntlet lives here because it IS a week of past days: the
-            // calendar is where a player already thinks about them.
             var randomLabel = UIFactory.CreateButton(dim, "Random day",
-                new Vector2(0.10f, 0.135f), new Vector2(0.38f, 0.19f), NoOp, 22);
+                new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, 26);
             menu.archiveRandomButton = randomLabel.GetComponentInParent<Button>();
 
-            menu.gauntletLabel = UIFactory.CreateButton(dim, "Gauntlet",
-                new Vector2(0.40f, 0.135f), new Vector2(0.64f, 0.19f), NoOp, 22);
-            menu.gauntletButton = menu.gauntletLabel.GetComponentInParent<Button>();
-
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.66f, 0.135f), new Vector2(0.90f, 0.19f), NoOp, 26, primary: true);
+                new Vector2(0.52f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
             menu.archiveCloseButton = close.GetComponentInParent<Button>();
             menu.archiveCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -596,10 +597,12 @@ namespace PuttSeed.Unity
                 new Vector2(0.02f, 0.08f), new Vector2(0.98f, 0.92f), "paste PUTT- code…");
             ui.importRow.SetActive(false);
 
-            // Next lesson rides with the tutorial hint at the top instead of
-            // widening the bar for every mode.
+            // The advance button sits low and centred, where the thumb
+            // already is — it used to ride the top-right corner, a reach away
+            // from every other control. It clears the import chip (top 0.152)
+            // and the toast (bottom 0.25), the two things that share this band.
             var next = UIFactory.CreateButton(canvas.transform, "Next lesson",
-                new Vector2(0.60f, 0.80f), new Vector2(0.94f, 0.858f), NoOp, 28, primary: true);
+                new Vector2(0.30f, 0.16f), new Vector2(0.70f, 0.22f), NoOp, 30, primary: true);
             ui.nextLessonButton = ButtonOf(next);
         }
 

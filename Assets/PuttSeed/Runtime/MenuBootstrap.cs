@@ -170,6 +170,8 @@ namespace PuttSeed.Unity
                 difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
             }
 
+            RefreshGauntletChip();
+
             if (journeyLabel != null)
             {
                 int done = stats.Data.journeyStars.Count;
@@ -947,27 +949,6 @@ namespace PuttSeed.Unity
                 }
             }
 
-            // The gauntlet needs a week that has fully elapsed.
-            int latestWeek = GauntletWeek.LatestCompleteWeek(today);
-            bool weekReady = latestWeek >= 0;
-            if (gauntletButton != null)
-            {
-                gauntletButton.interactable = weekReady;
-            }
-
-            if (gauntletLabel != null)
-            {
-                var data = _stats.Data;
-                bool hasRecord = weekReady && data.gauntletWeek == latestWeek;
-                gauntletLabel.text = !weekReady ? Loc.Tr("No finished week yet")
-                    : hasRecord
-                        ? string.Format(Loc.Tr("Gauntlet · {0}"), data.gauntletBestStrokes)
-                        : Loc.Tr("Gauntlet");
-                gauntletLabel.color = hasRecord ? UIStyle.Accent
-                    : weekReady ? UIStyle.Cream
-                    : UIStyle.CreamDim;
-            }
-
             if (archivePrevMonthButton != null)
             {
                 archivePrevMonthButton.interactable = _archiveMonth > EpochMonth;
@@ -978,6 +959,33 @@ namespace PuttSeed.Unity
                 var utc = DateTime.UtcNow.Date;
                 archiveNextMonthButton.interactable =
                     _archiveMonth < new DateTime(utc.Year, utc.Month, 1);
+            }
+        }
+
+        /// <summary>
+        /// The menu's gauntlet chip: dead until a week has fully elapsed, and
+        /// wearing this week's score once it has been run.
+        /// </summary>
+        private void RefreshGauntletChip()
+        {
+            int latestWeek = GauntletWeek.LatestCompleteWeek(
+                ModeController.DayNumber(DateTime.UtcNow));
+            bool weekReady = latestWeek >= 0;
+            if (gauntletButton != null)
+            {
+                gauntletButton.interactable = weekReady;
+            }
+
+            if (gauntletLabel != null)
+            {
+                var data = _stats.Data;
+                bool hasRecord = weekReady && data.gauntletWeek == latestWeek;
+                gauntletLabel.text = hasRecord
+                    ? string.Format(Loc.Tr("Gauntlet · {0}"), data.gauntletBestStrokes)
+                    : Loc.Tr("Gauntlet");
+                gauntletLabel.color = hasRecord ? UIStyle.Accent
+                    : weekReady ? UIStyle.Cream
+                    : UIStyle.CreamDim;
             }
         }
 

@@ -122,7 +122,6 @@ namespace PuttSeed.Unity
             ["Gauntlet"] = "Gauntlet",
             ["Gauntlet · {0}"] = "Gauntlet · {0}",
             ["Week done — {0} strokes!"] = "Hafta bitti — {0} vuruş!",
-            ["No finished week yet"] = "Henüz biten hafta yok",
             ["{0} stars"] = "{0} yıldız",
             ["Settings"] = "Ayarlar",
             ["Collection"] = "Koleksiyon",
