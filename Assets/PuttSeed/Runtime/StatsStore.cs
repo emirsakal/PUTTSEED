@@ -41,6 +41,7 @@ namespace PuttSeed.Unity
         public bool hapticsEnabled = true;
         public bool aimDirect;
         public string ballSkin = "cream";
+        public string ballTrail = "plain";
         public bool colorblindMode;
         public bool batterySaver;
         public string language = ""; // "" = follow the device, else "en"/"tr"
@@ -210,6 +211,13 @@ namespace PuttSeed.Unity
         public void SetBallSkin(string id)
         {
             Data.ballSkin = id;
+            Save();
+        }
+
+        /// <summary>Persists the equipped ball trail.</summary>
+        public void SetBallTrail(string id)
+        {
+            Data.ballTrail = id;
             Save();
         }
 

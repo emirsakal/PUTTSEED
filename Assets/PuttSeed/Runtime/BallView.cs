@@ -9,9 +9,15 @@ namespace PuttSeed.Unity
     /// </summary>
     public sealed class BallView : MonoBehaviour
     {
-        private static readonly Color TrailDefault = new Color(1f, 1f, 1f, 0.5f);
         private static readonly Color TrailIce = new Color(0.68f, 0.85f, 1f, 0.55f);
         private static readonly Color TrailSand = new Color(0.9f, 0.82f, 0.6f, 0.5f);
+
+        /// <summary>
+        /// The equipped trail's tint — the color the trail rests at. Ice and
+        /// sand still take over while the ball is on them: those cues carry
+        /// information, and information outranks cosmetics.
+        /// </summary>
+        private Color _trailBase = new Color(1f, 1f, 1f, 0.5f);
 
         private SimRunner _runner = null!;
         private TrailRenderer _trail = null!;
@@ -21,17 +27,22 @@ namespace PuttSeed.Unity
         private Transform _body = null!;
         private Transform? _spin;
         private float _spinAngle;
-        private Color _trailColor = TrailDefault;
+        private Color _trailColor = new Color(1f, 1f, 1f, 0.5f);
 
         private MeshRenderer _renderer = null!;
 
         /// <summary>Creates the ball visuals and subscribes to run resets.</summary>
         public void Initialize(SimRunner runner) => Initialize(runner, PaletteMaterials.Ball);
 
-        /// <summary>Creates the ball visuals with a cosmetic skin color.</summary>
-        public void Initialize(SimRunner runner, Color ballColor)
+        /// <summary>Creates the ball visuals with cosmetic skin and trail colors.</summary>
+        public void Initialize(SimRunner runner, Color ballColor, Color? trailColor = null)
         {
             _runner = runner;
+            if (trailColor.HasValue)
+            {
+                _trailBase = trailColor.Value;
+                _trailColor = trailColor.Value;
+            }
 
             // The disc lives on a rotatable child so impact squash can align
             // to the contact axis without swinging the shadow or the trail.
@@ -164,7 +175,7 @@ namespace PuttSeed.Unity
             // in sand, cream elsewhere — eased so transitions never snap.
             var target = InZone(_runner.Generation?.Course.IceZones) ? TrailIce
                 : InZone(_runner.Generation?.Course.SandZones) ? TrailSand
-                : TrailDefault;
+                : _trailBase;
             _trailColor = Color.Lerp(_trailColor, target, Time.deltaTime * 6f);
             _trail.startColor = _trailColor;
         }

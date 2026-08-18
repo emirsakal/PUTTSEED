@@ -65,7 +65,9 @@ namespace PuttSeed.Unity
 
             var ballGo = new GameObject("Ball");
             var ballView = ballGo.AddComponent<BallView>();
-            ballView.Initialize(runner, BallSkins.Resolve(stats.Data.ballSkin).Color);
+            ballView.Initialize(runner,
+                BallSkins.Resolve(stats.Data.ballSkin).Color,
+                BallTrails.Resolve(stats.Data.ballTrail).Color);
 
             var feedbackGo = new GameObject("Feedback");
             var feedback = feedbackGo.AddComponent<FeedbackController>();

@@ -78,6 +78,10 @@ namespace PuttSeed.Unity
         public Image[] collectionCellSwatches = new Image[0];
         public Image[] collectionCellRings = new Image[0];
         public Text? collectionHintText;
+        public SegmentedToggle? collectionTab;
+
+        /// <summary>False = the grid shows ball skins, true = trails.</summary>
+        private bool _collectionShowsTrails;
         public InputField? saveField;
         public Button? importSaveButton;
         public Text? importSaveLabel;
@@ -258,6 +262,12 @@ namespace PuttSeed.Unity
             {
                 int cell = i; // capture per cell
                 collectionCellButtons[i]?.onClick.AddListener(() => OnCollectionCell(cell));
+            }
+
+            if (collectionTab != null)
+            {
+                collectionTab.optionAButton?.onClick.AddListener(() => ShowCollectionTab(false));
+                collectionTab.optionBButton?.onClick.AddListener(() => ShowCollectionTab(true));
             }
             exportSaveButton?.onClick.AddListener(ExportSave);
             importSaveButton?.onClick.AddListener(ImportSave);
@@ -576,29 +586,71 @@ namespace PuttSeed.Unity
 
         private void OpenCollection()
         {
-            RefreshCollection();
-            var equipped = BallSkins.Resolve(_stats.Data.ballSkin);
-            SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"), Loc.Tr(equipped.Name)));
+            ShowCollectionTab(false);
             if (collectionPanel != null)
             {
                 UiFx.PopIn(this, collectionPanel);
             }
         }
 
+        /// <summary>Switches the shared grid between ball skins and trails.</summary>
+        private void ShowCollectionTab(bool trails)
+        {
+            _collectionShowsTrails = trails;
+            collectionTab?.SetSelected(!trails);
+            RefreshCollection();
+            SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"),
+                Loc.Tr(trails
+                    ? BallTrails.Resolve(_stats.Data.ballTrail).Name
+                    : BallSkins.Resolve(_stats.Data.ballSkin).Name)));
+        }
+
+        /// <summary>How many cells the active tab fills.</summary>
+        private int CollectionCount =>
+            _collectionShowsTrails ? BallTrails.All.Length : BallSkins.All.Length;
+
         private void RefreshCollection()
         {
             var data = _stats.Data;
-            for (int i = 0; i < collectionCellLabels.Length && i < BallSkins.All.Length; i++)
+            for (int i = 0; i < collectionCellButtons.Length; i++)
             {
-                var skin = BallSkins.All[i];
-                bool unlocked = BallSkins.IsUnlocked(skin, data);
-                bool equipped = data.ballSkin == skin.Id;
+                // The grid is sized for the LARGER catalog, so the shorter tab
+                // hides its spare cells rather than showing dead squares.
+                bool exists = i < CollectionCount;
+                collectionCellButtons[i]?.gameObject.SetActive(exists);
+                if (!exists)
+                {
+                    continue;
+                }
+
+                string name;
+                Color color;
+                bool unlocked;
+                bool equipped;
+                if (_collectionShowsTrails)
+                {
+                    var trail = BallTrails.All[i];
+                    name = trail.Name;
+                    color = trail.Color;
+                    unlocked = BallTrails.IsUnlocked(trail, data);
+                    equipped = data.ballTrail == trail.Id;
+                }
+                else
+                {
+                    var skin = BallSkins.All[i];
+                    name = skin.Name;
+                    color = skin.Color;
+                    unlocked = BallSkins.IsUnlocked(skin, data);
+                    equipped = data.ballSkin == skin.Id;
+                }
 
                 if (collectionCellSwatches[i] != null)
                 {
+                    // Trail tints carry their own alpha; the swatch shows the
+                    // color at full strength so a locked cell is the only dim one.
                     collectionCellSwatches[i].color = unlocked
-                        ? skin.Color
-                        : new Color(skin.Color.r, skin.Color.g, skin.Color.b, 0.22f);
+                        ? new Color(color.r, color.g, color.b, 1f)
+                        : new Color(color.r, color.g, color.b, 0.22f);
                 }
 
                 if (collectionCellRings[i] != null)
@@ -608,7 +660,7 @@ namespace PuttSeed.Unity
 
                 if (collectionCellLabels[i] != null)
                 {
-                    collectionCellLabels[i].text = Loc.Tr(skin.Name);
+                    collectionCellLabels[i].text = Loc.Tr(name);
                     collectionCellLabels[i].color = equipped
                         ? UIStyle.Accent
                         : unlocked ? UIStyle.Cream : UIStyle.CreamDim;
@@ -630,23 +682,45 @@ namespace PuttSeed.Unity
         /// </summary>
         private void OnCollectionCell(int cell)
         {
-            if (cell >= BallSkins.All.Length)
+            if (cell >= CollectionCount)
             {
                 return;
             }
 
-            var skin = BallSkins.All[cell];
-            string name = Loc.Tr(skin.Name);
-            if (BallSkins.IsUnlocked(skin, _stats.Data))
+            string name;
+            bool unlocked;
+            string hint;
+            if (_collectionShowsTrails)
             {
-                _stats.SetBallSkin(skin.Id);
+                var trail = BallTrails.All[cell];
+                name = Loc.Tr(trail.Name);
+                unlocked = BallTrails.IsUnlocked(trail, _stats.Data);
+                hint = BallTrails.UnlockHint(trail);
+                if (unlocked)
+                {
+                    _stats.SetBallTrail(trail.Id);
+                }
+            }
+            else
+            {
+                var skin = BallSkins.All[cell];
+                name = Loc.Tr(skin.Name);
+                unlocked = BallSkins.IsUnlocked(skin, _stats.Data);
+                hint = BallSkins.UnlockHint(skin);
+                if (unlocked)
+                {
+                    _stats.SetBallSkin(skin.Id);
+                }
+            }
+
+            if (unlocked)
+            {
                 RefreshCollection();
                 SetCollectionHint(string.Format(Loc.Tr("{0}  —  equipped"), name));
             }
             else
             {
-                SetCollectionHint(string.Format(
-                    Loc.Tr("{0}  —  locked: {1}"), name, BallSkins.UnlockHint(skin)));
+                SetCollectionHint(string.Format(Loc.Tr("{0}  —  locked: {1}"), name, hint));
             }
         }
 

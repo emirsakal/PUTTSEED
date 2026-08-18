@@ -67,6 +67,11 @@ namespace PuttSeed.Unity.Tests
             {
                 Assert.That(Loc.Turkish.ContainsKey(skin.Name), Is.True, skin.Name);
             }
+
+            foreach (var trail in BallTrails.All)
+            {
+                Assert.That(Loc.Turkish.ContainsKey(trail.Name), Is.True, trail.Name);
+            }
         }
 
         [Test]

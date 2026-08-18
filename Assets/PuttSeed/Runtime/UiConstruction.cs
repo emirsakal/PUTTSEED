@@ -285,7 +285,12 @@ namespace PuttSeed.Unity
             title.text = "Collection";
 
             const int columns = 4;
-            int count = BallSkins.All.Length;
+            // Balls and trails share one grid, swapped by a segmented tab —
+            // a second grid would not fit the card, and paging a dozen cells
+            // is worse than one clear switch.
+            menu.collectionTab = CreateSettingRow(dim, 0.695f, "Show", "Balls", "Trails");
+
+            int count = Mathf.Max(BallSkins.All.Length, BallTrails.All.Length);
             menu.collectionCellButtons = new Button[count];
             menu.collectionCellLabels = new Text[count];
             menu.collectionCellSwatches = new Image[count];
@@ -295,9 +300,9 @@ namespace PuttSeed.Unity
                 int r = i / columns;
                 int c = i % columns;
                 float x0 = 0.135f + c * 0.19f;
-                float yMax = 0.685f - r * 0.122f;
+                float yMax = 0.625f - r * 0.115f;
                 var cellLabel = UIFactory.CreateButton(dim, "—",
-                    new Vector2(x0, yMax - 0.108f), new Vector2(x0 + 0.175f, yMax), NoOp, 20);
+                    new Vector2(x0, yMax - 0.101f), new Vector2(x0 + 0.175f, yMax), NoOp, 20);
                 var labelRect = cellLabel.rectTransform;
                 labelRect.anchorMin = new Vector2(0.03f, 0.04f);
                 labelRect.anchorMax = new Vector2(0.97f, 0.30f);
@@ -326,8 +331,10 @@ namespace PuttSeed.Unity
 
             // Status line: equipped skin, or the unlock hint of a tapped
             // locked cell.
+            // Clears the third grid row (bottom 0.294) and the Close button
+            // (top 0.21) — the panel's tightest sandwich.
             menu.collectionHintText = UIFactory.CreateText(dim, "Hint",
-                new Vector2(0.12f, 0.235f), new Vector2(0.88f, 0.30f), 24, TextAnchor.MiddleCenter);
+                new Vector2(0.12f, 0.222f), new Vector2(0.88f, 0.286f), 24, TextAnchor.MiddleCenter);
             menu.collectionHintText.color = UIStyle.CreamDim;
 
             var close = UIFactory.CreateButton(dim, "Close",
