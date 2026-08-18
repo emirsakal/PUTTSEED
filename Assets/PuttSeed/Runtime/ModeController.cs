@@ -524,8 +524,13 @@ namespace PuttSeed.Unity
 
             // Achievements see the post-record save, so streak/day counts
             // already include this run.
-            var earned = Achievements.EvaluateRun(_stats.Data, Mode, IsArchiveDay,
-                sim.Strokes, _runner.Generation!.Course.Par, sim.WallHitCount);
+            var course = _runner.Generation!.Course;
+            var facts = new Achievements.RunFacts(
+                Mode, IsArchiveDay, IsHardMode,
+                sim.Strokes, course.Par, sim.StrokeLimit,
+                sim.WallHitCount, sim.WallHitsThisShot, sim.TouchedHazard,
+                course.Windmills.Length > 0, sim.WindmillHitCount);
+            var earned = Achievements.EvaluateRun(_stats.Data, facts);
             for (int i = 0; i < earned.Count; i++)
             {
                 var def = Achievements.Find(earned[i]);

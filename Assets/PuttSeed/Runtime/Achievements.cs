@@ -30,6 +30,64 @@ namespace PuttSeed.Unity
     /// </summary>
     public static class Achievements
     {
+        /// <summary>
+        /// What a finished run looks like to the achievement rules. Grouping
+        /// these beats growing the evaluator's parameter list: the sim already
+        /// measures every one exactly, so detection is a read, never a guess.
+        /// </summary>
+        public readonly struct RunFacts
+        {
+            /// <summary>The mode the run was played in.</summary>
+            public readonly GameMode Mode;
+
+            /// <summary>True when the daily was a past day from the archive.</summary>
+            public readonly bool IsArchiveDay;
+
+            /// <summary>True when the daily ran under hard rules (par + 1).</summary>
+            public readonly bool IsHardMode;
+
+            /// <summary>Strokes taken to hole out.</summary>
+            public readonly int Strokes;
+
+            /// <summary>The course par.</summary>
+            public readonly int Par;
+
+            /// <summary>Strokes the run was allowed (par + allowance).</summary>
+            public readonly int StrokeLimit;
+
+            /// <summary>Wall bounces over the whole run.</summary>
+            public readonly int WallHits;
+
+            /// <summary>Wall bounces on the shot that holed out.</summary>
+            public readonly int WallHitsFinalShot;
+
+            /// <summary>True when the ball met a bumper, water, sand or ice.</summary>
+            public readonly bool TouchedHazard;
+
+            /// <summary>True when the course carried at least one windmill.</summary>
+            public readonly bool HasWindmill;
+
+            /// <summary>Windmill blade bounces over the whole run.</summary>
+            public readonly int WindmillHits;
+
+            public RunFacts(GameMode mode, bool isArchiveDay, bool isHardMode, int strokes, int par,
+                int strokeLimit, int wallHits, int wallHitsFinalShot, bool touchedHazard,
+                bool hasWindmill, int windmillHits)
+            {
+                Mode = mode;
+                IsArchiveDay = isArchiveDay;
+                IsHardMode = isHardMode;
+                Strokes = strokes;
+                Par = par;
+                StrokeLimit = strokeLimit;
+                WallHits = wallHits;
+                WallHitsFinalShot = wallHitsFinalShot;
+                TouchedHazard = touchedHazard;
+                HasWindmill = hasWindmill;
+                WindmillHits = windmillHits;
+            }
+        }
+
         /// <summary>All achievements, in display order.</summary>
         public static readonly AchievementDef[] All =
         {
@@ -41,6 +99,15 @@ namespace PuttSeed.Unity
             new AchievementDef("dailies10", "Regular", "complete 10 different dailies"),
             new AchievementDef("archive1", "Time Traveler", "complete an archive day"),
             new AchievementDef("practice25", "Range Rat", "play 25 practice courses"),
+
+            // The 2026-08-18 wave. Every rule reads a measurement the sim
+            // already makes, so none of them can fire by accident.
+            new AchievementDef("bank_shot", "Bank Shot", "hole out on a shot off three walls"),
+            new AchievementDef("untouched", "Untouched", "hole out without touching a hazard"),
+            new AchievementDef("hard_daily", "Hard Day", "finish a daily under hard rules"),
+            new AchievementDef("millwright", "Millwright", "hole out on a windmill course, blades untouched"),
+            new AchievementDef("last_stroke", "Down to the Wire", "hole out on your final allowed stroke"),
+            new AchievementDef("three_star_10", "Perfectionist", "earn three stars on 10 dailies"),
         };
 
         /// <summary>Catalog lookup by id (null for unknown ids in old saves).</summary>
@@ -62,8 +129,7 @@ namespace PuttSeed.Unity
         /// was recorded so streak/day counts include it; already-unlocked ids
         /// are never returned.
         /// </summary>
-        public static List<string> EvaluateRun(SaveData data, GameMode mode, bool isArchiveDay,
-            int strokes, int par, int wallHits)
+        public static List<string> EvaluateRun(SaveData data, in RunFacts run)
         {
             var earned = new List<string>();
             void Earn(string id)
@@ -75,31 +141,61 @@ namespace PuttSeed.Unity
             }
 
             Earn("first_hole");
-            if (strokes == 1)
+            if (run.Strokes == 1)
             {
                 Earn("ace");
             }
 
-            if (wallHits == 0)
+            if (run.WallHits == 0)
             {
                 Earn("no_walls");
             }
 
-            if (mode == GameMode.Daily)
+            if (run.WallHitsFinalShot >= 3)
+            {
+                Earn("bank_shot");
+            }
+
+            if (!run.TouchedHazard)
+            {
+                Earn("untouched");
+            }
+
+            if (run.HasWindmill && run.WindmillHits == 0)
+            {
+                Earn("millwright");
+            }
+
+            if (run.Strokes == run.StrokeLimit)
+            {
+                Earn("last_stroke");
+            }
+
+            if (run.Mode == GameMode.Daily)
             {
                 // Was "strokes < par", which on the par-2 courses generation
                 // actually makes was the same condition as Ace — two of eight
                 // achievements firing together, forever. It now means what its
                 // id always said, and defers to the one scoring rule.
-                if (PuttSeed.Core.Sim.Scoring.Stars(strokes, par) == 3)
+                if (PuttSeed.Core.Sim.Scoring.Stars(run.Strokes, run.Par) == 3)
                 {
                     Earn("three_star");
                 }
 
-                if (isArchiveDay)
+                if (run.IsArchiveDay)
                 {
                     Earn("archive1");
                 }
+
+                if (run.IsHardMode)
+                {
+                    Earn("hard_daily");
+                }
+            }
+
+            if (ThreeStarDayCount(data) >= 10)
+            {
+                Earn("three_star_10");
             }
 
             if (data.streak >= 7)
@@ -118,6 +214,21 @@ namespace PuttSeed.Unity
             }
 
             return earned;
+        }
+
+        /// <summary>Distinct days whose best run earned all three stars.</summary>
+        public static int ThreeStarDayCount(SaveData data)
+        {
+            int count = 0;
+            for (int i = 0; i < data.days.Count; i++)
+            {
+                if (data.days[i].completed && data.days[i].bestStars >= 3)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         /// <summary>Distinct completed daily days in the save.</summary>

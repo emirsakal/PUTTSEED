@@ -91,6 +91,19 @@ namespace PuttSeed.Core.Sim
         /// <summary>Windmill blade bounces so far (see <see cref="WallHitCount"/> caveat).</summary>
         public int WindmillHitCount { get; private set; }
 
+        /// <summary>
+        /// Wall bounces during the CURRENT shot (re-armed by <see cref="Shoot"/>
+        /// and <see cref="RestoreRest"/>) — what a bank shot is counted with.
+        /// </summary>
+        public int WallHitsThisShot { get; private set; }
+
+        /// <summary>
+        /// True once the ball has met any hazard this run: a bumper, water, or
+        /// the inside of a sand or ice zone. Walls are not hazards — they are
+        /// the course. Never resets short of a new sim.
+        /// </summary>
+        public bool TouchedHazard { get; private set; }
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config, int strokeAllowance = 3)
         {
@@ -117,6 +130,7 @@ namespace PuttSeed.Core.Sim
             _lastRestPosition = position;
             _restTicks = 0;
             _ticksSinceShot = 0;
+            WallHitsThisShot = 0;
             Strokes = strokes;
             IsAtRest = true;
             IsHoled = false;
@@ -139,6 +153,7 @@ namespace PuttSeed.Core.Sim
             IsAtRest = false;
             _restTicks = 0;
             _ticksSinceShot = 0; // windmill blades re-arm to their base phase
+            WallHitsThisShot = 0;
         }
 
         /// <summary>
@@ -160,8 +175,11 @@ namespace PuttSeed.Core.Sim
 
             // Surface friction priority: sand beats ice beats bare ground
             // (deterministic tie-break when generated zones overlap).
-            _velocity *= IsInSand() ? _config.SandDamping
-                : IsInIce() ? _config.IceDamping
+            bool inSand = IsInSand();
+            bool inIce = !inSand && IsInIce();
+            TouchedHazard |= inSand || inIce;
+            _velocity *= inSand ? _config.SandDamping
+                : inIce ? _config.IceDamping
                 : _config.RollDamping;
 
             // Split the tick so no sub-step moves farther than the anti-tunneling
@@ -215,6 +233,7 @@ namespace PuttSeed.Core.Sim
 
                 Strokes++;
                 WaterEntryCount++;
+                TouchedHazard = true;
                 _position = _lastRestPosition;
                 _velocity = Vec2Fix.Zero;
                 _restTicks = 0;
@@ -460,6 +479,7 @@ namespace PuttSeed.Core.Sim
                 if (vn < Fix64.Zero)
                 {
                     BumperHitCount++;
+                    TouchedHazard = true;
                     var bounce = Fix64.One + _config.BumperRestitution;
                     _velocity -= normal * (bounce * vn);
 
@@ -511,6 +531,7 @@ namespace PuttSeed.Core.Sim
                 if (ResolveSegmentCollision(walls[i].A, walls[i].B))
                 {
                     WallHitCount++;
+                    WallHitsThisShot++;
                 }
             }
         }
