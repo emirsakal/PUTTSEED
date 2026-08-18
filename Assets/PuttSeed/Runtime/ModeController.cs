@@ -24,6 +24,9 @@ namespace PuttSeed.Unity
 
         /// <summary>The 50 curated fixed-seed levels, unlocked in order.</summary>
         Journey,
+
+        /// <summary>Seven consecutive dailies as one round, strokes cumulative.</summary>
+        Gauntlet,
     }
 
     /// <summary>
@@ -81,6 +84,35 @@ namespace PuttSeed.Unity
 
         /// <summary>True when the loaded daily is a past day from the archive.</summary>
         public bool IsArchiveDay { get; private set; }
+
+        // The gauntlet in flight: which week, which of its seven holes, the
+        // strokes banked from the holes already finished, and the shots each
+        // took (a whole week shares one code).
+        private int _gauntletWeek = -1;
+        private int _gauntletHole;
+        private int _gauntletBankedStrokes;
+        private readonly ShotInput[][] _gauntletShots = new ShotInput[GauntletWeek.Length][];
+        private readonly int[][] _gauntletClocks = new int[GauntletWeek.Length][];
+
+        /// <summary>The gauntlet week in flight (-1 outside the mode).</summary>
+        public int GauntletWeekIndex => _gauntletWeek;
+
+        /// <summary>Which hole of the gauntlet is loaded (0-based).</summary>
+        public int GauntletHole => _gauntletHole;
+
+        /// <summary>Strokes banked from finished holes, excluding this one.</summary>
+        public int GauntletBankedStrokes => _gauntletBankedStrokes;
+
+        /// <summary>Total strokes so far, this hole included.</summary>
+        public int GauntletTotalStrokes =>
+            _gauntletBankedStrokes + (_runner.Sim?.Strokes ?? 0);
+
+        /// <summary>True when the loaded hole is not the last of the week.</summary>
+        public bool HasNextGauntletHole =>
+            Mode == GameMode.Gauntlet && _gauntletHole + 1 < GauntletWeek.Length;
+
+        /// <summary>Raised when a gauntlet finishes, with its stroke total.</summary>
+        public event Action<int>? GauntletFinished;
 
         /// <summary>The themed twist the loaded course plays under.</summary>
         public DailyMutator ActiveMutator { get; private set; } = DailyMutator.None;
@@ -180,6 +212,9 @@ namespace PuttSeed.Unity
                 case GameMode.Journey:
                     StartJourney(GameSession.JourneyLevel);
                     break;
+                case GameMode.Gauntlet:
+                    StartGauntlet(GameSession.GauntletWeekIndex);
+                    break;
                 default:
                     if (GameSession.ArchiveDayNumber >= 0)
                     {
@@ -195,6 +230,99 @@ namespace PuttSeed.Unity
             }
         }
 
+        /// <summary>
+        /// Starts a week's gauntlet at its first hole. The seven courses are
+        /// the dailies that week already shipped — no new content, and every
+        /// player runs the same seven.
+        /// </summary>
+        public void StartGauntlet(int weekIndex)
+        {
+            Mode = GameMode.Gauntlet;
+            CurrentHint = "";
+            IsArchiveDay = false;
+            JourneyLevel = -1;
+            _gauntletWeek = weekIndex;
+            _gauntletHole = 0;
+            _gauntletBankedStrokes = 0;
+            for (int h = 0; h < GauntletWeek.Length; h++)
+            {
+                _gauntletShots[h] = Array.Empty<ShotInput>();
+                _gauntletClocks[h] = Array.Empty<int>();
+            }
+
+            LoadGauntletHole();
+        }
+
+        /// <summary>Banks the finished hole and loads the next one.</summary>
+        public void NextGauntletHole()
+        {
+            if (!HasNextGauntletHole)
+            {
+                return;
+            }
+
+            BankGauntletHole();
+            _gauntletHole++;
+            LoadGauntletHole();
+        }
+
+        private void LoadGauntletHole()
+        {
+            int day = GauntletWeek.DayOfHole(_gauntletWeek, _gauntletHole);
+            LoadAndShow(DailyCalendar.SeedForDay(day),
+                configVersion: GeneratorSchedule.VersionForDay(day));
+        }
+
+        /// <summary>
+        /// Moves this hole's strokes and shots into the run's totals. A failed
+        /// hole banks the limit it spent and the week carries on — one bad
+        /// hole should cost a week, not end it.
+        /// </summary>
+        private void BankGauntletHole()
+        {
+            var sim = _runner.Sim;
+            if (sim == null || _gauntletHole >= GauntletWeek.Length)
+            {
+                return;
+            }
+
+            _gauntletBankedStrokes += sim.Strokes;
+            var shots = new ShotInput[_runner.PlayedShots.Count];
+            var clocks = new int[_runner.PlayedShotClocks.Count];
+            for (int i = 0; i < shots.Length; i++)
+            {
+                shots[i] = _runner.PlayedShots[i];
+            }
+
+            for (int i = 0; i < clocks.Length; i++)
+            {
+                clocks[i] = _runner.PlayedShotClocks[i];
+            }
+
+            _gauntletShots[_gauntletHole] = shots;
+            _gauntletClocks[_gauntletHole] = clocks;
+        }
+
+        /// <summary>
+        /// Ends the week once the seventh hole is done. Earlier holes wait for
+        /// the player to press on, so a finished hole can still be admired.
+        /// </summary>
+        private void FinishGauntletHoleIfLast()
+        {
+            if (HasNextGauntletHole)
+            {
+                return;
+            }
+
+            BankGauntletHole();
+            _stats.RecordGauntlet(_gauntletWeek, _gauntletBankedStrokes);
+            GauntletFinished?.Invoke(_gauntletBankedStrokes);
+        }
+
+        /// <summary>The whole week as one shareable code.</summary>
+        public string BuildGauntletCode() =>
+            GauntletCodec.Encode(_gauntletWeek, _gauntletShots, _gauntletClocks);
+
         /// <summary>Loads today's daily course.</summary>
         public void StartDaily()
         {
@@ -202,6 +330,7 @@ namespace PuttSeed.Unity
             CurrentHint = "";
             IsArchiveDay = false;
             JourneyLevel = -1;
+            _gauntletWeek = -1;
             var utc = DateTime.UtcNow;
             _activeDayNumber = DayNumber(utc);
             _activeDayDate = utc.Date;
@@ -507,7 +636,11 @@ namespace PuttSeed.Unity
             }
 
             _completionRecorded = true;
-            if (Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0)
+            if (Mode == GameMode.Gauntlet)
+            {
+                FinishGauntletHoleIfLast();
+            }
+            else if (Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0)
             {
                 var shots = new ShotInput[_runner.PlayedShots.Count];
                 for (int i = 0; i < shots.Length; i++)

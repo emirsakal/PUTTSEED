@@ -25,6 +25,9 @@ namespace PuttSeed.Unity
         /// <summary>Journey level to start at (0-based).</summary>
         public static int JourneyLevel;
 
+        /// <summary>Gauntlet week to run (-1 = none).</summary>
+        public static int GauntletWeekIndex = -1;
+
         /// <summary>Editor testing: load this exact seed instead of the mode.</summary>
         public static bool UseFixedSeed;
 

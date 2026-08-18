@@ -63,6 +63,10 @@ namespace PuttSeed.Unity
                 {
                     _modes.NextJourneyLevel();
                 }
+                else if (_modes.Mode == GameMode.Gauntlet)
+                {
+                    _modes.NextGauntletHole();
+                }
                 else
                 {
                     _modes.NextTutorial();
@@ -79,6 +83,8 @@ namespace PuttSeed.Unity
             modes.ModeChanged += Refresh;
             modes.AchievementUnlocked += def => ShowToast(string.Format(Loc.Tr("Achievement — {0}!"), Loc.Tr(def.Title)));
             modes.PracticeBestImproved += strokes => ShowToast(string.Format(Loc.Tr("New practice best — {0}!"), strokes));
+            modes.GauntletFinished += strokes =>
+                ShowToast(string.Format(Loc.Tr("Week done — {0} strokes!"), strokes));
             OfferClipboardReplay();
             Refresh();
         }
@@ -111,16 +117,24 @@ namespace PuttSeed.Unity
 
             // One advance button, two modes: every tutorial stage offers the
             // next lesson; a journey level offers the next level once holed.
+            // A gauntlet hole offers the next one as soon as it is settled —
+            // holed OR out of strokes, because a failed hole still counts its
+            // strokes and the week carries on.
+            bool gauntletHoleDone = _modes.Mode == GameMode.Gauntlet && sim != null
+                && (sim.IsHoled || sim.IsFailed) && _modes.HasNextGauntletHole;
             bool showNext = _modes.Mode == GameMode.Tutorial
                 || (_modes.Mode == GameMode.Journey && sim != null && sim.IsHoled
-                    && _modes.HasNextJourneyLevel);
+                    && _modes.HasNextJourneyLevel)
+                || gauntletHoleDone;
             nextLessonButton?.gameObject.SetActive(showNext);
             if (showNext && nextLessonButton != null)
             {
                 var label = nextLessonButton.GetComponentInChildren<Text>();
                 if (label != null)
                 {
-                    label.text = Loc.Tr(_modes.Mode == GameMode.Journey ? "Next level" : "Next lesson");
+                    label.text = Loc.Tr(_modes.Mode == GameMode.Journey ? "Next level"
+                        : _modes.Mode == GameMode.Gauntlet ? "Next hole"
+                        : "Next lesson");
                 }
             }
 
@@ -151,6 +165,9 @@ namespace PuttSeed.Unity
                 GameMode.Practice => string.Format(Loc.Tr("Practice · {0}"), Loc.Tr(gen.Difficulty.ToString())),
                 GameMode.Journey => string.Format(Loc.Tr("Level {0}/{1}"),
                     _modes.JourneyLevel + 1, JourneyConfig.Seeds.Length),
+                GameMode.Gauntlet => string.Format(Loc.Tr("Gauntlet {0}/{1}  ·  {2} total"),
+                    _modes.GauntletHole + 1, PuttSeed.Core.Daily.GauntletWeek.Length,
+                    _modes.GauntletTotalStrokes),
                 _ => string.Format(Loc.Tr("Tutorial {0}/{1}"), _modes.TutorialIndex + 1, TutorialConfig.Stages.Length),
             };
 
@@ -369,6 +386,20 @@ namespace PuttSeed.Unity
 
         private void OnShare()
         {
+            // A finished gauntlet shares the WEEK, not the hole: one code
+            // carries all seven, and the seeds come back from the week index.
+            if (_modes.Mode == GameMode.Gauntlet && !_modes.HasNextGauntletHole
+                && _runner.Sim != null && (_runner.Sim.IsHoled || _runner.Sim.IsFailed))
+            {
+                var weekCode = _modes.BuildGauntletCode();
+                string weekText = string.Format(
+                    "PUTTSEED week {0} — {1} strokes. Watch: {2}",
+                    _modes.GauntletWeekIndex, _modes.GauntletTotalStrokes, weekCode);
+                GUIUtility.systemCopyBuffer = weekText;
+                ShowToast(Loc.Tr(NativeShare.Share(weekText) ? "Sharing…" : "Copied!"));
+                return;
+            }
+
             var sim = _runner.Sim;
             if (sim == null || !sim.IsHoled)
             {

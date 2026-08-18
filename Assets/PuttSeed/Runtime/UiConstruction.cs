@@ -486,12 +486,18 @@ namespace PuttSeed.Unity
                 }
             }
 
+            // The gauntlet lives here because it IS a week of past days: the
+            // calendar is where a player already thinks about them.
             var randomLabel = UIFactory.CreateButton(dim, "Random day",
-                new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, 26);
+                new Vector2(0.10f, 0.135f), new Vector2(0.38f, 0.19f), NoOp, 22);
             menu.archiveRandomButton = randomLabel.GetComponentInParent<Button>();
 
+            menu.gauntletLabel = UIFactory.CreateButton(dim, "Gauntlet",
+                new Vector2(0.40f, 0.135f), new Vector2(0.64f, 0.19f), NoOp, 22);
+            menu.gauntletButton = menu.gauntletLabel.GetComponentInParent<Button>();
+
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.52f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
+                new Vector2(0.66f, 0.135f), new Vector2(0.90f, 0.19f), NoOp, 26, primary: true);
             menu.archiveCloseButton = close.GetComponentInParent<Button>();
             menu.archiveCloseButton.GetComponent<UiClickSound>().downTone = true;
 

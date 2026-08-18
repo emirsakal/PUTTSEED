@@ -51,6 +51,13 @@ namespace PuttSeed.Unity
         public List<int> journeyStars = new List<int>();
 
         public List<DayRecord> days = new List<DayRecord>();
+
+        // Weekly gauntlet: the week of the best run and its stroke total.
+        // One record is enough — a new week replaces the old one, the same
+        // way the gauntlet itself moves on.
+        public int gauntletWeek = -1;
+        public int gauntletBestStrokes;
+        public int gauntletsFinished;
     }
 
     /// <summary>
@@ -154,6 +161,25 @@ namespace PuttSeed.Unity
             }
 
             Save();
+        }
+
+        /// <summary>
+        /// Records a finished gauntlet. A better total on the SAME week
+        /// replaces the record; a new week always does, because last week's
+        /// score is not a target any more.
+        /// </summary>
+        public bool RecordGauntlet(int weekIndex, int strokes)
+        {
+            bool improved = Data.gauntletWeek != weekIndex || strokes < Data.gauntletBestStrokes;
+            if (improved)
+            {
+                Data.gauntletWeek = weekIndex;
+                Data.gauntletBestStrokes = strokes;
+            }
+
+            Data.gauntletsFinished++;
+            Save();
+            return improved;
         }
 
         /// <summary>Marks the FTUE tutorial as launched (persisted immediately).</summary>

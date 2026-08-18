@@ -108,6 +108,13 @@ regenerates the course it was played on.
   level. Levels are ordinary generator seeds hand-picked from scan CSVs
   on a difficulty ramp — no new content pipeline, no new rules.
 - **Tutorial:** four fixed courses (see FTUE).
+- **Weekly gauntlet** (added 2026-08-18): the seven dailies of the last
+  fully elapsed week, played back to back for one cumulative stroke
+  total. No new content — the seven holes already shipped as dailies,
+  and every player runs the same week. A hole that runs out of strokes
+  banks its limit and the week carries on: one bad hole should cost a
+  week, not end it. The whole run shares as a single `PUTTWK-` code, the
+  seven seeds derived from the week index rather than stored.
 
 ## Scoring & retention surface
 

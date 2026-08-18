@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using PuttSeed.Core.CourseGen;
+using PuttSeed.Core.Daily;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -53,6 +54,8 @@ namespace PuttSeed.Unity
         public Text? taglineText;
         public Image[] archiveCellStars = new Image[0];
         public Button? archiveRandomButton;
+        public Button? gauntletButton;
+        public Text? gauntletLabel;
         public Text? histogramBlock;
         public Button? journeyButton;
         public Text? journeyLabel;
@@ -206,6 +209,7 @@ namespace PuttSeed.Unity
             archiveButton?.onClick.AddListener(OpenArchive);
             archiveRandomButton?.onClick.AddListener(PlayRandomUnplayedDay);
             archiveCloseButton?.onClick.AddListener(() => archivePanel?.SetActive(false));
+            gauntletButton?.onClick.AddListener(LaunchGauntlet);
             archivePrevMonthButton?.onClick.AddListener(() => StepArchiveMonth(-1));
             archiveNextMonthButton?.onClick.AddListener(() => StepArchiveMonth(1));
             for (int i = 0; i < archiveCellButtons.Length; i++)
@@ -943,6 +947,27 @@ namespace PuttSeed.Unity
                 }
             }
 
+            // The gauntlet needs a week that has fully elapsed.
+            int latestWeek = GauntletWeek.LatestCompleteWeek(today);
+            bool weekReady = latestWeek >= 0;
+            if (gauntletButton != null)
+            {
+                gauntletButton.interactable = weekReady;
+            }
+
+            if (gauntletLabel != null)
+            {
+                var data = _stats.Data;
+                bool hasRecord = weekReady && data.gauntletWeek == latestWeek;
+                gauntletLabel.text = !weekReady ? Loc.Tr("No finished week yet")
+                    : hasRecord
+                        ? string.Format(Loc.Tr("Gauntlet · {0}"), data.gauntletBestStrokes)
+                        : Loc.Tr("Gauntlet");
+                gauntletLabel.color = hasRecord ? UIStyle.Accent
+                    : weekReady ? UIStyle.Cream
+                    : UIStyle.CreamDim;
+            }
+
             if (archivePrevMonthButton != null)
             {
                 archivePrevMonthButton.interactable = _archiveMonth > EpochMonth;
@@ -954,6 +979,22 @@ namespace PuttSeed.Unity
                 archiveNextMonthButton.interactable =
                     _archiveMonth < new DateTime(utc.Year, utc.Month, 1);
             }
+        }
+
+        private void LaunchGauntlet()
+        {
+            int latestWeek = GauntletWeek.LatestCompleteWeek(
+                ModeController.DayNumber(DateTime.UtcNow));
+            if (latestWeek < 0)
+            {
+                return;
+            }
+
+            GameSession.Mode = GameMode.Gauntlet;
+            GameSession.GauntletWeekIndex = latestWeek;
+            GameSession.ArchiveDayNumber = -1;
+            GameSession.UseFixedSeed = false;
+            SceneFader.LoadScene("Game");
         }
 
         private void LaunchArchiveCell(int cell)
