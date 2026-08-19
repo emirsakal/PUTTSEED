@@ -643,7 +643,11 @@ namespace PuttSeed.Unity
         private void RebuildView()
         {
             _courseRenderer.Rebuild(_runner.Generation!.Course, _runner.Seed);
-            CameraFramer.Frame(_camera, _runner.Generation.Course);
+
+            // A hint chip rides under the top bar in teaching modes, so the
+            // course gets less room on exactly the holes that show one.
+            CameraFramer.Frame(_camera, _runner.Generation.Course,
+                CurrentHint.Length > 0 ? CameraFramer.TopChromeWithHint : CameraFramer.TopChrome);
         }
 
         private void OnRunReset()

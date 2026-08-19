@@ -679,12 +679,13 @@ namespace PuttSeed.Unity
                 new Vector2(0.02f, 0.08f), new Vector2(0.98f, 0.92f), "paste PUTT- code…");
             ui.importRow.SetActive(false);
 
-            // The advance button sits low and centred, where the thumb
-            // already is — it used to ride the top-right corner, a reach away
-            // from every other control. It clears the import chip (top 0.152)
-            // and the toast (bottom 0.25), the two things that share this band.
+            // The advance button belongs IN the row, not floating above it.
+            // It used to ride the top-right corner, then a band of its own at
+            // 0.16–0.22 — which put a tappable control over the playfield, so
+            // on a tall hole it could land on the ball and eat the touch meant
+            // to aim it. GameUI lays it out with the rest of the bar.
             var next = UIFactory.CreateButton(canvas.transform, "Next lesson",
-                new Vector2(0.30f, 0.16f), new Vector2(0.70f, 0.22f), NoOp, 30, primary: true);
+                new Vector2(0.60f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, 25, primary: true);
             ui.nextLessonButton = ButtonOf(next);
         }
 

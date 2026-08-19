@@ -185,7 +185,8 @@ namespace PuttSeed.Unity
 
             // The mulligan is a teaching tool — practice and tutorial only;
             // the bar reflows so five buttons share the row when Undo is gone.
-            bool showUndo = _modes.Mode == GameMode.Practice || _modes.Mode == GameMode.Tutorial;
+            bool tutorial = _modes.Mode == GameMode.Tutorial;
+            bool showUndo = _modes.Mode == GameMode.Practice || tutorial;
             undoButton?.gameObject.SetActive(showUndo);
 
             // Share arrives with the run worth sharing. It used to sit there
@@ -193,14 +194,24 @@ namespace PuttSeed.Unity
             // On a finished daily the closing card carries the primary Share,
             // so the bar stands down rather than offering it twice.
             bool cardUp = _modes.Mode == GameMode.Daily && sim != null && sim.IsHoled;
-            bool showShare = CanShare() && !cardUp;
-            shareButton?.gameObject.SetActive(showShare);
 
-            int barShape = (showUndo ? 1 : 0) | (showShare ? 2 : 0);
+            // With an advance button in the row, the row has to make space for
+            // it: sharing a tutorial lesson means nothing, the author ghost is
+            // a teaching aid that only belongs in one, and pasting a
+            // stranger's replay code belongs to neither.
+            bool showShare = CanShare() && !cardUp && !(showNext && tutorial);
+            bool showGhost = !showNext || tutorial;
+            bool showWatch = !showNext;
+            shareButton?.gameObject.SetActive(showShare);
+            ghostButton?.gameObject.SetActive(showGhost);
+            watchButton?.gameObject.SetActive(showWatch);
+
+            int barShape = (showUndo ? 1 : 0) | (showShare ? 2 : 0) | (showNext ? 4 : 0)
+                | (showGhost ? 8 : 0) | (showWatch ? 16 : 0);
             if (_barShape != barShape)
             {
                 _barShape = barShape;
-                LayoutBottomBar(showUndo, showShare);
+                LayoutBottomBar(showUndo, showShare, showGhost, showWatch, showNext);
             }
 
             if (counterText == null)
@@ -400,24 +411,44 @@ namespace PuttSeed.Unity
         /// width. Share only appears once there is a run to share — before
         /// that it existed only to refuse.
         /// </summary>
-        private void LayoutBottomBar(bool withUndo, bool withShare)
+        private void LayoutBottomBar(bool withUndo, bool withShare, bool withGhost,
+            bool withWatch, bool withNext)
         {
             var buttons = new System.Collections.Generic.List<Button?>(6) { menuButton, retryButton };
-            var weights = new System.Collections.Generic.List<float>(6) { 1f, 2.3f };
+            var weights = new System.Collections.Generic.List<float>(6)
+            {
+                1f,
+                withNext ? 1.7f : 2.3f, // the advance button takes the lead when there is one
+            };
+
             if (withShare)
             {
                 buttons.Add(shareButton);
                 weights.Add(1.15f);
             }
 
-            buttons.Add(ghostButton);
-            weights.Add(1f);
-            buttons.Add(watchButton);
-            weights.Add(1f);
+            if (withGhost)
+            {
+                buttons.Add(ghostButton);
+                weights.Add(1f);
+            }
+
+            if (withWatch)
+            {
+                buttons.Add(watchButton);
+                weights.Add(1f);
+            }
+
             if (withUndo)
             {
                 buttons.Add(undoButton);
                 weights.Add(1f);
+            }
+
+            if (withNext)
+            {
+                buttons.Add(nextLessonButton);
+                weights.Add(2.2f);
             }
 
             const float margin = 0.02f;
