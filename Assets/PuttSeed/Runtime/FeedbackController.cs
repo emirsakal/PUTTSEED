@@ -55,6 +55,7 @@ namespace PuttSeed.Unity
         private Vector2 _lastBallPos;
 
         private CameraJuice? _cameraJuice;
+        private ShotLog? _shotLog;
         private LineRenderer _putterFace = null!;
         private Coroutine? _swingRoutine;
         private Coroutine? _slowMoRoutine;
@@ -112,6 +113,14 @@ namespace PuttSeed.Unity
 
         /// <summary>Camera effect target (shake, celebration zoom).</summary>
         public void SetCameraJuice(CameraJuice juice) => _cameraJuice = juice;
+
+        /// <summary>
+        /// The run's scorecard. This class already watches every event the
+        /// card wants — it is the thing that turns them into sound — so it
+        /// writes the marks rather than a second observer polling the same
+        /// zones a second time.
+        /// </summary>
+        public void SetShotLog(ShotLog log) => _shotLog = log;
 
         /// <summary>Wires dependencies (called by the bootstrap).</summary>
         public void Initialize(SimRunner runner, BallView ballView)
@@ -177,6 +186,7 @@ namespace PuttSeed.Unity
             _lastPortalTransits = sim.PortalTransitCount;
             _lastHoled = sim.IsHoled;
             _lastFailed = sim.IsFailed;
+            _shotLog?.Reset();
             _wasInSand = false;
             _wasInIce = false;
             _wasInRamp = false;
@@ -303,6 +313,7 @@ namespace PuttSeed.Unity
 
         private void OnShotFired()
         {
+            _shotLog?.BeginShot();
             PlayShot();
             Tick(); // the stroke itself gets the lightest touch
             if (_swingRoutine != null)
@@ -358,6 +369,7 @@ namespace PuttSeed.Unity
 
             if (sim.WallHitCount > _lastWallHits)
             {
+                _shotLog?.Record(ShotLog.Mark.Wall);
                 OnBounce(wallClip);
                 // A few sparks at the contact point.
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
@@ -366,6 +378,7 @@ namespace PuttSeed.Unity
 
             if (sim.BumperHitCount > _lastBumperHits)
             {
+                _shotLog?.Record(ShotLog.Mark.Bumper);
                 OnBounce(bumperClip);
                 Tap();
                 _cameraJuice?.Shake(0.05f, 0.18f);
@@ -377,6 +390,7 @@ namespace PuttSeed.Unity
             // player nothing about what just refused them.
             if (sim.GateHitCount > _lastGateHits)
             {
+                _shotLog?.Record(ShotLog.Mark.Gate);
                 OnBounce(gateClip);
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
                     new Color(0.99f, 0.80f, 0.38f, 0.9f), count: 5, speed: 1.3f, life: 0.25f);
@@ -384,6 +398,7 @@ namespace PuttSeed.Unity
 
             if (sim.WindmillHitCount > _lastMillHits)
             {
+                _shotLog?.Record(ShotLog.Mark.Windmill);
                 OnBounce(millClip);
                 Tap();
                 _cameraJuice?.Shake(0.04f, 0.15f);
@@ -393,6 +408,7 @@ namespace PuttSeed.Unity
 
             if (sim.PortalTransitCount > _lastPortalTransits)
             {
+                _shotLog?.Record(ShotLog.Mark.Portal);
                 // Two violet puffs: where the ball vanished and where it is now.
                 Play(readyClip, 0.9f);
                 EmitBurst(_burstPs, _lastBallPos, new Color(0.62f, 0.40f, 0.92f, 0.9f),
@@ -403,6 +419,7 @@ namespace PuttSeed.Unity
 
             if (sim.WaterEntryCount > _lastWaterEntries)
             {
+                _shotLog?.Record(ShotLog.Mark.Water);
                 Play(waterClip, 1f);
                 Tap();
                 // The sim already snapped the ball back to its last rest, so
@@ -416,6 +433,7 @@ namespace PuttSeed.Unity
             bool inSand = BallIsIn(course?.SandZones);
             if (inSand && !_wasInSand)
             {
+                _shotLog?.Record(ShotLog.Mark.Sand);
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position), SandPuff, count: 8, speed: 0.8f, life: 0.4f);
                 Play(sandClip, 0.9f);
             }
@@ -425,6 +443,7 @@ namespace PuttSeed.Unity
             bool inIce = BallIsIn(course?.IceZones);
             if (inIce && !_wasInIce)
             {
+                _shotLog?.Record(ShotLog.Mark.Ice);
                 Play(iceClip, 0.8f);
             }
 
@@ -435,6 +454,7 @@ namespace PuttSeed.Unity
             bool onRamp = BallIsOnRamp(course?.Ramps);
             if (onRamp && !_wasInRamp)
             {
+                _shotLog?.Record(ShotLog.Mark.Ramp);
                 Play(rampClip, 0.85f);
                 Tick();
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
@@ -445,6 +465,7 @@ namespace PuttSeed.Unity
 
             if (sim.IsHoled && !_lastHoled)
             {
+                _shotLog?.Record(ShotLog.Mark.Holed);
                 Play(captureClip, 1f);
                 Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);

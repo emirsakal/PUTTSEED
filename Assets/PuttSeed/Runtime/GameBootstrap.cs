@@ -69,11 +69,16 @@ namespace PuttSeed.Unity
                 BallSkins.Resolve(stats.Data.ballSkin).Color,
                 BallTrails.Resolve(stats.Data.ballTrail).Color);
 
+            // One scorecard per session: the feedback watcher writes it as it
+            // turns events into sound, the share text reads it.
+            var shotLog = new ShotLog();
+
             var feedbackGo = new GameObject("Feedback");
             var feedback = feedbackGo.AddComponent<FeedbackController>();
             feedback.LoadDefaultClips();
             feedback.SetSettings(stats);
             feedback.SetCameraJuice(cameraJuice);
+            feedback.SetShotLog(shotLog);
             feedback.Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");
@@ -100,6 +105,7 @@ namespace PuttSeed.Unity
             var modesGo = new GameObject("Modes");
             var modes = modesGo.AddComponent<ModeController>();
             modes.Initialize(runner, courseRenderer, cam, overlay, stats);
+            modes.SetShotLog(shotLog);
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);

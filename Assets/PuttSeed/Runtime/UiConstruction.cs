@@ -558,8 +558,24 @@ namespace PuttSeed.Unity
 
             UIFactory.CreatePanel(canvas.transform, "TopBar",
                 new Vector2(0.02f, 0.925f), new Vector2(0.98f, 0.985f), UIStyle.PanelSoft);
+
+            // Golf's own hierarchy. The bar used to be one string at one size,
+            // so the word "Daily" shouted as loudly as the score: the stroke
+            // count is the number being played against, the chip beside it is
+            // where that stands against par — the thing a golfer actually
+            // reads — and mode, par and streak are small print on the right.
+            ui.strokeText = UIFactory.CreateText(canvas.transform, "Strokes",
+                new Vector2(0.05f, 0.925f), new Vector2(0.25f, 0.985f), 58, TextAnchor.MiddleLeft);
+
+            var parChip = UIFactory.CreatePanel(canvas.transform, "ParChip",
+                new Vector2(0.255f, 0.938f), new Vector2(0.365f, 0.974f), UIStyle.PanelDark);
+            ui.parChip = parChip.gameObject;
+            ui.parChipText = UIFactory.CreateText(parChip.transform, "ParChipText",
+                Vector2.zero, Vector2.one, 27, TextAnchor.MiddleCenter);
+
             ui.counterText = UIFactory.CreateText(canvas.transform, "Counter",
-                new Vector2(0.05f, 0.925f), new Vector2(0.95f, 0.985f), 40, TextAnchor.MiddleLeft);
+                new Vector2(0.38f, 0.925f), new Vector2(0.95f, 0.985f), 25, TextAnchor.MiddleRight);
+            ui.counterText.color = UIStyle.CreamDim;
 
             var hintChip = UIFactory.CreatePanel(canvas.transform, "HintChip",
                 new Vector2(0.06f, 0.865f), new Vector2(0.94f, 0.915f), UIStyle.PanelSoft);
@@ -608,6 +624,26 @@ namespace PuttSeed.Unity
             ui.failRetryButton = ButtonOf(UIFactory.CreateButton(failPanel.transform, "Retry",
                 new Vector2(0.28f, 0.08f), new Vector2(0.72f, 0.36f), NoOp, 36, primary: true));
             ui.failPanel.SetActive(false);
+
+            // The day's closing card. The ritual had no end: the result, the
+            // streak, the countdown and the share button lived on three
+            // different screens, and the last thing a player saw after holing
+            // out was the same course they had just finished. It sits clear of
+            // the status line above (0.55) and the toast below (0.30).
+            var dailyCard = UIFactory.CreatePanel(canvas.transform, "DailyCard",
+                new Vector2(0.10f, 0.31f), new Vector2(0.90f, 0.54f), UIStyle.PanelDark);
+            ui.dailyCard = dailyCard.gameObject;
+            ui.dailyCardResult = UIFactory.CreateText(dailyCard.transform, "Result",
+                new Vector2(0.05f, 0.66f), new Vector2(0.95f, 0.95f), 32, TextAnchor.MiddleCenter);
+            ui.dailyCardStreak = UIFactory.CreateText(dailyCard.transform, "Streaks",
+                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.66f), 25, TextAnchor.MiddleCenter);
+            ui.dailyCardStreak.color = UIStyle.CreamDim;
+            ui.dailyCardCountdown = UIFactory.CreateText(dailyCard.transform, "Countdown",
+                new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.46f), 24, TextAnchor.MiddleCenter);
+            ui.dailyCardCountdown.color = UIStyle.CreamDim;
+            ui.dailyShareButton = ButtonOf(UIFactory.CreateButton(dailyCard.transform, "Share",
+                new Vector2(0.26f, 0.05f), new Vector2(0.74f, 0.26f), NoOp, 30, primary: true));
+            ui.dailyCard.SetActive(false);
 
             var toastChip = UIFactory.CreatePanel(canvas.transform, "ToastChip",
                 new Vector2(0.12f, 0.25f), new Vector2(0.88f, 0.3f), UIStyle.PanelDark);

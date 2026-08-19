@@ -15,7 +15,33 @@ namespace PuttSeed.Unity
     public sealed class GameUI : MonoBehaviour
     {
         [Header("Scene-authored UI (assigned by PuttSeed → Rebuild Scenes)")]
+
+        /// <summary>Mode, par and streak — the small print, right-aligned.</summary>
         public Text? counterText;
+
+        /// <summary>The hero number: strokes taken, with the limit hung off it.</summary>
+        public Text? strokeText;
+
+        /// <summary>The score-to-par chip beside it (E, +1, -1).</summary>
+        public GameObject? parChip;
+
+        /// <summary>Text inside the par chip.</summary>
+        public Text? parChipText;
+
+        /// <summary>The day's closing card, shown once a daily is holed.</summary>
+        public GameObject? dailyCard;
+
+        /// <summary>Result line on the closing card.</summary>
+        public Text? dailyCardResult;
+
+        /// <summary>Streak line on the closing card.</summary>
+        public Text? dailyCardStreak;
+
+        /// <summary>Countdown line on the closing card (ticks in Update).</summary>
+        public Text? dailyCardCountdown;
+
+        /// <summary>The card's primary share button.</summary>
+        public Button? dailyShareButton;
         public GameObject? hintChip;
         public Text? hintText;
         public Text? statusText;
@@ -46,6 +72,10 @@ namespace PuttSeed.Unity
         private int _lastStrokesShown;
         private Coroutine? _counterPulse;
         private int _barShape = -1;
+        private string _lastCountdown = "";
+
+        private static readonly Color UnderPar = new Color(0.45f, 0.85f, 0.45f);
+        private static readonly Color OverPar = new Color(0.95f, 0.36f, 0.30f);
 
         // Prompt each clipboard code once per app run, not per scene entry.
         private static string? _promptedClipboardCode;
@@ -76,6 +106,7 @@ namespace PuttSeed.Unity
             retryButton?.onClick.AddListener(() => _runner.Retry());
             failRetryButton?.onClick.AddListener(() => _runner.Retry());
             shareButton?.onClick.AddListener(OnShare);
+            dailyShareButton?.onClick.AddListener(OnShare);
             ghostButton?.onClick.AddListener(OnToggleAuthorGhost);
 
             undoButton?.onClick.AddListener(OnUndo);
@@ -94,6 +125,20 @@ namespace PuttSeed.Unity
             if (toastChip != null && toastChip.activeSelf && Time.unscaledTime > _toastUntil)
             {
                 toastChip.SetActive(false);
+            }
+
+            // Refresh() is event-driven and the sim goes quiet the moment the
+            // ball drops, so the countdown has to tick from here — and only
+            // when the second actually changes, not once a frame.
+            if (dailyCard != null && dailyCard.activeSelf && dailyCardCountdown != null)
+            {
+                string remaining = DailyCountdown.Format(
+                    DailyCountdown.UntilNextHole(System.DateTime.UtcNow));
+                if (remaining != _lastCountdown)
+                {
+                    _lastCountdown = remaining;
+                    dailyCardCountdown.text = string.Format(Loc.Tr("Next hole in {0}"), remaining);
+                }
             }
 
             // Android back button (Escape) returns to the menu.
@@ -145,7 +190,10 @@ namespace PuttSeed.Unity
 
             // Share arrives with the run worth sharing. It used to sit there
             // through every attempt only to answer "finish the hole first".
-            bool showShare = CanShare();
+            // On a finished daily the closing card carries the primary Share,
+            // so the bar stands down rather than offering it twice.
+            bool cardUp = _modes.Mode == GameMode.Daily && sim != null && sim.IsHoled;
+            bool showShare = CanShare() && !cardUp;
             shareButton?.gameObject.SetActive(showShare);
 
             int barShape = (showUndo ? 1 : 0) | (showShare ? 2 : 0);
@@ -191,10 +239,26 @@ namespace PuttSeed.Unity
                 modeLabel = string.Format(Loc.Tr("{0} · {1}"), modeLabel, mutator);
             }
 
+            // Small print on the right; the numbers that matter are the hero
+            // and the chip.
             int streak = _modes.Stats.Data.streak;
-            string streakLabel = streak > 0 ? string.Format(Loc.Tr("   Streak {0}"), streak) : "";
-            counterText.text = string.Format(Loc.Tr("{0}   Strokes {1}/{2}   Par {3}{4}"),
-                modeLabel, sim.Strokes, sim.StrokeLimit, gen.Course.Par, streakLabel);
+            string right = string.Format(Loc.Tr("{0} · {1}"),
+                modeLabel, string.Format(Loc.Tr("Par {0}"), gen.Course.Par));
+            if (streak > 0)
+            {
+                right = string.Format(Loc.Tr("{0} · {1}"), right,
+                    string.Format(Loc.Tr("Streak {0}"), streak));
+            }
+
+            counterText.text = right;
+
+            if (strokeText != null)
+            {
+                strokeText.text = $"{sim.Strokes}<size=26>/{sim.StrokeLimit}</size>";
+            }
+
+            RefreshParChip(sim.Strokes, gen.Course.Par);
+            RefreshDailyCard(sim, gen.Course.Par);
             if (sim.Strokes > _lastStrokesShown)
             {
                 if (_counterPulse != null)
@@ -226,6 +290,73 @@ namespace PuttSeed.Unity
             }
 
             RefreshStars(sim, gen.Course.Par);
+        }
+
+        /// <summary>
+        /// Score to par — the number a golfer reads before the stroke count.
+        /// Colour says the same thing again for anyone who does not yet know
+        /// what "+1" costs them.
+        /// </summary>
+        private void RefreshParChip(int strokes, int par)
+        {
+            if (parChipText == null)
+            {
+                return;
+            }
+
+            int diff = strokes - par;
+            parChipText.text = diff == 0 ? "E" : diff > 0 ? $"+{diff}" : diff.ToString();
+            parChipText.color = diff <= 0 ? UnderPar
+                : diff == 1 ? UIStyle.Accent
+                : OverPar;
+        }
+
+        /// <summary>
+        /// The day's closing card: what you scored, what it did to your
+        /// streaks, and how long until the next hole — the three things a
+        /// player wants once the ball drops, gathered where they are already
+        /// looking instead of spread over the menu and the stats panel.
+        /// </summary>
+        private void RefreshDailyCard(PuttSeed.Core.Sim.GolfSim sim, int par)
+        {
+            if (dailyCard == null)
+            {
+                return;
+            }
+
+            bool show = _modes.Mode == GameMode.Daily && sim.IsHoled;
+            if (dailyCard.activeSelf != show)
+            {
+                if (show)
+                {
+                    UiFx.PopIn(this, dailyCard);
+                }
+                else
+                {
+                    dailyCard.SetActive(false);
+                }
+            }
+
+            if (!show)
+            {
+                return;
+            }
+
+            var data = _modes.Stats.Data;
+            var record = _modes.Stats.FindDay(_modes.ActiveDayNumber);
+            int best = record != null && record.completed ? record.bestStrokes : sim.Strokes;
+
+            if (dailyCardResult != null)
+            {
+                dailyCardResult.text = string.Format(Loc.Tr("{0} strokes · best {1}"),
+                    sim.Strokes, best);
+            }
+
+            if (dailyCardStreak != null)
+            {
+                dailyCardStreak.text = string.Format(Loc.Tr("Streak {0} · par streak {1}"),
+                    data.streak, data.parStreak);
+            }
         }
 
         /// <summary>

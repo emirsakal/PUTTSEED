@@ -43,6 +43,7 @@ namespace PuttSeed.Unity
         private CourseRenderer _courseRenderer = null!;
         private Camera _camera = null!;
         private StatsStore _stats = null!;
+        private ShotLog? _shotLog;
         private LoadingOverlay? _overlay;
 
         // The ACTIVE daily: today's, or a past day picked from the archive.
@@ -184,9 +185,34 @@ namespace PuttSeed.Unity
         /// number when today's daily is loaded, plain otherwise.
         /// </summary>
         public string BuildShareText(int strokes, int par, string code)
-            => Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0
-                ? $"PUTTSEED day {_activeDayNumber} — {strokes} strokes (par {par}). Watch: {code}"
-                : $"PUTTSEED — {strokes} strokes (par {par}). Watch: {code}";
+        {
+            bool isDaily = Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0;
+            var text = new System.Text.StringBuilder(isDaily
+                ? $"PUTTSEED day {_activeDayNumber} — {strokes} strokes (par {par})"
+                : $"PUTTSEED — {strokes} strokes (par {par})");
+
+            // The scorecard. A replay code proves the run and reads as noise;
+            // this row is the part a stranger can actually see.
+            string glyphs = _shotLog != null ? _shotLog.Glyphs() : "";
+            if (glyphs.Length > 0)
+            {
+                text.Append('\n').Append(glyphs);
+            }
+
+            if (isDaily && _stats.Data.streak > 0)
+            {
+                text.Append('\n').Append($"🔥 {_stats.Data.streak}-day streak");
+            }
+
+            // The code goes last: it is the proof, not the pitch.
+            return text.Append($"\nWatch: {code}").ToString();
+        }
+
+        /// <summary>The run's scorecard, filled by the feedback observer.</summary>
+        public void SetShotLog(ShotLog log) => _shotLog = log;
+
+        /// <summary>The day being played (0 outside daily and archive runs).</summary>
+        public int ActiveDayNumber => _activeDayNumber;
 
         /// <summary>
         /// Starts whatever the menu put into <see cref="GameSession"/> —
