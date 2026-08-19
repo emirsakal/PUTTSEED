@@ -2,55 +2,62 @@ namespace PuttSeed.Unity
 {
     /// <summary>
     /// FTUE per the GDD: hand-picked fixed seeds, one hint line each, no text
-    /// walls. Seeds are chosen by scanning generator output for courses that
-    /// isolate the element being taught (101: bumpers only; 43: sand only;
-    /// 24: ice only).
+    /// walls. Seeds come from generator scans, chosen for carrying exactly the
+    /// elements their lesson claims and nothing else.
     ///
-    /// Extended 2026-08-19 with the element wave — gates, ramps, portals and
-    /// windmills had shipped with nothing teaching them at all — and with
-    /// water, which had gone untaught since the MVP despite being the only
-    /// element that costs a stroke. The opening lesson was re-picked at the
-    /// same time: seed 35 was curated as "no hazards" and had since drifted to
-    /// a course carrying water and ice, so the first hole a new player ever
-    /// saw opened with two elements the tutorial had not reached yet. 304 is
-    /// bare corridor. <see cref="PuttSeed.Unity.Tests"/> holds every seed here
-    /// to its hint, which is how that drift was found.
+    /// Rebuilt 2026-08-19. Gates, ramps, portals and windmills had shipped
+    /// with nothing teaching them anywhere, and water had gone untaught since
+    /// the MVP despite being the only element that costs a stroke — nine
+    /// elements, four lessons. Teaching them one apiece would have walked a
+    /// new player through nine courses before the game started, so related
+    /// elements were paired and the tutorial came out SHORTER than it began:
+    /// five lessons for nine elements.
+    ///
+    /// The opening lesson was re-picked in the same pass: seed 35 was curated
+    /// as "no hazards" and had since drifted into carrying water and ice, so
+    /// the first hole a new player ever saw opened with two elements the
+    /// tutorial had not reached yet. 304 is bare corridor.
+    /// <see cref="PuttSeed.Unity.Tests"/> holds every seed here to its
+    /// declaration, which is how that drift was found.
     /// </summary>
     public static class TutorialConfig
     {
         /// <summary>
         /// What a stage exists to teach. Declared rather than implied, so a
-        /// test can hold the curated seed to its promise: a lesson whose
-        /// course does not actually contain its element teaches nothing.
+        /// test can hold the curated seed to its promise — and a flag set
+        /// rather than a single value, because a lesson may introduce a PAIR
+        /// that belongs together. The test then demands the course contain
+        /// exactly what is declared here and nothing else.
         /// </summary>
+        [System.Flags]
         public enum Lesson
         {
             /// <summary>The shot itself — drag, release, reach the cup.</summary>
-            Shot,
+            Shot = 0,
 
             /// <summary>Bumpers.</summary>
-            Bumper,
+            Bumper = 1 << 0,
 
             /// <summary>Sand zones.</summary>
-            Sand,
+            Sand = 1 << 1,
 
             /// <summary>Ice zones.</summary>
-            Ice,
+            Ice = 1 << 2,
 
             /// <summary>Water zones — the only element that costs a stroke.</summary>
-            Water,
+            Water = 1 << 3,
 
             /// <summary>One-way gates.</summary>
-            Gate,
+            Gate = 1 << 4,
 
             /// <summary>Ramp slopes.</summary>
-            Ramp,
+            Ramp = 1 << 5,
 
             /// <summary>Portal pairs.</summary>
-            Portal,
+            Portal = 1 << 6,
 
             /// <summary>Windmills.</summary>
-            Windmill,
+            Windmill = 1 << 7,
         }
 
         /// <summary>One tutorial course: a fixed seed plus its single hint line.</summary>
@@ -83,33 +90,30 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>
-        /// The tutorial stages, in teaching order: the shot, then the five
-        /// elements a v1 course can hold, then the four the wave added. The
-        /// wave's lessons are v2 seeds, because their elements do not exist in
-        /// v1 at all; each was picked from a 3000-seed scan for isolating its
-        /// element — no other wave element on the course, and as little else
-        /// as generation would give.
+        /// Five lessons for nine elements. One element per course meant nine
+        /// courses before a new player reached the game, so the elements that
+        /// share an idea now share a course: the two that change your speed,
+        /// the slide and the penalty, the two the arrows point through, and
+        /// the two that act on their own. Each pair is a single sentence, not
+        /// two facts — which is the argument for pairing them, the shorter
+        /// FTUE being the reward rather than the reason.
+        ///
+        /// Every seed comes from a generator scan and carries EXACTLY the
+        /// elements its lesson declares and nothing else; the wave's two are
+        /// v2, because gates, ramps, portals and windmills do not exist in v1.
         /// </summary>
         public static readonly Stage[] Stages =
         {
             new Stage(304UL, "Drag anywhere and release to shoot — reach the hole within the stroke limit.",
                 Lesson.Shot),
-            new Stage(101UL, "Pink bumpers boost your ball. Bounce off them — or steer clear.",
-                Lesson.Bumper),
-            new Stage(43UL, "Sand kills your speed. Power through it or roll around.",
-                Lesson.Sand),
-            new Stage(24UL, "Ice barely slows the ball — ease off and plan for the long slide.",
-                Lesson.Ice),
-            new Stage(148UL, "Water costs a stroke and puts the ball back where it was — go around it.",
-                Lesson.Water),
-            new Stage(1046UL, "Amber gates pass one way only — the chevrons point the way through.",
-                Lesson.Gate, configVersion: 2),
-            new Stage(1599UL, "Ramps tilt the green: the arrows point downhill, and the ball runs with them.",
-                Lesson.Ramp, configVersion: 2),
-            new Stage(2019UL, "Portals come in pairs — in one mouth, out of its twin, still moving.",
-                Lesson.Portal, configVersion: 2),
-            new Stage(535UL, "The blades never stop turning. Watch for your gap, then take the shot.",
-                Lesson.Windmill, configVersion: 2),
+            new Stage(40UL, "Bumpers boost the ball, sand drags it down — both sit on your way to the cup.",
+                Lesson.Bumper | Lesson.Sand),
+            new Stage(17UL, "Ice barely slows the ball; water costs a stroke and puts it back where it was.",
+                Lesson.Ice | Lesson.Water),
+            new Stage(216UL, "Arrows show the way: gates pass from one side only, ramps push you downhill.",
+                Lesson.Gate | Lesson.Ramp, configVersion: 2),
+            new Stage(522UL, "Portals throw the ball to their twin — and the blades never stop turning.",
+                Lesson.Portal | Lesson.Windmill, configVersion: 2),
         };
     }
 }

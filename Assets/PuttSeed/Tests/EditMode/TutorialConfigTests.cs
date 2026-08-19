@@ -8,14 +8,16 @@ using UnityEngine;
 namespace PuttSeed.Unity.Tests
 {
     /// <summary>
-    /// The tutorial's promise, held to: every lesson's hand-picked seed really
-    /// does grow a course containing the thing its hint talks about. Curated
-    /// constants are exactly what rots silently — a generator change could
+    /// The tutorial's promise, held to: a lesson's course contains EXACTLY the
+    /// elements the lesson declares — every one it names, and nothing it does
+    /// not. Hand-picked seeds are what rot silently; a generator change could
     /// leave "the blades never stop turning" printed over a course with no
-    /// windmill on it, and nothing would fail until a player noticed.
+    /// windmill on it, or drop a water hazard into the opening lesson, and
+    /// nothing would fail until a player noticed. Something did exactly that
+    /// once, which is why this file exists.
     ///
-    /// Generation runs under the SAME config the game plays: the FeelConfig
-    /// asset, not core's defaults, because acceptance depends on solvability
+    /// Generation runs under the SAME config the game plays — the FeelConfig
+    /// asset, not core's defaults — because acceptance depends on solvability
     /// and solvability depends on friction.
     /// </summary>
     public class TutorialConfigTests
@@ -29,67 +31,68 @@ namespace PuttSeed.Unity.Tests
                 simConfig, SolverConfig.Default).Course;
         }
 
-        private static int CountOf(CourseData course, TutorialConfig.Lesson lesson) => lesson switch
+        /// <summary>
+        /// Declared means present; undeclared means absent. Both halves matter:
+        /// the first keeps a lesson from teaching nothing, the second keeps a
+        /// beginner from meeting an element the hint never mentions.
+        /// </summary>
+        private static void AssertElement(TutorialConfig.Stage stage, int count, TutorialConfig.Lesson element)
         {
-            TutorialConfig.Lesson.Bumper => course.Bumpers.Length,
-            TutorialConfig.Lesson.Sand => course.SandZones.Length,
-            TutorialConfig.Lesson.Ice => course.IceZones.Length,
-            TutorialConfig.Lesson.Water => course.WaterZones.Length,
-            TutorialConfig.Lesson.Gate => course.Gates.Length,
-            TutorialConfig.Lesson.Ramp => course.Ramps.Length,
-            TutorialConfig.Lesson.Portal => course.Portals.Length,
-            TutorialConfig.Lesson.Windmill => course.Windmills.Length,
-            _ => 0,
-        };
-
-        [Test]
-        public void EveryLesson_ActuallyContainsWhatItTeaches()
-        {
-            foreach (var stage in TutorialConfig.Stages)
+            bool declared = (stage.Teaches & element) != 0;
+            if (declared)
             {
-                if (stage.Teaches == TutorialConfig.Lesson.Shot)
-                {
-                    continue; // the shot is taught by the absence of everything
-                }
-
-                Assert.That(CountOf(Generate(stage), stage.Teaches), Is.GreaterThan(0),
-                    $"seed {stage.Seed} is the {stage.Teaches} lesson but grows no {stage.Teaches}");
+                Assert.That(count, Is.GreaterThan(0),
+                    $"seed {stage.Seed} teaches {element} and grows none of it");
+            }
+            else
+            {
+                Assert.That(count, Is.Zero,
+                    $"seed {stage.Seed} does not teach {element}, but the player meets it there");
             }
         }
 
         [Test]
-        public void TheFirstLesson_IsCleanGround()
-        {
-            var course = Generate(TutorialConfig.Stages[0]);
-            int hazards = course.Bumpers.Length + course.SandZones.Length + course.IceZones.Length
-                + course.WaterZones.Length + course.Gates.Length + course.Ramps.Length
-                + course.Portals.Length + course.Windmills.Length;
-
-            Assert.That(TutorialConfig.Stages[0].Teaches, Is.EqualTo(TutorialConfig.Lesson.Shot));
-            Assert.That(hazards, Is.Zero,
-                "the first lesson is the shot itself — nothing else belongs on that course");
-        }
-
-        [Test]
-        public void EachWaveLesson_IntroducesOneNewElementAtATime()
+        public void EveryLesson_ContainsExactlyWhatItDeclares()
         {
             foreach (var stage in TutorialConfig.Stages)
             {
-                if (stage.ConfigVersion < 2)
+                var course = Generate(stage);
+                AssertElement(stage, course.Bumpers.Length, TutorialConfig.Lesson.Bumper);
+                AssertElement(stage, course.SandZones.Length, TutorialConfig.Lesson.Sand);
+                AssertElement(stage, course.IceZones.Length, TutorialConfig.Lesson.Ice);
+                AssertElement(stage, course.WaterZones.Length, TutorialConfig.Lesson.Water);
+                AssertElement(stage, course.Gates.Length, TutorialConfig.Lesson.Gate);
+                AssertElement(stage, course.Ramps.Length, TutorialConfig.Lesson.Ramp);
+                AssertElement(stage, course.Portals.Length, TutorialConfig.Lesson.Portal);
+                AssertElement(stage, course.Windmills.Length, TutorialConfig.Lesson.Windmill);
+            }
+        }
+
+        [Test]
+        public void TheOpeningLesson_IsBareGround()
+        {
+            Assert.That(TutorialConfig.Stages[0].Teaches, Is.EqualTo(TutorialConfig.Lesson.Shot),
+                "the first lesson is the shot itself — it may declare no element at all");
+        }
+
+        [Test]
+        public void EveryElementInTheGame_IsTaughtSomewhere()
+        {
+            var taught = TutorialConfig.Lesson.Shot;
+            foreach (var stage in TutorialConfig.Stages)
+            {
+                taught |= stage.Teaches;
+            }
+
+            foreach (TutorialConfig.Lesson element in System.Enum.GetValues(typeof(TutorialConfig.Lesson)))
+            {
+                if (element == TutorialConfig.Lesson.Shot)
                 {
-                    continue; // v1 courses cannot hold a wave element at all
+                    continue;
                 }
 
-                var course = Generate(stage);
-                int strangers =
-                    (stage.Teaches == TutorialConfig.Lesson.Gate ? 0 : course.Gates.Length)
-                    + (stage.Teaches == TutorialConfig.Lesson.Ramp ? 0 : course.Ramps.Length)
-                    + (stage.Teaches == TutorialConfig.Lesson.Portal ? 0 : course.Portals.Length)
-                    + (stage.Teaches == TutorialConfig.Lesson.Windmill ? 0 : course.Windmills.Length);
-
-                Assert.That(strangers, Is.Zero,
-                    $"seed {stage.Seed} teaches {stage.Teaches} but meets the player with another "
-                    + "new element on the same course");
+                Assert.That(taught & element, Is.EqualTo(element),
+                    $"{element} ships in the game and no lesson teaches it");
             }
         }
 

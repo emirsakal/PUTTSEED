@@ -107,7 +107,7 @@ regenerates the course it was played on.
   campaign of curated fixed seeds unlocked in order, three stars per
   level. Levels are ordinary generator seeds hand-picked from scan CSVs
   on a difficulty ramp — no new content pipeline, no new rules.
-- **Tutorial:** nine fixed courses, one per element (see FTUE).
+- **Tutorial:** five fixed courses covering all nine elements (see FTUE).
 - **Weekly gauntlet** (added 2026-08-18): the seven dailies of the last
   fully elapsed week, played back to back for one cumulative stroke
   total. No new content — the seven holes already shipped as dailies,
@@ -139,20 +139,35 @@ Pasting a code into the app's import field plays the ghost.
 
 ## FTUE
 
-First launch: fixed tutorial courses (hand-picked seeds) teaching shot,
-bumper, sand — grown to four when ice shipped, and to nine on 2026-08-19,
-one lesson per element: water, which had gone untaught since the MVP
-despite costing a stroke, and the wave's four (gate, ramp, portal,
-windmill). No text walls; one hint line per course.
+First launch: fixed tutorial courses (hand-picked seeds), one hint line
+each, no text walls. Rebuilt 2026-08-19, when four elements (gate, ramp,
+portal, windmill) were shipping with nothing teaching them anywhere and
+water had gone untaught since the MVP despite being the only element that
+costs a stroke.
 
-Two rules keep the lessons honest, and both are enforced by tests rather
-than by care. A lesson's course must actually contain the element its
-hint describes — the opening lesson's seed had drifted into carrying
-water and ice, so the first hole a new player ever saw opened with two
-elements the tutorial had not reached yet. And a lesson is never a themed
-day: the wave's seeds are v2, where one seed in eighteen turns icy,
-bouncy or windy, and a beginner cannot tell a themed day from a broken
-one.
+Nine elements do not mean nine lessons. The ones that share an idea share
+a course — the two that change your speed, the slide and the penalty, the
+two the arrows point through, the two that act on their own — so each
+pair is one sentence instead of two facts, and the tutorial came out
+**shorter than before it grew**: five lessons, nine elements.
+
+| Lesson | Teaches |
+|---|---|
+| 1 | the shot, on bare ground |
+| 2 | bumpers · sand |
+| 3 | ice · water |
+| 4 | gates · ramps |
+| 5 | portals · windmills |
+
+Three rules keep the lessons honest, all enforced by tests rather than by
+care. A lesson's course carries **exactly** what its hint names — every
+element mentioned, and none that is not; the opening lesson's seed had
+drifted into carrying water and ice, so the first hole a new player ever
+saw opened with two elements the tutorial had not reached yet. Every
+element in the game is taught by some lesson. And no lesson is a themed
+day: the paired wave lessons are v2 seeds, where one seed in eighteen
+turns icy, bouncy or windy, and a beginner cannot tell a themed day from
+a broken one.
 
 ## Out of scope (do not build in MVP)
 

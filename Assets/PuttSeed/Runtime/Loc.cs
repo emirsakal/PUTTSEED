@@ -227,22 +227,14 @@ namespace PuttSeed.Unity
             // Tutorial hints
             ["Drag anywhere and release to shoot — reach the hole within the stroke limit."] =
                 "Herhangi bir yerden sürükleyip bırak — vuruş limiti içinde deliğe ulaş.",
-            ["Pink bumpers boost your ball. Bounce off them — or steer clear."] =
-                "Pembe tamponlar topu hızlandırır. Onlardan sek — ya da uzak dur.",
-            ["Sand kills your speed. Power through it or roll around."] =
-                "Kum hızını öldürür. Ya güçlü vur ya da etrafından dolan.",
-            ["Ice barely slows the ball — ease off and plan for the long slide."] =
-                "Buz topu neredeyse hiç yavaşlatmaz — yumuşak vur, uzun kaymayı hesapla.",
-            ["Water costs a stroke and puts the ball back where it was — go around it."] =
-                "Su bir vuruşa mal olur ve topu bulunduğu yere geri koyar — etrafından dolan.",
-            ["Amber gates pass one way only — the chevrons point the way through."] =
-                "Kehribar kapılar tek yönlüdür — oklar geçilebilen yönü gösterir.",
-            ["Ramps tilt the green: the arrows point downhill, and the ball runs with them."] =
-                "Rampalar zemini eğer: oklar yokuş aşağıyı gösterir, top o yöne kaçar.",
-            ["Portals come in pairs — in one mouth, out of its twin, still moving."] =
-                "Portallar çifttir — bir ağızdan giren top, ikizinden hızını koruyarak çıkar.",
-            ["The blades never stop turning. Watch for your gap, then take the shot."] =
-                "Kanatlar hiç durmaz. Boşluğu kolla, sonra vuruşunu yap.",
+            ["Bumpers boost the ball, sand drags it down — both sit on your way to the cup."] =
+                "Tamponlar topu hızlandırır, kum yavaşlatır — ikisi de deliğe giden yolun üstünde.",
+            ["Ice barely slows the ball; water costs a stroke and puts it back where it was."] =
+                "Buz topu neredeyse hiç yavaşlatmaz; su bir vuruşa mal olup topu geri koyar.",
+            ["Arrows show the way: gates pass from one side only, ramps push you downhill."] =
+                "Oklar yönü gösterir: kapılar tek taraftan geçirir, rampalar yokuş aşağı iter.",
+            ["Portals throw the ball to their twin — and the blades never stop turning."] =
+                "Portallar topu ikizine fırlatır — kanatlar ise hiç durmaz.",
 
             // Achievements
             ["First Putt"] = "İlk Vuruş",
