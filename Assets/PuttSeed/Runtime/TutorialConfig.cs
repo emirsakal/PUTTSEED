@@ -7,11 +7,12 @@ namespace PuttSeed.Unity
     /// 24: ice only).
     ///
     /// Extended 2026-08-19 with the element wave — gates, ramps, portals and
-    /// windmills had shipped with nothing teaching them at all — and the
-    /// opening lesson was re-picked at the same time: seed 35 was curated as
-    /// "no hazards" and had since drifted to a course carrying water and ice,
-    /// so the first hole a new player ever saw opened with an element the
-    /// tutorial teaches three lessons later and one it never teaches. 304 is
+    /// windmills had shipped with nothing teaching them at all — and with
+    /// water, which had gone untaught since the MVP despite being the only
+    /// element that costs a stroke. The opening lesson was re-picked at the
+    /// same time: seed 35 was curated as "no hazards" and had since drifted to
+    /// a course carrying water and ice, so the first hole a new player ever
+    /// saw opened with two elements the tutorial had not reached yet. 304 is
     /// bare corridor. <see cref="PuttSeed.Unity.Tests"/> holds every seed here
     /// to its hint, which is how that drift was found.
     /// </summary>
@@ -35,6 +36,9 @@ namespace PuttSeed.Unity
 
             /// <summary>Ice zones.</summary>
             Ice,
+
+            /// <summary>Water zones — the only element that costs a stroke.</summary>
+            Water,
 
             /// <summary>One-way gates.</summary>
             Gate,
@@ -96,6 +100,8 @@ namespace PuttSeed.Unity
                 Lesson.Sand),
             new Stage(24UL, "Ice barely slows the ball — ease off and plan for the long slide.",
                 Lesson.Ice),
+            new Stage(148UL, "Water costs a stroke and puts the ball back where it was — go around it.",
+                Lesson.Water),
             new Stage(1046UL, "Amber gates pass one way only — the chevrons point the way through.",
                 Lesson.Gate, configVersion: 2),
             new Stage(1599UL, "Ramps tilt the green: the arrows point downhill, and the ball runs with them.",

@@ -34,6 +34,7 @@ namespace PuttSeed.Unity.Tests
             TutorialConfig.Lesson.Bumper => course.Bumpers.Length,
             TutorialConfig.Lesson.Sand => course.SandZones.Length,
             TutorialConfig.Lesson.Ice => course.IceZones.Length,
+            TutorialConfig.Lesson.Water => course.WaterZones.Length,
             TutorialConfig.Lesson.Gate => course.Gates.Length,
             TutorialConfig.Lesson.Ramp => course.Ramps.Length,
             TutorialConfig.Lesson.Portal => course.Portals.Length,

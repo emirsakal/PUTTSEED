@@ -107,7 +107,7 @@ regenerates the course it was played on.
   campaign of curated fixed seeds unlocked in order, three stars per
   level. Levels are ordinary generator seeds hand-picked from scan CSVs
   on a difficulty ramp — no new content pipeline, no new rules.
-- **Tutorial:** eight fixed courses, one per element (see FTUE).
+- **Tutorial:** nine fixed courses, one per element (see FTUE).
 - **Weekly gauntlet** (added 2026-08-18): the seven dailies of the last
   fully elapsed week, played back to back for one cumulative stroke
   total. No new content — the seven holes already shipped as dailies,
@@ -140,19 +140,19 @@ Pasting a code into the app's import field plays the ghost.
 ## FTUE
 
 First launch: fixed tutorial courses (hand-picked seeds) teaching shot,
-bumper, sand — grown to four when ice shipped, and to eight on
-2026-08-19 when the element wave's four (gate, ramp, portal, windmill)
-finally got lessons of their own. No text walls; one hint line per
-course.
+bumper, sand — grown to four when ice shipped, and to nine on 2026-08-19,
+one lesson per element: water, which had gone untaught since the MVP
+despite costing a stroke, and the wave's four (gate, ramp, portal,
+windmill). No text walls; one hint line per course.
 
 Two rules keep the lessons honest, and both are enforced by tests rather
 than by care. A lesson's course must actually contain the element its
 hint describes — the opening lesson's seed had drifted into carrying
-water and ice, so the first hole a new player ever saw opened with an
-element taught three lessons later and one taught nowhere. And a lesson
-is never a themed day: the wave's seeds are v2, where one seed in
-eighteen turns icy, bouncy or windy, and a beginner cannot tell a themed
-day from a broken one.
+water and ice, so the first hole a new player ever saw opened with two
+elements the tutorial had not reached yet. And a lesson is never a themed
+day: the wave's seeds are v2, where one seed in eighteen turns icy,
+bouncy or windy, and a beginner cannot tell a themed day from a broken
+one.
 
 ## Out of scope (do not build in MVP)
 

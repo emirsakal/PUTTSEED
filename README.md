@@ -198,7 +198,7 @@ lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
 - **Practice** — unlimited courses by difficulty (Easy / Normal / Hard),
   per-difficulty personal bests, an undo mulligan, and course invites: any
   course shares as a code a friend can play on their own device.
-- **Tutorial** — eight fixed courses, one per element, gates and windmills
+- **Tutorial** — nine fixed courses, one per element, water and windmills
   included; the first launch walks straight into them. Each lesson's seed is
   held to its hint by a test: the course must really grow the thing the hint
   talks about, and must never be a themed day.

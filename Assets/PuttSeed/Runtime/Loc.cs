@@ -233,6 +233,8 @@ namespace PuttSeed.Unity
                 "Kum hızını öldürür. Ya güçlü vur ya da etrafından dolan.",
             ["Ice barely slows the ball — ease off and plan for the long slide."] =
                 "Buz topu neredeyse hiç yavaşlatmaz — yumuşak vur, uzun kaymayı hesapla.",
+            ["Water costs a stroke and puts the ball back where it was — go around it."] =
+                "Su bir vuruşa mal olur ve topu bulunduğu yere geri koyar — etrafından dolan.",
             ["Amber gates pass one way only — the chevrons point the way through."] =
                 "Kehribar kapılar tek yönlüdür — oklar geçilebilen yönü gösterir.",
             ["Ramps tilt the green: the arrows point downhill, and the ball runs with them."] =
