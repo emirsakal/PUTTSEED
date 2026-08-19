@@ -141,7 +141,7 @@ mechanically, not by care:
 | What | How |
 |---|---|
 | Core test suite (275 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (103 tests) | `scripts\unity-tests.bat` |
+| Unity EditMode tests (112 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
@@ -198,8 +198,10 @@ lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
 - **Practice** — unlimited courses by difficulty (Easy / Normal / Hard),
   per-difficulty personal bests, an undo mulligan, and course invites: any
   course shares as a code a friend can play on their own device.
-- **Tutorial** — four fixed courses teach the elements; the first launch
-  walks straight into them.
+- **Tutorial** — eight fixed courses, one per element, gates and windmills
+  included; the first launch walks straight into them. Each lesson's seed is
+  held to its hint by a test: the course must really grow the thing the hint
+  talks about, and must never be a themed day.
 
 ## Meta — local by design
 

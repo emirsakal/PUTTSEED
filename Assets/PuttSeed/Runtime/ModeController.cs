@@ -377,7 +377,9 @@ namespace PuttSeed.Unity
                 % TutorialConfig.Stages.Length;
             var stage = TutorialConfig.Stages[TutorialIndex];
             CurrentHint = stage.Hint;
-            LoadAndShow(stage.Seed, configVersion: 1); // hand-tuned layouts: v1 forever
+            // Curated layouts, frozen to the generator they were picked from:
+            // the first four are v1 forever, the element wave needs v2.
+            LoadAndShow(stage.Seed, configVersion: stage.ConfigVersion);
         }
 
         /// <summary>Advances to the next tutorial stage (wraps).</summary>

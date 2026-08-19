@@ -233,6 +233,14 @@ namespace PuttSeed.Unity
                 "Kum hızını öldürür. Ya güçlü vur ya da etrafından dolan.",
             ["Ice barely slows the ball — ease off and plan for the long slide."] =
                 "Buz topu neredeyse hiç yavaşlatmaz — yumuşak vur, uzun kaymayı hesapla.",
+            ["Amber gates pass one way only — the chevrons point the way through."] =
+                "Kehribar kapılar tek yönlüdür — oklar geçilebilen yönü gösterir.",
+            ["Ramps tilt the green: the arrows point downhill, and the ball runs with them."] =
+                "Rampalar zemini eğer: oklar yokuş aşağıyı gösterir, top o yöne kaçar.",
+            ["Portals come in pairs — in one mouth, out of its twin, still moving."] =
+                "Portallar çifttir — bir ağızdan giren top, ikizinden hızını koruyarak çıkar.",
+            ["The blades never stop turning. Watch for your gap, then take the shot."] =
+                "Kanatlar hiç durmaz. Boşluğu kolla, sonra vuruşunu yap.",
 
             // Achievements
             ["First Putt"] = "İlk Vuruş",
