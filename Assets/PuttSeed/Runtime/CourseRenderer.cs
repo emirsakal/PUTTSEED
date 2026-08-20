@@ -191,8 +191,60 @@ namespace PuttSeed.Unity
             edgeCaps.transform.localPosition = new Vector3(-ShadowOffset.x * 0.42f, -ShadowOffset.y * 0.42f, -0.052f);
 
             BuildElementWave(course);
+            BuildWindVane(course, min, max);
 
             _intro = StartCoroutine(IntroReveal());
+        }
+
+        /// <summary>
+        /// Puts the day's wind on the course, when there is one. The wind
+        /// lives in the config the ball is PLAYED under, not in the course
+        /// data — a themed day turns a physics knob, it does not add geometry
+        /// — so the vane asks the runner rather than the course.
+        /// </summary>
+        private void BuildWindVane(CourseData course, Vector2 min, Vector2 max)
+        {
+            if (runner == null)
+            {
+                return;
+            }
+
+            var wind = FixView.ToVector2(runner.PlayConfig.Wind);
+            if (wind.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            // The quietest corner: the one whose nearest landmark — tee or cup
+            // — is farthest off, so the badge never sits where the ball has
+            // business. Deterministic, so a course always wears it in the same
+            // place, and every player sees it in that place.
+            var start = FixView.ToVector2(course.StartPosition);
+            var hole = FixView.ToVector2(course.HolePosition);
+            var corner = min;
+            float quietest = -1f;
+            for (int i = 0; i < 4; i++)
+            {
+                var candidate = new Vector2(i < 2 ? min.x : max.x, (i % 2) == 0 ? min.y : max.y);
+                float nearest = Mathf.Min(
+                    Vector2.Distance(candidate, start), Vector2.Distance(candidate, hole));
+                if (nearest > quietest)
+                {
+                    quietest = nearest;
+                    corner = candidate;
+                }
+            }
+
+            // Pushed diagonally out of play, onto the fringe. The camera keeps
+            // eight tenths of a unit of grass past the wall and the badge is
+            // three tenths across, so it lands on grass and stays on screen at
+            // the tightest fit.
+            var outward = (corner - (min + max) * 0.5f).normalized;
+            var vane = new GameObject("WindVane");
+            vane.transform.SetParent(transform, false);
+            vane.transform.localPosition = new Vector3(
+                corner.x + outward.x * 0.42f, corner.y + outward.y * 0.42f, -0.03f);
+            vane.AddComponent<WindVane>().Build(wind);
         }
 
         /// <summary>

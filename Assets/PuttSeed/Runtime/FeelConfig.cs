@@ -42,9 +42,12 @@ namespace PuttSeed.Unity
         [Range(0.4f, 3f)] public float captureSpeed = 1.5f;
         [Tooltip("How lively a too-fast ball bounces off the rim (lower = dies at the lip).")]
         [Range(0.1f, 1f)] public float rimRestitution = 0.4f;
-        [Tooltip("Easy/Normal courses capture on ANY touch (no rim-out); Hard keeps the speed threshold. " +
+        [Tooltip("Easy/Normal courses capture on ANY touch (no rim-out); Hard keeps a speed threshold. " +
             "The rule follows the course's rated difficulty, so replays stay identical on every device.")]
         public bool touchCaptureBelowHard = true;
+        [Tooltip("How much more forgiving Hard's capture is at PLAY time than the threshold courses are " +
+            "generated and solved under. 1 = exactly as strict as the proof; 1.7 lets a firm putt drop.")]
+        [Range(1f, 3f)] public float hardCaptureSlack = 1.7f;
 
         [Header("Rest detection")]
         [Range(0.005f, 0.1f)] public float restSpeed = 0.02f;
@@ -63,23 +66,39 @@ namespace PuttSeed.Unity
         /// </summary>
         public SimConfig BuildPlayConfig(SimConfig baseConfig, PuttSeed.Core.CourseGen.Difficulty difficulty)
         {
-            if (!touchCaptureBelowHard || difficulty == PuttSeed.Core.CourseGen.Difficulty.Hard)
+            if (!touchCaptureBelowHard)
             {
                 return baseConfig;
             }
 
+            if (difficulty == PuttSeed.Core.CourseGen.Difficulty.Hard)
+            {
+                // Hard keeps a lip: a ball CAN still arrive too fast to drop,
+                // which is most of what makes a hard hole hard. It stopped
+                // being all-or-nothing, though — the threshold the course was
+                // proven solvable under is a floor, not a ceiling, and a firm
+                // putt that finds the middle of the cup now falls in. Relaxing
+                // capture can only ever add ways to finish, so the proof holds.
+                var relaxed = Quantize(captureSpeed * Mathf.Max(1f, hardCaptureSlack));
+                return WithCaptureSpeedSq(baseConfig, relaxed * relaxed);
+            }
+
             // Any overlap captures: a threshold far above any reachable speed².
-            return SimConfig.Create(
+            return WithCaptureSpeedSq(baseConfig, Fix64.FromInt(1_000_000));
+        }
+
+        /// <summary>The same config with one knob moved — capture speed, squared.</summary>
+        private static SimConfig WithCaptureSpeedSq(SimConfig baseConfig, Fix64 captureSpeedSq)
+            => SimConfig.Create(
                 baseConfig.Dt, baseConfig.BallRadius, baseConfig.MaxShotSpeed,
                 baseConfig.RollDamping, baseConfig.SandDamping, baseConfig.IceDamping,
                 baseConfig.WallRestitution, baseConfig.MaxTravelPerSubStep,
                 baseConfig.BumperRestitution, baseConfig.BumperMaxExitSpeed,
                 baseConfig.HoleRadius,
-                holeCaptureSpeedSq: Fix64.FromInt(1_000_000),
+                holeCaptureSpeedSq: captureSpeedSq,
                 rimRestitution: baseConfig.RimRestitution,
                 restSpeedEpsSq: baseConfig.RestSpeedEpsSq,
                 restTicksRequired: baseConfig.RestTicksRequired);
-        }
 
         /// <summary>Builds the deterministic sim config from the current knob values.</summary>
         public SimConfig BuildSimConfig()

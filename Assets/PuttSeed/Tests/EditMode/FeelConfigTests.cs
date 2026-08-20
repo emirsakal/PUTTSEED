@@ -88,7 +88,15 @@ namespace PuttSeed.Unity.Tests
             // Touch capture: threshold far above any reachable speed².
             Assert.That(easy.HoleCaptureSpeedSq.Raw, Is.EqualTo(Fix64.FromInt(1_000_000).Raw));
             Assert.That(normal.HoleCaptureSpeedSq.Raw, Is.EqualTo(Fix64.FromInt(1_000_000).Raw));
-            Assert.That(hard.HoleCaptureSpeedSq.Raw, Is.EqualTo(baseConfig.HoleCaptureSpeedSq.Raw));
+            // Hard still has a lip — but a slacker one than the course was
+            // generated under, which is the whole point of playing it.
+            Assert.That(hard.HoleCaptureSpeedSq.Raw,
+                Is.GreaterThan(baseConfig.HoleCaptureSpeedSq.Raw));
+            Assert.That(hard.HoleCaptureSpeedSq.Raw,
+                Is.LessThan(Fix64.FromInt(1_000_000).Raw), "Hard must not become touch capture");
+
+            var slack = FeelConfig.Quantize(feel.captureSpeed * feel.hardCaptureSlack);
+            Assert.That(hard.HoleCaptureSpeedSq.Raw, Is.EqualTo((slack * slack).Raw));
 
             // Everything else must carry over unchanged.
             Assert.That(easy.RollDamping.Raw, Is.EqualTo(baseConfig.RollDamping.Raw));

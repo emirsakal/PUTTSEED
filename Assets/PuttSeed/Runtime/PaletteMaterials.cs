@@ -64,6 +64,12 @@ namespace PuttSeed.Unity
         public static readonly Color Shadow = new Color(0f, 0f, 0f, 0.22f);
 
         /// <summary>Wall color.</summary>
+        /// <summary>
+        /// The wind badge's ground: felt-ink, translucent, so the vane reads as
+        /// a marker lying ON the grass rather than a sticker over it.
+        /// </summary>
+        public static readonly Color VaneBadge = new Color(0.05f, 0.12f, 0.08f, 0.42f);
+
         public static readonly Color Wall = new Color(0.16f, 0.15f, 0.18f);
 
         /// <summary>

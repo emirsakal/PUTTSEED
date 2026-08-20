@@ -48,6 +48,7 @@ namespace PuttSeed.Unity
         private static Sprite? _circleSprite;
         private static Sprite? _starSprite;
         private static Sprite? _pennantSprite;
+        private static Sprite? _sphereSprite;
         private static Font? _fontAsset;
 
         /// <summary>
@@ -55,12 +56,13 @@ namespace PuttSeed.Unity
         /// The editor scene builder calls this before baking UI into a scene,
         /// so saved scenes reference real assets the user can swap or repaint.
         /// </summary>
-        public static void UseSpriteAssets(Sprite rounded, Sprite circle, Sprite star, Sprite pennant)
+        public static void UseSpriteAssets(Sprite rounded, Sprite circle, Sprite star, Sprite pennant, Sprite sphere)
         {
             _roundedSprite = rounded;
             _circleSprite = circle;
             _starSprite = star;
             _pennantSprite = pennant;
+            _sphereSprite = sphere;
         }
 
         /// <summary>
@@ -156,6 +158,32 @@ namespace PuttSeed.Unity
             }
 
             return _pennantSprite;
+        }
+
+        /// <summary>
+        /// A lit sphere: the same disc as <see cref="CircleSprite"/> with the
+        /// shading baked into its RGB, so an Image tinted cream comes out as a
+        /// ball with a light source instead of a filled circle. Used by the
+        /// menu emblem, which is the first thing anybody sees.
+        /// </summary>
+        public static Sprite SphereSprite()
+        {
+            if (_sphereSprite == null)
+            {
+                _sphereSprite = Sprite.Create(BuildSphereTexture(96),
+                    new Rect(0, 0, 96, 96), new Vector2(0.5f, 0.5f));
+            }
+
+            return _sphereSprite;
+        }
+
+        /// <summary>Generates the raw PNG bytes for the lit-sphere sprite asset.</summary>
+        public static byte[] SphereSpritePng()
+        {
+            var tex = BuildSphereTexture(96);
+            var png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            return png;
         }
 
         /// <summary>Generates the raw PNG bytes for the pennant sprite asset.</summary>
@@ -382,6 +410,40 @@ namespace PuttSeed.Unity
             return tex;
         }
 
+        /// <summary>
+        /// Shades a disc as a sphere lit from the upper left: a Lambert term
+        /// off the implied surface normal, a rim that falls away at the edge,
+        /// and one small specular. The alpha is the same anti-aliased coverage
+        /// the flat circle uses, so the silhouette is identical — only the
+        /// inside changed.
+        /// </summary>
+        private static Texture2D BuildSphereTexture(int size)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            float r = size * 0.5f - 1f;
+            var center = new Vector2(size * 0.5f, size * 0.5f);
+            var light = new Vector2(-0.5f, 0.62f).normalized;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    float dist = Vector2.Distance(p, center);
+                    var d = (p - center) / r;
+                    float height = Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Min(1f, d.sqrMagnitude)));
+                    float lambert = Mathf.Clamp01(Vector2.Dot(d, light) * 0.8f + height * 0.6f);
+                    float spec = Mathf.Pow(
+                        Mathf.Clamp01(1f - (d - light * 0.5f).magnitude * 2.4f), 2f) * 0.45f;
+                    float shade = Mathf.Clamp01(0.52f + lambert * 0.5f + spec);
+                    tex.SetPixel(x, y, new Color(shade, shade, shade * 0.99f,
+                        Mathf.Clamp01(r - dist + 0.5f)));
+                }
+            }
+
+            tex.Apply();
+            return tex;
+        }
+
         private static Sprite BuildCircleSprite(int size)
             => Sprite.Create(BuildCircleTexture(size), new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
 
@@ -400,7 +462,15 @@ namespace PuttSeed.Unity
                 float edge = (width - 1f) * (1f - Mathf.Abs(y + 0.5f - halfHeight) / halfHeight);
                 for (int x = 0; x < width; x++)
                 {
-                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01(edge - (x + 0.5f) + 0.5f)));
+                    // Cloth, not a triangle: one soft fold running the length
+                    // of the pennant and a tip that catches more light than the
+                    // tied edge. Baked into RGB, so the tint still decides the
+                    // colour and this only decides the light.
+                    float along = x / (width - 1f);
+                    float fold = Mathf.Sin(along * 7.2f + 0.6f) * 0.055f;
+                    float shade = Mathf.Clamp01(0.8f + along * 0.26f + fold);
+                    tex.SetPixel(x, y, new Color(shade, shade, shade,
+                        Mathf.Clamp01(edge - (x + 0.5f) + 0.5f)));
                 }
             }
 

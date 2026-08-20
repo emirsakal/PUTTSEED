@@ -84,48 +84,14 @@ namespace PuttSeed.Unity.Editor
             const string circlePath = dir + "/circle.png";
             const string starPath = dir + "/star.png";
             const string pennantPath = dir + "/pennant.png";
+            const string spherePath = dir + "/sphere.png";
             Directory.CreateDirectory(dir);
 
-            if (!File.Exists(roundedPath))
-            {
-                File.WriteAllBytes(roundedPath, UIFactory.RoundedSpritePng());
-                AssetDatabase.ImportAsset(roundedPath);
-                var importer = (TextureImporter)AssetImporter.GetAtPath(roundedPath);
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteBorder = new Vector4(24, 24, 24, 24);
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
-
-            if (!File.Exists(circlePath))
-            {
-                File.WriteAllBytes(circlePath, UIFactory.CircleSpritePng());
-                AssetDatabase.ImportAsset(circlePath);
-                var importer = (TextureImporter)AssetImporter.GetAtPath(circlePath);
-                importer.textureType = TextureImporterType.Sprite;
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
-
-            if (!File.Exists(starPath))
-            {
-                File.WriteAllBytes(starPath, UIFactory.StarSpritePng());
-                AssetDatabase.ImportAsset(starPath);
-                var importer = (TextureImporter)AssetImporter.GetAtPath(starPath);
-                importer.textureType = TextureImporterType.Sprite;
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
-
-            if (!File.Exists(pennantPath))
-            {
-                File.WriteAllBytes(pennantPath, UIFactory.PennantSpritePng());
-                AssetDatabase.ImportAsset(pennantPath);
-                var importer = (TextureImporter)AssetImporter.GetAtPath(pennantPath);
-                importer.textureType = TextureImporterType.Sprite;
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
+            EnsureSprite(roundedPath, UIFactory.RoundedSpritePng, new Vector4(24, 24, 24, 24));
+            EnsureSprite(circlePath, UIFactory.CircleSpritePng);
+            EnsureSprite(starPath, UIFactory.StarSpritePng);
+            EnsureSprite(pennantPath, UIFactory.PennantSpritePng);
+            EnsureSprite(spherePath, UIFactory.SphereSpritePng);
 
             var font = ActiveUiFont(dir + "/Fonts");
             if (font != null)
@@ -138,9 +104,73 @@ namespace PuttSeed.Unity.Editor
             var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
             var star = AssetDatabase.LoadAssetAtPath<Sprite>(starPath);
             var pennant = AssetDatabase.LoadAssetAtPath<Sprite>(pennantPath);
-            if (rounded != null && circle != null && star != null && pennant != null)
+            var sphere = AssetDatabase.LoadAssetAtPath<Sprite>(spherePath);
+            if (rounded != null && circle != null && star != null && pennant != null && sphere != null)
             {
-                UIFactory.UseSpriteAssets(rounded, circle, star, pennant);
+                UIFactory.UseSpriteAssets(rounded, circle, star, pennant, sphere);
+            }
+        }
+
+        /// <summary>
+        /// Generates a sprite asset if it is missing, and enforces its import
+        /// settings every time — settings on an asset that already exists are
+        /// otherwise frozen at whatever they were the day it was created.
+        ///
+        /// Clamp is the one that matters. Unity imports textures wrapping by
+        /// default, so sampling a hair past the right edge of a sprite comes
+        /// back with the pixel from its LEFT edge. On the pennant that left
+        /// edge is the full-height side tied to the pole, so the menu emblem
+        /// grew a red line down the far side of the flag — a rendering
+        /// artifact that looked exactly like a drawing mistake.
+        /// </summary>
+        private static void EnsureSprite(string path, System.Func<byte[]> generate, Vector4 border = default)
+        {
+            if (!File.Exists(path))
+            {
+                File.WriteAllBytes(path, generate());
+                AssetDatabase.ImportAsset(path);
+            }
+
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+            {
+                return;
+            }
+
+            bool changed = false;
+            if (importer.textureType != TextureImporterType.Sprite)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                changed = true;
+            }
+
+            if (importer.spriteBorder != border)
+            {
+                importer.spriteBorder = border;
+                changed = true;
+            }
+
+            if (importer.mipmapEnabled)
+            {
+                importer.mipmapEnabled = false;
+                changed = true;
+            }
+
+            if (importer.wrapMode != TextureWrapMode.Clamp)
+            {
+                importer.wrapMode = TextureWrapMode.Clamp;
+                changed = true;
+            }
+
+            if (!importer.alphaIsTransparency)
+            {
+                importer.alphaIsTransparency = true;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                importer.SaveAndReimport();
             }
         }
 

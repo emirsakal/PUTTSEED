@@ -26,29 +26,66 @@ namespace PuttSeed.Unity
                 new Vector2(0.7f, -0.12f), new Vector2(1.35f, 0.25f), new Color(1f, 1f, 1f, 0.05f))
                 .rectTransform;
 
+            // The emblem in two and a half dimensions. Every piece of it is
+            // still flat uGUI — nothing here rotates in 3D — but the pole gets
+            // a lit side, the cloth a fold and a shadow, and the ball a light
+            // source. The cup was given a lip and a far wall too, and it read
+            // as a green halo around a black sticker rather than as a hole; a
+            // hole seen from this angle is a dark ellipse, and the depth was
+            // in the ball's shadow all along.
             UIFactory.CreateCircle(canvas.transform, "EmblemHole",
                 new Vector2(0.44f, 0.855f), new Vector2(0.56f, 0.885f), new Color(0.05f, 0.09f, 0.06f, 0.9f));
+
+            // A pole is a cylinder: dim on the right, lit on the left, which
+            // is exactly two rectangles and no shader at all.
+            var poleShade = UIFactory.CreateRect(canvas.transform, "EmblemPoleShade",
+                new Vector2(0.4955f, 0.87f), new Vector2(0.5045f, 0.955f));
+            var poleShadeImage = poleShade.gameObject.AddComponent<Image>();
+            poleShadeImage.color = new Color(0.62f, 0.60f, 0.55f);
+            poleShadeImage.raycastTarget = false;
             var pole = UIFactory.CreateRect(canvas.transform, "EmblemPole",
-                new Vector2(0.496f, 0.87f), new Vector2(0.504f, 0.955f));
+                new Vector2(0.4955f, 0.87f), new Vector2(0.5005f, 0.955f));
             var poleImage = pole.gameObject.AddComponent<Image>();
             poleImage.color = UIStyle.Cream;
             poleImage.raycastTarget = false;
+
             // A pennant, not a rectangle — the same triangle of cloth the cup
-            // flies out on the course. Pivoted at the pole edge so it can wave
-            // from where it is actually tied (MenuBootstrap drives it).
-            var flagRect = UIFactory.CreateRect(canvas.transform, "EmblemFlag",
+            // flies out on the course. The waving target is now a PIVOT with
+            // two children, shadow first, so the shadow swings with the flag
+            // instead of staying behind while the cloth moves off it.
+            var flagPivot = UIFactory.CreateRect(canvas.transform, "EmblemFlag",
                 new Vector2(0.504f, 0.915f), new Vector2(0.63f, 0.952f));
-            flagRect.pivot = new Vector2(0f, 0.5f);
+            flagPivot.pivot = new Vector2(0f, 0.5f);
+            var flagShadow = UIFactory.CreateRect(flagPivot, "Shadow", Vector2.zero, Vector2.one);
+            flagShadow.offsetMin = new Vector2(5f, -7f);
+            flagShadow.offsetMax = new Vector2(5f, -7f);
+            var flagShadowImage = flagShadow.gameObject.AddComponent<Image>();
+            flagShadowImage.sprite = UIFactory.PennantSprite();
+            flagShadowImage.color = new Color(0f, 0f, 0f, 0.2f);
+            flagShadowImage.raycastTarget = false;
+            var flagRect = UIFactory.CreateRect(flagPivot, "Cloth", Vector2.zero, Vector2.one);
             var flagImage = flagRect.gameObject.AddComponent<Image>();
             flagImage.sprite = UIFactory.PennantSprite();
             flagImage.color = PaletteMaterials.Flag;
             flagImage.raycastTarget = false;
-            menu.emblemFlag = flagRect;
+            menu.emblemFlag = flagPivot;
+
+            // The ball is a container now: a shadow on the grass and a lit
+            // sphere above it, so the thing that rolls into the cup carries
+            // its own ground contact with it.
             var ballRect = UIFactory.CreateRect(canvas.transform, "EmblemBall",
                 new Vector2(0.425f, 0.8765f), new Vector2(0.425f, 0.8765f));
             ballRect.sizeDelta = new Vector2(48f, 48f);
-            var ballImage = ballRect.gameObject.AddComponent<Image>();
-            ballImage.sprite = UIFactory.CircleSprite();
+            var ballShadow = UIFactory.CreateRect(ballRect, "Shadow", Vector2.zero, Vector2.one);
+            ballShadow.offsetMin = new Vector2(3f, -7f);
+            ballShadow.offsetMax = new Vector2(3f, -33f);
+            var ballShadowImage = ballShadow.gameObject.AddComponent<Image>();
+            ballShadowImage.sprite = UIFactory.CircleSprite();
+            ballShadowImage.color = new Color(0f, 0f, 0f, 0.22f);
+            ballShadowImage.raycastTarget = false;
+            var ballBody = UIFactory.CreateRect(ballRect, "Body", Vector2.zero, Vector2.one);
+            var ballImage = ballBody.gameObject.AddComponent<Image>();
+            ballImage.sprite = UIFactory.SphereSprite();
             ballImage.color = UIStyle.Cream;
             ballImage.raycastTarget = false;
             menu.emblemBall = ballRect; // idle animation target (rolls into the cup)
