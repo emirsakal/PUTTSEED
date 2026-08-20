@@ -68,11 +68,7 @@ namespace PuttSeed.Unity
                 MeshFactory.Triangle(new Vector2(0.07f, -0.082f), new Vector2(0.07f, 0.082f),
                     new Vector2(0.245f, 0f), cream), 0f);
 
-            // Strength: one barb per step, capped at three. The wind is one
-            // fixed strength today, so this always draws two — it is derived
-            // from the vector rather than from that fact, because the day the
-            // strength varies is the day nobody remembers this line exists.
-            int barbs = Mathf.Clamp(Mathf.RoundToInt(wind.magnitude / StrengthPerBarb), 1, 3);
+            int barbs = Barbs(wind);
             for (int i = 0; i < barbs; i++)
             {
                 float x = -0.165f + i * 0.055f;
@@ -83,6 +79,15 @@ namespace PuttSeed.Unity
             _heading = Mathf.Atan2(wind.y, wind.x) * Mathf.Rad2Deg;
             _needle.localEulerAngles = new Vector3(0f, 0f, _heading);
         }
+
+        /// <summary>
+        /// How many barbs the vane wears: one per step of strength, three at
+        /// most. A day blows at one of three strengths, and this is what makes
+        /// them tell apart at a glance — the number in the top bar is for
+        /// after you have already looked.
+        /// </summary>
+        public static int Barbs(Vector2 wind)
+            => Mathf.Clamp(Mathf.RoundToInt(wind.magnitude / StrengthPerBarb), 1, 3);
 
         /// <summary>
         /// The wind as a number a person can say out loud, in the unit their

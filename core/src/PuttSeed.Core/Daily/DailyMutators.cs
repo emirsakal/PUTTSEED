@@ -84,8 +84,30 @@ namespace PuttSeed.Core.Daily
         }
 
         /// <summary>
-        /// The day's wind: a fixed strength on one of the sixteen compass
-        /// points the angle table already gives exactly.
+        /// The three strengths a windy day can blow at. One barb each on the
+        /// course vane, and a different number in the top bar: a breeze that
+        /// bends a long roll, the middle wind every windy day used to blow at,
+        /// and one that has to be played around.
+        ///
+        /// Three rather than a continuum because the player has to be able to
+        /// TELL them apart at a glance — two winds a tenth apart are the same
+        /// wind as far as anyone aiming can see, and the vane would be
+        /// pretending to a precision the game does not have.
+        /// </summary>
+        private static readonly Fix64[] Strengths =
+        {
+            Fix64.FromFraction(35, 100),
+            Fix64.FromFraction(65, 100),
+            Fix64.FromFraction(100, 100),
+        };
+
+        /// <summary>
+        /// The day's wind: a strength on one of the sixteen compass points the
+        /// angle table already gives exactly.
+        ///
+        /// The strength is drawn AFTER the direction, off the same stream, so
+        /// every windy day that existed before still blows the way it did —
+        /// only how hard is new.
         /// </summary>
         private static Vec2Fix WindForSeed(ulong seed)
         {
@@ -93,9 +115,9 @@ namespace PuttSeed.Core.Daily
             ulong roll = FixRng.SplitMix64(ref state);
             int angleIndex = (int)(roll % 16) * (FixTrig.AngleSteps / 16);
 
-            // Gentle: about a fifteenth of gravity, enough to bend a long roll
-            // without stealing the shot from the player.
-            return FixTrig.UnitVector(angleIndex) * Fix64.FromFraction(65, 100);
+            ulong strengthRoll = FixRng.SplitMix64(ref state);
+            var strength = Strengths[(int)(strengthRoll % (ulong)Strengths.Length)];
+            return FixTrig.UnitVector(angleIndex) * strength;
         }
     }
 }

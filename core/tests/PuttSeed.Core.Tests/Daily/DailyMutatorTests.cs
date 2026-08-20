@@ -169,5 +169,46 @@ namespace PuttSeed.Core.Tests.Daily
 
             throw new System.InvalidOperationException($"no seed produced {kind}");
         }
+
+        [Test]
+        public void WindyDays_DoNotAllBlowTheSame()
+        {
+            // A vane with a strength readout is a lie when every windy day
+            // blows at one number: the barbs always read two and the top bar
+            // always says the same speed.
+            bool light = false;
+            bool strong = false;
+            for (ulong seed = 1; seed <= 3000; seed++)
+            {
+                if (DailyMutators.ForSeed(seed, 4) != DailyMutator.Windy)
+                {
+                    continue;
+                }
+
+                var strength = DailyMutators.Apply(SimConfig.Default, seed, 4).Wind.Length();
+
+                // Every windy day has to be worth the label.
+                Assert.That(strength.Raw, Is.GreaterThan(Fix64.FromFraction(2, 10).Raw),
+                    $"seed {seed} is called windy and barely blows");
+
+                light |= strength < Fix64.FromFraction(5, 10);
+                strong |= strength > Fix64.FromFraction(9, 10);
+            }
+
+            Assert.That(light, Is.True, "no windy day blows gently");
+            Assert.That(strong, Is.True, "no windy day blows hard");
+        }
+
+        [Test]
+        public void WindStrength_IsAFunctionOfTheSeed()
+        {
+            for (ulong seed = 1; seed <= 600; seed++)
+            {
+                var a = DailyMutators.Apply(SimConfig.Default, seed, 4).Wind;
+                var b = DailyMutators.Apply(SimConfig.Default, seed, 4).Wind;
+                Assert.That(a.X.Raw, Is.EqualTo(b.X.Raw), $"seed {seed}");
+                Assert.That(a.Y.Raw, Is.EqualTo(b.Y.Raw), $"seed {seed}");
+            }
+        }
     }
 }

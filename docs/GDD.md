@@ -82,6 +82,22 @@ course solvable in the same wind the player will meet, so a themed day
 is never an unfair day. The HUD names the day, because ice underfoot
 with no explanation reads as the game misbehaving.
 
+A wind is also SHOWN, because a force with no direction on screen is
+only discoverable by losing a shot to it. A vane sits on the grass in
+the quietest corner of the hole — an arrow pointing where the air
+pushes, one barb per step of strength — and the top bar gives the same
+wind as a number in the player's own unit ("Windy day 21 km/s", 13 mph
+in English). A day blows at one of three strengths, far enough apart to
+tell at a glance; a continuum would be a precision the game does not
+have.
+
+The wind bends a roll but never drives one. Rolling friction here is
+proportional to speed, so it produces no force at all on a ball at rest
+and a steady push would otherwise walk a stopped ball across the green
+and hold it against a wall for ever. The wind therefore acts only above
+the speed it could sustain on the ground the ball is on — derived from
+the wind itself, not a number anyone tuned.
+
 Themed days ride on generator v2, like every other post-MVP rule: v1
 regenerates Journey and the archive, and a twist there would rewrite
 finished history.
