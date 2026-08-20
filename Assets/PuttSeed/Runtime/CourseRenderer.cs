@@ -242,9 +242,8 @@ namespace PuttSeed.Unity
             var outward = (corner - (min + max) * 0.5f).normalized;
             var vane = new GameObject("WindVane");
             vane.transform.SetParent(transform, false);
-            vane.transform.localPosition = new Vector3(
-                corner.x + outward.x * 0.42f, corner.y + outward.y * 0.42f, -0.03f);
-            vane.AddComponent<WindVane>().Build(wind);
+            vane.AddComponent<WindVane>().Build(wind, new Vector3(
+                corner.x + outward.x * 0.42f, corner.y + outward.y * 0.42f, -0.03f));
         }
 
         /// <summary>

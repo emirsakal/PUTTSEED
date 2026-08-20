@@ -101,6 +101,24 @@ namespace PuttSeed.Core.Tests.Sim
         }
 
         [Test]
+        public void WithHoleCapture_KeepsEveryOtherKnob_WindIncluded()
+        {
+            var windy = SimConfig.Default.WithWind(V(0, 1)).WithRollDamping(Fix64.FromFraction(97, 100));
+            var relaxed = windy.WithHoleCapture(Fix64.FromInt(9));
+
+            Assert.That(relaxed.HoleCaptureSpeedSq, Is.EqualTo(Fix64.FromInt(9)));
+
+            // The whole point: a config rebuilt to move ONE knob must not
+            // quietly lose another. Wind is the one that got lost.
+            Assert.That(relaxed.Wind.X, Is.EqualTo(windy.Wind.X));
+            Assert.That(relaxed.Wind.Y, Is.EqualTo(windy.Wind.Y));
+            Assert.That(relaxed.RollDamping, Is.EqualTo(windy.RollDamping));
+            Assert.That(relaxed.HoleRadius, Is.EqualTo(windy.HoleRadius));
+            Assert.That(relaxed.RimRestitution, Is.EqualTo(windy.RimRestitution));
+            Assert.That(relaxed.RestTicksRequired, Is.EqualTo(windy.RestTicksRequired));
+        }
+
+        [Test]
         public void SimConfigCreate_MatchingDefaults_BehavesLikeDefault()
         {
             var d = SimConfig.Default;

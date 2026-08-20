@@ -103,6 +103,28 @@ namespace PuttSeed.Unity.Tests
             Assert.That(easy.IceDamping.Raw, Is.EqualTo(baseConfig.IceDamping.Raw));
             Assert.That(easy.HoleRadius.Raw, Is.EqualTo(baseConfig.HoleRadius.Raw));
 
+            // A themed day turns a physics knob BEFORE generation; the play
+            // config must carry it through. It used to rebuild the config from
+            // scratch to move the capture threshold, and wind — the one knob
+            // Create cannot take — was dropped on the floor. Easy and Normal
+            // windy days generated under wind and then played without it.
+            var windy = baseConfig.WithWind(new PuttSeed.Core.FixedMath.Vec2Fix(
+                PuttSeed.Core.FixedMath.Fix64.FromFraction(65, 100), PuttSeed.Core.FixedMath.Fix64.Zero));
+            Assert.That(windy.Wind.X.Raw, Is.Not.EqualTo(0),
+                "the fixture itself must carry wind, or the loop below proves nothing");
+
+            foreach (var difficulty in new[]
+            {
+                PuttSeed.Core.CourseGen.Difficulty.Easy,
+                PuttSeed.Core.CourseGen.Difficulty.Normal,
+                PuttSeed.Core.CourseGen.Difficulty.Hard,
+            })
+            {
+                var played = feel.BuildPlayConfig(windy, difficulty);
+                Assert.That(played.Wind.X.Raw, Is.EqualTo(windy.Wind.X.Raw), $"{difficulty} lost the wind");
+                Assert.That(played.Wind.Y.Raw, Is.EqualTo(windy.Wind.Y.Raw), $"{difficulty} lost the wind");
+            }
+
             // The toggle turns the relaxation off entirely.
             feel.touchCaptureBelowHard = false;
             var strict = feel.BuildPlayConfig(baseConfig, PuttSeed.Core.CourseGen.Difficulty.Easy);

@@ -115,11 +115,24 @@ namespace PuttSeed.Core.Sim
         /// </summary>
         public bool TouchedHazard { get; private set; }
 
+        /// <summary>
+        /// The speed at which the wind lets go of the ball, squared, on each of
+        /// the three surfaces. Above it the wind pushes; below it the ground
+        /// has the ball. This is what keeps a windy day from being a day the
+        /// ball never stops.
+        /// </summary>
+        private readonly Fix64 _windReleaseRollSq;
+        private readonly Fix64 _windReleaseSandSq;
+        private readonly Fix64 _windReleaseIceSq;
+
         /// <summary>Creates a simulation for one course.</summary>
         public GolfSim(CourseData course, SimConfig config)
         {
             _course = course;
             _config = config;
+            _windReleaseRollSq = ReleaseSpeedSq(config, config.RollDamping);
+            _windReleaseSandSq = ReleaseSpeedSq(config, config.SandDamping);
+            _windReleaseIceSq = ReleaseSpeedSq(config, config.IceDamping);
             _position = course.StartPosition;
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = course.StartPosition;
@@ -203,18 +216,37 @@ namespace PuttSeed.Core.Sim
                 return;
             }
 
-            // Wind and ramps push first, then friction damps — damping applies
-            // to the boosted velocity, so a slope has a stable terminal speed.
-            // Wind is zero on an ordinary day and adding zero is exact, so this
-            // line costs nothing and changes no existing hash.
-            _velocity += _config.Wind * _config.Dt;
-            ApplyRampAcceleration();
-
             // Surface friction priority: sand beats ice beats bare ground
-            // (deterministic tie-break when generated zones overlap).
+            // (deterministic tie-break when generated zones overlap). Resolved
+            // before the wind, because how fast the wind CAN hold a ball
+            // depends on the ground it is holding it on.
             bool inSand = IsInSand();
             bool inIce = !inSand && IsInIce();
             TouchedHazard |= inSand || inIce;
+
+            // Wind and ramps push first, then friction damps — damping applies
+            // to the boosted velocity, so a slope has a stable terminal speed.
+            //
+            // The wind bends a roll; it never drives one. Rolling friction here
+            // is VISCOUS — proportional to speed, and therefore zero at zero
+            // speed — so a steady acceleration always wins in the end: the ball
+            // settled at the wind's own terminal speed, drifted forever, and
+            // pinned itself against the nearest wall, firing a bounce sound
+            // every few frames. Gating the push at exactly that terminal speed
+            // is the whole fix, and it needs no number anyone has to tune: over
+            // it the wind still shapes the shot, under it the grass has the ball.
+            //
+            // Wind is zero on an ordinary day, where every gate is zero and
+            // adding zero was exact anyway, so no existing hash moves.
+            var releaseSq = inSand ? _windReleaseSandSq
+                : inIce ? _windReleaseIceSq
+                : _windReleaseRollSq;
+            if (_velocity.LengthSq() > releaseSq)
+            {
+                _velocity += _config.Wind * _config.Dt;
+            }
+
+            ApplyRampAcceleration();
             _velocity *= inSand ? _config.SandDamping
                 : inIce ? _config.IceDamping
                 : _config.RollDamping;
@@ -347,6 +379,32 @@ namespace PuttSeed.Core.Sim
         /// back to the cup edge and its inward velocity reflects with reduced
         /// restitution. Checked every sub-step.
         /// </summary>
+        /// <summary>
+        /// The speed the wind lets go at, squared, on a surface with the given
+        /// damping: twice v = |wind| * dt * k / (1 - k), the fixed point of
+        /// "push, then damp".
+        ///
+        /// The doubling is not taste. That fixed point is an ATTRACTOR reached
+        /// from above, so a gate sitting exactly on it is never crossed: the
+        /// ball hovers there and rolls on for ever, which is measurably what
+        /// happened — 0.44597 units per second, tick after tick, until the test
+        /// gave up at 2400. Twice the speed the wind could hold clears the
+        /// asymptote while leaving the wind in charge of the whole part of the
+        /// roll a player is aiming with. Zero when there is no wind, and zero
+        /// on a surface that never slows anything, where no such speed exists.
+        /// </summary>
+        private static Fix64 ReleaseSpeedSq(SimConfig config, Fix64 damping)
+        {
+            if (damping >= Fix64.One)
+            {
+                return Fix64.Zero;
+            }
+
+            var sustained = config.Wind.Length() * config.Dt * damping / (Fix64.One - damping);
+            var release = sustained + sustained;
+            return release * release;
+        }
+
         private bool CheckHoleCapture()
         {
             var delta = _position - _course.HolePosition;

@@ -153,7 +153,8 @@ namespace PuttSeed.Unity
         {
             DailyMutator.Icy => Loc.Tr("Icy day"),
             DailyMutator.Bouncy => Loc.Tr("Bouncy day"),
-            DailyMutator.Windy => Loc.Tr("Windy day"),
+            DailyMutator.Windy => Loc.Tr("Windy day") + " "
+                + WindVane.SpeedLabel(FixView.ToVector2(_runner.PlayConfig.Wind)),
             _ => "",
         };
 

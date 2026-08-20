@@ -80,25 +80,12 @@ namespace PuttSeed.Unity
                 // putt that finds the middle of the cup now falls in. Relaxing
                 // capture can only ever add ways to finish, so the proof holds.
                 var relaxed = Quantize(captureSpeed * Mathf.Max(1f, hardCaptureSlack));
-                return WithCaptureSpeedSq(baseConfig, relaxed * relaxed);
+                return baseConfig.WithHoleCapture(relaxed * relaxed);
             }
 
             // Any overlap captures: a threshold far above any reachable speed².
-            return WithCaptureSpeedSq(baseConfig, Fix64.FromInt(1_000_000));
+            return baseConfig.WithHoleCapture(Fix64.FromInt(1_000_000));
         }
-
-        /// <summary>The same config with one knob moved — capture speed, squared.</summary>
-        private static SimConfig WithCaptureSpeedSq(SimConfig baseConfig, Fix64 captureSpeedSq)
-            => SimConfig.Create(
-                baseConfig.Dt, baseConfig.BallRadius, baseConfig.MaxShotSpeed,
-                baseConfig.RollDamping, baseConfig.SandDamping, baseConfig.IceDamping,
-                baseConfig.WallRestitution, baseConfig.MaxTravelPerSubStep,
-                baseConfig.BumperRestitution, baseConfig.BumperMaxExitSpeed,
-                baseConfig.HoleRadius,
-                holeCaptureSpeedSq: captureSpeedSq,
-                rimRestitution: baseConfig.RimRestitution,
-                restSpeedEpsSq: baseConfig.RestSpeedEpsSq,
-                restTicksRequired: baseConfig.RestTicksRequired);
 
         /// <summary>Builds the deterministic sim config from the current knob values.</summary>
         public SimConfig BuildSimConfig()

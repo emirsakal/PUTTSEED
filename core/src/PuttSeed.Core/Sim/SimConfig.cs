@@ -143,6 +143,24 @@ namespace PuttSeed.Core.Sim
                 HoleRadius, HoleCaptureSpeedSq, RimRestitution, RestSpeedEpsSq, RestTicksRequired,
                 Wind);
 
+        /// <summary>
+        /// This config with a different capture threshold — how fast a ball may
+        /// be moving and still drop rather than rim out.
+        ///
+        /// It exists because the alternative is rebuilding a config through
+        /// <see cref="Create"/>, which starts every field from an argument and
+        /// therefore starts WIND from nothing. That is exactly what the Unity
+        /// feel asset did to relax capture, and the result was a windy day that
+        /// generated under wind and then played without any: the label said
+        /// "Windy day" and the ball rolled straight. A With- method carries
+        /// every knob it was not asked about, including the ones added later.
+        /// </summary>
+        public SimConfig WithHoleCapture(Fix64 holeCaptureSpeedSq)
+            => new SimConfig(Dt, BallRadius, MaxShotSpeed, RollDamping, SandDamping, IceDamping,
+                WallRestitution, MaxTravelPerSubStep, BumperRestitution, BumperMaxExitSpeed,
+                HoleRadius, holeCaptureSpeedSq, RimRestitution, RestSpeedEpsSq, RestTicksRequired,
+                Wind);
+
         /// <summary>This config with a different wind.</summary>
         public SimConfig WithWind(Vec2Fix wind)
             => new SimConfig(Dt, BallRadius, MaxShotSpeed, RollDamping, SandDamping, IceDamping,
