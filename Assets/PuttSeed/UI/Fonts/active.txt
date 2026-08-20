@@ -1,0 +1,3 @@
+# The typeface the game is set in. One file name from Fonts/Library.
+# Change this line, then run PuttSeed - Rebuild Scenes.
+Outfit-SemiBold.ttf

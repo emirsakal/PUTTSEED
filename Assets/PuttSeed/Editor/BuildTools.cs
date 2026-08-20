@@ -127,26 +127,11 @@ namespace PuttSeed.Unity.Editor
                 importer.SaveAndReimport();
             }
 
-            // A dropped-in typeface, if the project has one. Everything else
-            // in this method GENERATES its asset; a font cannot be generated,
-            // so this half only looks.
-            foreach (string path in Directory.Exists(dir + "/Fonts")
-                ? Directory.GetFiles(dir + "/Fonts")
-                : System.Array.Empty<string>())
+            var font = ActiveUiFont(dir + "/Fonts");
+            if (font != null)
             {
-                if (!path.EndsWith(".ttf", System.StringComparison.OrdinalIgnoreCase)
-                    && !path.EndsWith(".otf", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var font = AssetDatabase.LoadAssetAtPath<Font>(path.Replace(Path.DirectorySeparatorChar, '/'));
-                if (font != null)
-                {
-                    UIFactory.UseFontAsset(font);
-                    Debug.Log($"PuttSeed: UI font is {font.name} ({path}).");
-                    break;
-                }
+                UIFactory.UseFontAsset(font);
+                Debug.Log($"PuttSeed: UI font is {font.name}.");
             }
 
             var rounded = AssetDatabase.LoadAssetAtPath<Sprite>(roundedPath);
@@ -157,6 +142,59 @@ namespace PuttSeed.Unity.Editor
             {
                 UIFactory.UseSpriteAssets(rounded, circle, star, pennant);
             }
+        }
+
+        /// <summary>
+        /// The typeface the game is set in, or null for Unity's built-in face.
+        /// Everything else the bake needs it GENERATES; a font cannot be
+        /// generated, so this only looks — in two places, because there are two
+        /// ways to mean it. Fonts/active.txt names one file in Fonts/Library,
+        /// which is how you audition six faces without moving files around; a
+        /// font dropped loose into Fonts/ wins when there is no such line, which
+        /// is how you use one you already decided on.
+        ///
+        /// The tests resolve the face through here too — a font that cannot
+        /// print Turkish is a bug the bake should not be the first to notice.
+        /// </summary>
+        public static Font? ActiveUiFont(string fontsDir = "Assets/PuttSeed/UI/Fonts")
+        {
+            string activePath = fontsDir + "/active.txt";
+            if (File.Exists(activePath))
+            {
+                foreach (string line in File.ReadAllLines(activePath))
+                {
+                    string name = line.Trim();
+                    if (name.Length == 0 || name.StartsWith("#"))
+                    {
+                        continue;
+                    }
+
+                    var chosen = AssetDatabase.LoadAssetAtPath<Font>(fontsDir + "/Library/" + name);
+                    if (chosen == null)
+                    {
+                        Debug.LogWarning($"PuttSeed: active.txt names {name}, which is not in Fonts/Library.");
+                    }
+
+                    return chosen;
+                }
+            }
+
+            foreach (string path in Directory.Exists(fontsDir)
+                ? Directory.GetFiles(fontsDir)
+                : System.Array.Empty<string>())
+            {
+                if (path.EndsWith(".ttf", System.StringComparison.OrdinalIgnoreCase)
+                    || path.EndsWith(".otf", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    var loose = AssetDatabase.LoadAssetAtPath<Font>(path.Replace(Path.DirectorySeparatorChar, '/'));
+                    if (loose != null)
+                    {
+                        return loose;
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

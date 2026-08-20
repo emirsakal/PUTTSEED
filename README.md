@@ -161,11 +161,12 @@ repo root in Unity Hub).
 
 ### Typography
 
-No typeface ships in this repo — a font is licensed, not written. With the
-slot empty the game falls back to Unity's built-in Liberation Sans. Drop one
-OFL `.ttf` into `Assets/PuttSeed/UI/Fonts/` and run **PuttSeed → Rebuild
-Scenes**; every label in the game is set in it from that point on. The face
-must cover Turkish (ı, İ, ğ, ş, ç, ö, ü) — see the note in that folder.
+The game is set in **Outfit SemiBold**. Six OFL candidates live in
+`Assets/PuttSeed/UI/Fonts/Library/`; `Fonts/active.txt` names the one in
+use, and changing that line plus **PuttSeed → Rebuild Scenes** re-sets the
+whole UI. Two of the six failed the audition — one has no right arrow, one
+has no Turkish ğ/İ/ş — so `UiFontTests` asserts the active face can print
+every character the UI can show, in both languages.
 
 ### Signing (release builds)
 

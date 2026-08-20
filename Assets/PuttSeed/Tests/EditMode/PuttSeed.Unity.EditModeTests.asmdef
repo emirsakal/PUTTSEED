@@ -3,6 +3,7 @@
     "rootNamespace": "PuttSeed.Unity.Tests",
     "references": [
         "PuttSeed.Unity",
+        "PuttSeed.Unity.Editor",
         "PuttSeed.Core",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
