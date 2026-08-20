@@ -57,6 +57,31 @@ namespace PuttSeed.Unity
         /// </summary>
         public static PuttSeed.Core.CourseGen.GenerationResult? PreparedCourse;
 
+        /// <summary>The bucket the prepared practice course was grown for.</summary>
+        public static PuttSeed.Core.CourseGen.Difficulty PreparedPracticeBucket;
+
+        /// <summary>
+        /// A practice course the menu grew while the player was still deciding.
+        /// A search is up to eight generations; without this the first course
+        /// of a session sits behind the whole search, and only the first —
+        /// after that the game scene grows the next one during play.
+        /// </summary>
+        public static PracticeCourses.Candidate? PreparedPractice;
+
+        /// <summary>Takes the prepared practice course if its bucket matches.</summary>
+        public static PracticeCourses.Candidate? TakePreparedPractice(
+            PuttSeed.Core.CourseGen.Difficulty want)
+        {
+            if (PreparedPractice == null || PreparedPracticeBucket != want)
+            {
+                return null;
+            }
+
+            var prepared = PreparedPractice;
+            PreparedPractice = null;
+            return prepared;
+        }
+
         /// <summary>
         /// Takes the prepared course if it is the one being asked for. Single
         /// use: the menu prepares one on every visit, and a stale one must

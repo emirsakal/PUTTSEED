@@ -167,6 +167,37 @@ namespace PuttSeed.Unity
             todayThumb.sprite = Sprite.Create(texture,
                 new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             UiFx.PopIn(this, todayThumb.gameObject);
+
+            yield return PrewarmPractice(feel);
+        }
+
+        /// <summary>
+        /// Grows one practice course while the player is still reading the
+        /// menu. Practice picks its course by SEARCHING — up to eight
+        /// generations — so without this the first course of a session sits
+        /// behind the whole search; after it, the game scene keeps the next one
+        /// warm during play.
+        ///
+        /// Deliberately after the thumbnail rather than beside it: two
+        /// generations at once would slow the picture the player is waiting to
+        /// see, and this one nobody is waiting for yet.
+        /// </summary>
+        private IEnumerator PrewarmPractice(FeelConfig? feel)
+        {
+            var want = GameSession.PracticeDifficulty;
+            var seeds = PracticeCourses.DrawSeeds();
+            var baseConfig = feel != null ? feel.BuildSimConfig() : SimConfig.Default;
+            var search = Task.Run(() => PracticeCourses.Search(seeds, want, baseConfig));
+            while (!search.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (search.Status == TaskStatus.RanToCompletion && search.Result.Result != null)
+            {
+                GameSession.PreparedPracticeBucket = want;
+                GameSession.PreparedPractice = search.Result;
+            }
         }
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch

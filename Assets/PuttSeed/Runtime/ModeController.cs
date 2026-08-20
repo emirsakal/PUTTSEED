@@ -37,8 +37,6 @@ namespace PuttSeed.Unity
     /// </summary>
     public sealed class ModeController : MonoBehaviour
     {
-        private const int PracticeCandidateTries = 8;
-
         /// <summary>
         /// The generator the curated campaign was picked from. Journey seeds
         /// mean nothing without it: a level is a seed AND the version that
@@ -46,11 +44,8 @@ namespace PuttSeed.Unity
         /// </summary>
         public const int JourneyVersion = 4;
 
-        /// <summary>
-        /// Practice runs the newest generator — the fresh-course firehose is
-        /// where new elements meet players first.
-        /// </summary>
-        public const int PracticeVersion = 4;
+        /// <summary>The generator practice runs (see <see cref="PracticeCourses"/>).</summary>
+        public const int PracticeVersion = PracticeCourses.Version;
 
         private SimRunner _runner = null!;
         private CourseRenderer _courseRenderer = null!;
@@ -553,9 +548,15 @@ namespace PuttSeed.Unity
             // A candidate search is up to eight generations, and a v4
             // generation is not free: without this, every "new course" tap
             // would sit on the loading cover for as long as the search took.
-            var search = _nextPractice != null && _nextPracticeBucket == PracticeDifficulty
-                ? _nextPractice
-                : Task.Run(SearchArguments());
+            // Three places it can come from, cheapest first: the menu grew one
+            // while the player was still deciding, this scene grew one while
+            // the last course was being played, or nobody did and we pay now.
+            var handed = GameSession.TakePreparedPractice(PracticeDifficulty);
+            var search = handed != null
+                ? Task.FromResult(handed.Value)
+                : _nextPractice != null && _nextPracticeBucket == PracticeDifficulty
+                    ? _nextPractice
+                    : Task.Run(SearchArguments());
             _nextPractice = null;
 
             while (!search.IsCompleted)
@@ -582,86 +583,18 @@ namespace PuttSeed.Unity
             ModeChanged?.Invoke();
         }
 
-        /// <summary>A practice course and the physics it was proven under.</summary>
-        private readonly struct PracticeCandidate
-        {
-            public readonly ulong Seed;
-            public readonly SimConfig Config;
-            public readonly GenerationResult? Result;
-
-            public PracticeCandidate(ulong seed, SimConfig config, GenerationResult? result)
-            {
-                Seed = seed;
-                Config = config;
-                Result = result;
-            }
-        }
-
-        // The next practice course, grown in the background while the player is
-        // still on the current one, and the bucket it was grown for.
-        private Task<PracticeCandidate>? _nextPractice;
+        // The next practice course, grown in the background while the player
+        // is still on the current one, and the bucket it was grown for.
+        private Task<PracticeCourses.Candidate>? _nextPractice;
         private Difficulty _nextPracticeBucket;
 
-        /// <summary>
-        /// Builds the background search: seeds are drawn HERE, on the main
-        /// thread, so the task itself touches nothing but pure core.
-        /// </summary>
-        private Func<PracticeCandidate> SearchArguments()
+        /// <summary>Builds the background search for the current bucket.</summary>
+        private Func<PracticeCourses.Candidate> SearchArguments()
         {
-            var entropy = new System.Random();
-            var seeds = new ulong[PracticeCandidateTries];
-            var buffer = new byte[8];
-            for (int i = 0; i < seeds.Length; i++)
-            {
-                entropy.NextBytes(buffer);
-                seeds[i] = BitConverter.ToUInt64(buffer, 0);
-            }
-
+            var seeds = PracticeCourses.DrawSeeds();
             var baseConfig = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
             var want = PracticeDifficulty;
-            return () => SearchPractice(seeds, want, baseConfig);
-        }
-
-        /// <summary>
-        /// Grows candidates until one lands in the requested bucket, keeping
-        /// the closest miss so an unlucky bucket never hands back an arbitrary
-        /// course. Pure core work — safe on a thread pool thread.
-        /// </summary>
-        private static PracticeCandidate SearchPractice(ulong[] seeds, Difficulty want, SimConfig baseConfig)
-        {
-            var best = new PracticeCandidate(0, baseConfig, null);
-            int bestDistance = int.MaxValue;
-            foreach (ulong seed in seeds)
-            {
-                // Each seed carries its own themed twist, so a candidate is
-                // solved under the physics it will be played under.
-                var config = DailyMutators.Apply(baseConfig, seed, PracticeVersion);
-                GenerationResult candidate;
-                try
-                {
-                    candidate = CourseGenerator.Generate(
-                        seed, GeneratorConfig.ForVersion(PracticeVersion), config,
-                        SolverConfig.ForVersion(PracticeVersion));
-                }
-                catch (InvalidOperationException)
-                {
-                    continue; // bounded generation missed; the next seed will do
-                }
-
-                int distance = Math.Abs((int)candidate.Difficulty - (int)want);
-                if (distance < bestDistance)
-                {
-                    best = new PracticeCandidate(seed, config, candidate);
-                    bestDistance = distance;
-                }
-
-                if (distance == 0)
-                {
-                    break;
-                }
-            }
-
-            return best;
+            return () => PracticeCourses.Search(seeds, want, baseConfig);
         }
 
         /// <summary>Starts growing the next practice course, if one is wanted.</summary>
