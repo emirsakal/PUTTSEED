@@ -151,21 +151,42 @@ namespace PuttSeed.Unity.Tests
             Assert.That(earned, Does.Not.Contain("ace"));
         }
 
+        /// <summary>
+        /// Counted on the FIRST finish, not the best of a day's retries: three
+        /// stars found on the twelfth attempt is a personal best, not a day
+        /// played to three stars.
+        /// </summary>
         [Test]
         public void Perfectionist_CountsThreeStarDaysOnly()
         {
             var data = Fresh();
             for (int day = 1; day <= 9; day++)
             {
-                data.days.Add(new DayRecord { day = day, completed = true, bestStars = 3 });
+                data.days.Add(new DayRecord
+                {
+                    day = day, completed = true, firstStars = 3, bestStars = 3,
+                });
             }
 
-            data.days.Add(new DayRecord { day = 10, completed = true, bestStars = 2 });
+            data.days.Add(new DayRecord { day = 10, completed = true, firstStars = 2, bestStars = 2 });
             Assert.That(Achievements.ThreeStarDayCount(data), Is.EqualTo(9));
             Assert.That(Achievements.EvaluateRun(data, Run()), Does.Not.Contain("three_star_10"));
 
-            data.days.Add(new DayRecord { day = 11, completed = true, bestStars = 3 });
+            data.days.Add(new DayRecord { day = 11, completed = true, firstStars = 3, bestStars = 3 });
             Assert.That(Achievements.EvaluateRun(data, Run()), Does.Contain("three_star_10"));
+        }
+
+        /// <summary>A day retried into three stars is not a three-star day.</summary>
+        [Test]
+        public void Perfectionist_IgnoresStarsFoundOnARetry()
+        {
+            var data = Fresh();
+            data.days.Add(new DayRecord
+            {
+                day = 1, completed = true, firstStars = 1, bestStars = 3,
+            });
+
+            Assert.That(Achievements.ThreeStarDayCount(data), Is.Zero);
         }
 
         [Test]

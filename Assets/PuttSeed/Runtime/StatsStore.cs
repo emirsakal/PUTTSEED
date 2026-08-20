@@ -11,6 +11,16 @@ namespace PuttSeed.Unity
     public sealed class DayRecord
     {
         public int day;
+
+        // The day's OFFICIAL result: the first finish, whatever came after it.
+        // Retries stay unlimited — the loop is built on them — but a score
+        // taken on the thirty-fourth attempt is not a score anyone can compare
+        // against, so it is a personal best rather than the day's answer.
+        // Zero means the day has been played and not yet finished.
+        public int firstStrokes;
+        public int firstStars;
+        public string firstReplay = "";
+
         public int bestStrokes;
         public int bestStars;
         public int attempts;
@@ -145,6 +155,15 @@ namespace PuttSeed.Unity
         {
             var record = GetOrCreateDay(day);
             bool firstCompletionToday = !record.completed;
+            if (firstCompletionToday)
+            {
+                // Stamped once and never touched again: this is the number the
+                // streak, the share and the calendar answer with.
+                record.firstStrokes = strokes;
+                record.firstStars = stars;
+                record.firstReplay = replayCode;
+            }
+
             if (firstCompletionToday || strokes < record.bestStrokes)
             {
                 record.bestStrokes = strokes;

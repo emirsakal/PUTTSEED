@@ -205,6 +205,7 @@ namespace PuttSeed.Unity
             ["Practice · {0}"] = "Antrenman · {0}",
             ["Tutorial {0}/{1}"] = "Eğitim {0}/{1}",
             ["{0} strokes · best {1}"] = "{0} vuruş · en iyi {1}",
+            ["{0} strokes"] = "{0} vuruş",
             ["Streak {0} · par streak {1}"] = "Seri {0} · par serisi {1}",
             ["Next hole in {0}"] = "Sonraki delik: {0}",
             ["Easy"] = "Kolay",

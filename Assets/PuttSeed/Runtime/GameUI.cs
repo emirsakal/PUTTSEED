@@ -258,6 +258,13 @@ namespace PuttSeed.Unity
                 modeLabel = string.Format(Loc.Tr("{0} · {1}"), modeLabel, mutator);
             }
 
+            // Say so while it is happening: the day is already answered and
+            // this run is practice on the same hole.
+            if (_modes.DailyAlreadyAnswered)
+            {
+                modeLabel = string.Format(Loc.Tr("{0} · {1}"), modeLabel, Loc.Tr("Practice"));
+            }
+
             // Small print on the right; the numbers that matter are the hero
             // and the chip.
             int streak = _modes.Stats.Data.streak;
@@ -363,12 +370,17 @@ namespace PuttSeed.Unity
 
             var data = _modes.Stats.Data;
             var record = _modes.Stats.FindDay(_modes.ActiveDayNumber);
+            int official = record != null && record.completed ? record.firstStrokes : sim.Strokes;
             int best = record != null && record.completed ? record.bestStrokes : sim.Strokes;
 
             if (dailyCardResult != null)
             {
-                dailyCardResult.text = string.Format(Loc.Tr("{0} strokes · best {1}"),
-                    sim.Strokes, best);
+                // The day's answer first, the personal best beside it — and
+                // only when a retry actually beat the answer, so a clean first
+                // finish is not made to look like two numbers.
+                dailyCardResult.text = best < official
+                    ? string.Format(Loc.Tr("{0} strokes · best {1}"), official, best)
+                    : string.Format(Loc.Tr("{0} strokes"), official);
             }
 
             if (dailyCardStreak != null)

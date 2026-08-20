@@ -68,6 +68,48 @@ namespace PuttSeed.Unity.Tests
             Assert.That(store.Data.streak, Is.EqualTo(3));
         }
 
+        /// <summary>
+        /// The day's answer is its first finish. Retries stay unlimited — the
+        /// loop is built on them — but a score taken on the thirty-fourth
+        /// attempt is nobody else's score, so it may improve the personal best
+        /// and nothing else.
+        /// </summary>
+        [Test]
+        public void TheFirstFinish_IsTheDaysAnswerAndNeverChanges()
+        {
+            var store = new StatsStore(_path);
+            store.RecordDailyCompletion(100, 4, 1, "PUTT-first");
+            store.RecordDailyCompletion(100, 2, 3, "PUTT-better");
+            store.RecordDailyCompletion(100, 3, 2, "PUTT-middling");
+
+            var record = store.GetOrCreateDay(100);
+            Assert.That(record.firstStrokes, Is.EqualTo(4));
+            Assert.That(record.firstStars, Is.EqualTo(1));
+            Assert.That(record.firstReplay, Is.EqualTo("PUTT-first"));
+
+            Assert.That(record.bestStrokes, Is.EqualTo(2), "the personal best still improves");
+            Assert.That(record.bestStars, Is.EqualTo(3));
+            Assert.That(record.bestReplay, Is.EqualTo("PUTT-better"));
+        }
+
+        [Test]
+        public void ASaveWrittenBeforeTheRuleExisted_StillLoads()
+        {
+            // No first* fields at all — exactly what an older build wrote.
+            System.IO.File.WriteAllText(_path,
+                "{\"streak\":3,\"days\":[{\"day\":100,\"bestStrokes\":2,\"bestStars\":3,"
+                + "\"attempts\":7,\"completed\":true,\"bestReplay\":\"PUTT-old\"}]}");
+
+            var store = new StatsStore(_path);
+            var record = store.FindDay(100);
+
+            Assert.That(store.Data.streak, Is.EqualTo(3));
+            Assert.That(record, Is.Not.Null);
+            Assert.That(record!.bestStrokes, Is.EqualTo(2));
+            Assert.That(record.firstStrokes, Is.Zero, "an unanswered day, not a corrupt one");
+            Assert.That(record.firstReplay, Is.Empty);
+        }
+
         [Test]
         public void ParStreak_CountsOnlyDaysWhoseFirstFinishReachedPar()
         {

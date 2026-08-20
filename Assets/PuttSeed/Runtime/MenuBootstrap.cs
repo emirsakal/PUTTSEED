@@ -212,7 +212,9 @@ namespace PuttSeed.Unity
             if (dailyLabel != null)
             {
                 dailyLabel.text = todayRecord.completed
-                    ? string.Format(Loc.Tr("Daily {0} — done in {1}"), Loc.ShortDate(utc), todayRecord.bestStrokes)
+                    // The day's answer is its FIRST finish, not the best of
+                    // however many retries followed it.
+                    ? string.Format(Loc.Tr("Daily {0} — done in {1}"), Loc.ShortDate(utc), todayRecord.firstStrokes)
                     : string.Format(Loc.Tr("Play today's hole · {0}"), Loc.ShortDate(utc));
             }
 
@@ -582,7 +584,7 @@ namespace PuttSeed.Unity
                 {
                     if (day.completed)
                     {
-                        buckets[Mathf.Clamp(day.bestStrokes, 1, 6) - 1]++;
+                        buckets[Mathf.Clamp(day.firstStrokes, 1, 6) - 1]++;
                     }
                 }
 
@@ -650,7 +652,9 @@ namespace PuttSeed.Unity
             }
 
             // Share payloads stay English on purpose — they travel to anyone.
-            string text = $"PUTTSEED day {today} — {record.bestStrokes} strokes. Watch: {record.bestReplay}";
+            // Explicitly a personal best, not the day's official answer.
+            string text = $"PUTTSEED day {today} — {record.bestStrokes} strokes (best run). "
+                + $"Watch: {record.bestReplay}";
             GUIUtility.systemCopyBuffer = text;
             bool sheet = NativeShare.Share(text);
             if (shareBestLabel != null)
@@ -1053,7 +1057,7 @@ namespace PuttSeed.Unity
                     star.gameObject.SetActive(played);
                     if (played)
                     {
-                        star.color = st < record!.bestStars
+                        star.color = st < record!.firstStars
                             ? (isToday ? UIStyle.AccentInk : UIStyle.Accent)
                             : new Color(1f, 1f, 1f, 0.16f);
                     }

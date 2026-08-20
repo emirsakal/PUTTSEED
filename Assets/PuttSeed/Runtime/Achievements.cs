@@ -206,13 +206,13 @@ namespace PuttSeed.Unity
             return earned;
         }
 
-        /// <summary>Distinct days whose best run earned all three stars.</summary>
+        /// <summary>Distinct days whose FIRST finish earned all three stars.</summary>
         public static int ThreeStarDayCount(SaveData data)
         {
             int count = 0;
             for (int i = 0; i < data.days.Count; i++)
             {
-                if (data.days[i].completed && data.days[i].bestStars >= 3)
+                if (data.days[i].completed && data.days[i].firstStars >= 3)
                 {
                     count++;
                 }

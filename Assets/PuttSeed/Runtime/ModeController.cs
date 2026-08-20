@@ -52,6 +52,24 @@ namespace PuttSeed.Unity
         private DateTime _activeDayDate;
         private bool _completionRecorded;
 
+        /// <summary>
+        /// True when the run just holed out was the day's FIRST finish — the
+        /// one that counts. Retries stay unlimited because the loop is built on
+        /// them, but a score taken on the thirty-fourth attempt is nobody
+        /// else's score, so only this one fills the streak, the calendar and
+        /// the share.
+        /// </summary>
+        public bool WasFirstFinish { get; private set; } = true;
+
+        /// <summary>
+        /// True while today's hole has already been answered and this run is
+        /// therefore practice on it. The retry is still instant and still
+        /// unlimited — it just no longer pretends to be the day's score.
+        /// </summary>
+        public bool DailyAlreadyAnswered =>
+            Mode == GameMode.Daily && !IsArchiveDay && !_completionRecorded
+            && (_stats.FindDay(_activeDayNumber)?.completed ?? false);
+
         // Generator config version of the loaded course. Daily derives it from
         // the day number, journey and tutorial pin v1 forever, practice runs
         // the newest; replay codes carry theirs.
@@ -187,8 +205,11 @@ namespace PuttSeed.Unity
         public string BuildShareText(int strokes, int par, string code)
         {
             bool isDaily = Mode == GameMode.Daily && _runner.Seed == _dailySeed && _dailySeed != 0;
+            // A run after the day's first finish is practice on today's hole:
+            // shareable, but never dressed up as the day's answer.
+            string tail = isDaily && !WasFirstFinish ? " · practice run" : "";
             var text = new System.Text.StringBuilder(isDaily
-                ? $"PUTTSEED day {_activeDayNumber} — {strokes} strokes (par {par})"
+                ? $"PUTTSEED day {_activeDayNumber} — {strokes} strokes (par {par}){tail}"
                 : $"PUTTSEED — {strokes} strokes (par {par})");
 
             // The scorecard. A replay code proves the run and reads as noise;
@@ -693,6 +714,8 @@ namespace PuttSeed.Unity
                     shots[i] = _runner.PlayedShots[i];
                 }
 
+                // Asked BEFORE recording: afterwards every day looks finished.
+                WasFirstFinish = !(_stats.FindDay(_activeDayNumber)?.completed ?? false);
                 _stats.RecordDailyCompletion(
                     _activeDayNumber, sim.Strokes,
                     Scoring.Stars(sim.Strokes, _runner.Generation!.Course.Par),
