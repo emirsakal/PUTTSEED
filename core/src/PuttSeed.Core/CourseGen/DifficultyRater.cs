@@ -21,12 +21,60 @@ namespace PuttSeed.Core.CourseGen
     public static class DifficultyRater
     {
         /// <summary>
+        /// Score a hole is forgiven for each stroke of par beyond the second.
+        /// Measured, not guessed: over a 220-seed scan the median par 3 scores
+        /// exactly 2 above the median par 2 (21.9 mean against 20.2). The first
+        /// guess here was 8, and the data said otherwise.
+        /// </summary>
+        public const int ParAllowance = 2;
+
+        /// <summary>
         /// Rates a course. <paramref name="captureShots"/> /
         /// <paramref name="sampledShots"/> is the solver's tightness ratio;
         /// <paramref name="turnCount"/> is corridor joints;
         /// <paramref name="hazardCount"/> is bumpers + sand + ice + water.
         /// </summary>
-        public static Difficulty Rate(int captureShots, int sampledShots, int turnCount, int hazardCount)
+        /// <summary>
+        /// Rates a course against holes of ITS OWN SIZE.
+        /// <paramref name="captureShots"/> / <paramref name="sampledShots"/> is
+        /// the solver's tightness ratio; <paramref name="turnCount"/> is
+        /// corridor joints; <paramref name="hazardCount"/> is every element on
+        /// the course; <paramref name="par"/> is what the hole is worth.
+        /// </summary>
+        public static Difficulty Rate(int captureShots, int sampledShots, int turnCount,
+            int hazardCount, int par = 2)
+        {
+            // A longer hole is not a harder hole. Turns and hazards both grow
+            // with the corridor, so a par 3 scores systematically above a par
+            // 2: under fixed cuts a 200-seed par-2-and-3 scan rated 19/29/52
+            // Easy/Normal/Hard, and "Easy" had quietly come to mean "short" —
+            // which would have made choosing Easy in practice silently choose
+            // par 2, taking the variety back out of the mode that shows it off.
+            int score = Score(captureShots, sampledShots, turnCount, hazardCount)
+                - ParAllowance * (par - 2);
+
+            // Recalibrated three times, each against a scan: 2026-08-16 when
+            // ice joined the hazard pool, 2026-08-18 for the element wave, and
+            // 2026-08-19 when corridors grew long enough to hold a par 3 — that
+            // last one lifted the whole score distribution by about two points
+            // (mean 20.2 for par 2), which under the old 16/20 cuts rated a
+            // 200-seed scan 19/29/52 Easy/Normal/Hard. At 18/22 with the par
+            // allowance the same scan rates 35/38/25 overall AND per par:
+            // 35/39/25 for par 2, 35/37/27 for par 3.
+            if (score <= 18)
+            {
+                return Difficulty.Easy;
+            }
+
+            return score <= 22 ? Difficulty.Normal : Difficulty.Hard;
+        }
+
+        /// <summary>
+        /// The raw difficulty score, before the par allowance. Exposed because
+        /// the thresholds above are tuned from scans of it, and a constant
+        /// tuned from data nobody can reproduce is a constant nobody can trust.
+        /// </summary>
+        public static int Score(int captureShots, int sampledShots, int turnCount, int hazardCount)
         {
             // Tightness points without division by zero: compare ratios via
             // cross-multiplication. >= 1/16 of shots capture: forgiving (0).
@@ -45,24 +93,7 @@ namespace PuttSeed.Core.CourseGen
                 tightness = 4;
             }
 
-            // Thresholds recalibrated 2026-08-16 after ice zones joined the
-            // hazard pool (average score rose by ~8): a 300-seed scan under the
-            // old cuts rated 1/39/260 Easy/Normal/Hard. These cuts target
-            // roughly even thirds so every practice bucket actually generates.
-            //
-            // Recalibrated again 2026-08-18 for the v2 element wave (gates,
-            // ramps, portals, windmills each score like a hazard): under the
-            // 12/16 cuts a 300-seed v2 scan rated 29/75/196; at 16/20 the same
-            // scan rates 104/106/90 — near-even thirds. v1 courses rate easier
-            // under the new cuts, which only affects scan CSVs: practice (the
-            // one difficulty-facing mode) generates v2 exclusively.
-            int score = tightness + turnCount + 2 * hazardCount;
-            if (score <= 16)
-            {
-                return Difficulty.Easy;
-            }
-
-            return score <= 20 ? Difficulty.Normal : Difficulty.Hard;
+            return tightness + turnCount + 2 * hazardCount;
         }
     }
 }

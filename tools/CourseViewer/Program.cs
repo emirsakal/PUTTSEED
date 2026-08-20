@@ -12,26 +12,30 @@ using PuttSeed.Core.Sim;
 if (args.Length < 1)
 {
     Console.WriteLine("usage: CourseViewer <seed|yyyy-mm-dd> [--stats] [--v1]");
-    Console.WriteLine("       CourseViewer --scan <count> [--v1]   (CSV of seed stats, for curation)");
+    Console.WriteLine("       CourseViewer --scan <count> [--v1|--v4]   (CSV of seed stats, for curation)");
     Console.WriteLine("seeds default to the v2 generator; dates pick their own version by schedule.");
     return 1;
 }
 
 bool wantV1 = Array.Exists(args, a => a == "--v1");
+bool wantV4 = Array.Exists(args, a => a == "--v4");
+GeneratorConfig PickConfig() => wantV1 ? GeneratorConfig.V1 : wantV4 ? GeneratorConfig.V4 : GeneratorConfig.V2;
+SolverConfig PickSolver() => wantV4 ? SolverConfig.V4 : SolverConfig.Default;
 
 // Curation support: sweep seeds 1..N and emit one CSV row per generatable
 // course — the Journey level list is picked from this output.
 if (args[0] == "--scan")
 {
     int count = args.Length > 1 && int.TryParse(args[1], out int n) ? n : 1000;
-    var scanCfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
-    Console.WriteLine("seed,par,difficulty,walls,bumpers,sand,ice,water,gates,ramps,portals,mills,hazards,authorStrokes,attempts");
+    var scanCfg = PickConfig();
+    var scanSolver = PickSolver();
+    Console.WriteLine("seed,par,difficulty,walls,bumpers,sand,ice,water,gates,ramps,portals,mills,hazards,authorStrokes,attempts,score");
     for (ulong s = 1; s <= (ulong)count; s++)
     {
         GenerationResult r;
         try
         {
-            r = CourseGenerator.Generate(s, scanCfg, SimConfig.Default, SolverConfig.Default);
+            r = CourseGenerator.Generate(s, scanCfg, SimConfig.Default, scanSolver);
         }
         catch (InvalidOperationException)
         {
@@ -44,7 +48,7 @@ if (args[0] == "--scan")
         Console.WriteLine($"{s},{c.Par},{r.Difficulty},{c.Walls.Length},{c.Bumpers.Length}," +
             $"{c.SandZones.Length},{c.IceZones.Length},{c.WaterZones.Length}," +
             $"{c.Gates.Length},{c.Ramps.Length},{c.Portals.Length / 2},{c.Windmills.Length}," +
-            $"{hazards},{r.AuthorStrokes},{r.Attempts}");
+            $"{hazards},{r.AuthorStrokes},{r.Attempts},{r.DifficultyScore}");
     }
 
     return 0;
@@ -56,10 +60,11 @@ if (args[0] == "--scan")
 if (args[0] == "--bench")
 {
     int courses = args.Length > 1 && int.TryParse(args[1], out int bn) ? bn : 60;
-    var benchCfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
+    var benchCfg = PickConfig();
+    var benchSolver = PickSolver();
 
     // 1. Raw tick throughput on a real course, full-power shots to rest.
-    var warm = CourseGenerator.Generate(3UL, benchCfg, SimConfig.Default, SolverConfig.Default);
+    var warm = CourseGenerator.Generate(3UL, benchCfg, SimConfig.Default, benchSolver);
     var benchSim = new GolfSim(warm.Course, SimConfig.Default);
     long ticks = 0;
     var tickWatch = Stopwatch.StartNew();
@@ -85,7 +90,7 @@ if (args[0] == "--bench")
     {
         try
         {
-            var r = CourseGenerator.Generate(s, benchCfg, SimConfig.Default, SolverConfig.Default);
+            var r = CourseGenerator.Generate(s, benchCfg, SimConfig.Default, benchSolver);
             attempts += r.Attempts;
             made++;
         }
@@ -98,8 +103,8 @@ if (args[0] == "--bench")
     Console.WriteLine($"sim throughput   {ticksPerSecond / 1_000_000.0:F2} M ticks/s  ({ticks:N0} ticks measured)");
     Console.WriteLine($"generation       {genWatch.Elapsed.TotalMilliseconds / made:F1} ms/course over {made} courses");
     Console.WriteLine($"attempts         {attempts / (double)made:F2} avg per accepted course");
-    Console.WriteLine($"solver budget    {SolverConfig.Default.MaxTotalSimTicks:N0} ticks"
-        + $" = {SolverConfig.Default.MaxTotalSimTicks / ticksPerSecond * 1000.0:F0} ms of ticking at this rate");
+    Console.WriteLine($"solver budget    {benchSolver.MaxTotalSimTicks:N0} ticks"
+        + $" = {benchSolver.MaxTotalSimTicks / ticksPerSecond * 1000.0:F0} ms of ticking at this rate");
     return 0;
 }
 
@@ -112,11 +117,12 @@ if (args[0].Contains('-') && DateTime.TryParse(args[0], out var date))
     int dayNumber = (int)(date.Date - new DateTime(2020, 1, 1)).TotalDays;
     int version = GeneratorSchedule.VersionForDay(dayNumber);
     cfg = GeneratorConfig.ForVersion(version);
+    wantV4 = version >= 4;
     Console.WriteLine($"date {date:yyyy-MM-dd} -> seed {seed} (generator v{version})");
 }
 else if (ulong.TryParse(args[0], out seed))
 {
-    cfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
+    cfg = PickConfig();
 }
 else
 {
@@ -128,7 +134,7 @@ var sw = Stopwatch.StartNew();
 GenerationResult result;
 try
 {
-    result = CourseGenerator.Generate(seed, cfg, SimConfig.Default, SolverConfig.Default);
+    result = CourseGenerator.Generate(seed, cfg, SimConfig.Default, PickSolver());
 }
 catch (InvalidOperationException e)
 {

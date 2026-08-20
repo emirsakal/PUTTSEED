@@ -26,7 +26,7 @@ namespace PuttSeed.Core.Replay
     public static class ReplayCodec
     {
         /// <summary>Newest wire/config version this codec emits and accepts.</summary>
-        public const byte Version = 3;
+        public const byte Version = 4;
 
         private const string Prefix = "PUTT-";
         private const int HeaderBytes = 10; // version 1 + seed 8 + count 1

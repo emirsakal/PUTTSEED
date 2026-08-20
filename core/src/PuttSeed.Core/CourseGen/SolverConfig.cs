@@ -61,5 +61,29 @@ namespace PuttSeed.Core.CourseGen
             maxDepth: 5,
             maxPar: 5,
             dedupeCell: Fix64.Half);
+
+        /// <summary>
+        /// The budget a par-3 hole needs. Finding a three-shot solution is not
+        /// what costs: PROVING no two-shot solution exists is, and that means
+        /// exhausting a whole level of the search. Cut this back and the solver
+        /// gives up before the proof lands, the course is discarded as
+        /// unsolvable, and the generator quietly hands back a par 2 instead —
+        /// at 1.5M ticks a 150-seed scan produced 1% par 3 where 4M produces
+        /// 36%. Par is capped at 3 deliberately: par 4 asks for a fourth level
+        /// of search and a 32-unit corridor still only yielded 3% of them, at
+        /// nine times the cost and one seed in five failing outright.
+        /// </summary>
+        public static SolverConfig V4 { get; } = new SolverConfig(
+            angleStride: 32,
+            powerStride: 32,
+            tickCapPerShot: 700,
+            maxExpandedStates: 80,
+            maxTotalSimTicks: 4_000_000,
+            maxDepth: 3,
+            maxPar: 3,
+            dedupeCell: Fix64.Half);
+
+        /// <summary>The solver budget a generator version is proven under.</summary>
+        public static SolverConfig ForVersion(int version) => version >= 4 ? V4 : Default;
     }
 }

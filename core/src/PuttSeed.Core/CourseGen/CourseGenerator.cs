@@ -35,9 +35,12 @@ namespace PuttSeed.Core.CourseGen
         /// <summary>Decoration relaxation level used (0 = full decoration).</summary>
         public int RelaxationLevel { get; }
 
+        /// <summary>The raw difficulty score behind <see cref="Difficulty"/>.</summary>
+        public int DifficultyScore { get; }
+
         /// <summary>Creates a result.</summary>
         public GenerationResult(CourseData course, ShotInput[] authorSolution, int authorStrokes,
-            Difficulty difficulty, int attempts, int relaxationLevel)
+            Difficulty difficulty, int attempts, int relaxationLevel, int difficultyScore = 0)
         {
             Course = course;
             AuthorSolution = authorSolution;
@@ -46,6 +49,7 @@ namespace PuttSeed.Core.CourseGen
             Difficulty = difficulty;
             Attempts = attempts;
             RelaxationLevel = relaxationLevel;
+            DifficultyScore = difficultyScore;
         }
     }
 
@@ -100,7 +104,7 @@ namespace PuttSeed.Core.CourseGen
                     // Cheap pre-check before burning the solver's tick budget: a
                     // corridor longer than the depth cap can plausibly cover
                     // (~4 units of winding progress per shot) cannot be solved.
-                    if (!IsPlausiblyReachable(corridor, solverConfig))
+                    if (!IsPlausiblyReachable(corridor, cfg))
                     {
                         continue;
                     }
@@ -135,10 +139,12 @@ namespace PuttSeed.Core.CourseGen
                     int hazards = bumpers.Length + sand.Length + water.Length + ice.Length
                         + gates.Length + ramps.Length + portals.Length / 2 + windmills.Length;
                     var difficulty = DifficultyRater.Rate(
+                        solve.CaptureShotCount, solve.SampledShotCount, turns, hazards, par);
+                    int score = DifficultyRater.Score(
                         solve.CaptureShotCount, solve.SampledShotCount, turns, hazards);
 
                     return new GenerationResult(course, solve.AuthorSolution, solve.AuthorStrokes,
-                        difficulty, attempts, level);
+                        difficulty, attempts, level, score);
                 }
             }
 
@@ -146,7 +152,7 @@ namespace PuttSeed.Core.CourseGen
                 $"Course generation failed after {attempts} attempts for seed {seed}.");
         }
 
-        private static bool IsPlausiblyReachable(Corridor corridor, SolverConfig solverConfig)
+        private static bool IsPlausiblyReachable(Corridor corridor, GeneratorConfig cfg)
         {
             var total = Fix64.Zero;
             var c = corridor.Centerline;
@@ -155,9 +161,10 @@ namespace PuttSeed.Core.CourseGen
                 total += (c[i] - c[i - 1]).Length();
             }
 
-            // ~4 units of winding progress per shot, and the solver realistically
-            // explores about three levels deep within its tick budget.
-            return total <= Fix64.FromInt(12);
+            // ~4 units of winding progress per shot: the cap is what decides
+            // how many strokes a hole can be worth, so it belongs to the
+            // generator version rather than to the solver's budget.
+            return total <= cfg.MaxCorridorLength;
         }
     }
 }

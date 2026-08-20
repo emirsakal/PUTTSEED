@@ -63,12 +63,22 @@ namespace PuttSeed.Core.CourseGen
         /// <summary>Generation attempts per relaxation level before decorations are reduced.</summary>
         public int AttemptsPerLevel { get; }
 
+        /// <summary>
+        /// Longest centreline a corridor may total before it is thrown away
+        /// unsolved. THIS is what decides how many strokes a hole can be worth:
+        /// a shot carries about four units of winding progress, so a cap of 12
+        /// is a two-shot hole by construction, whatever the solver is allowed
+        /// to look for.
+        /// </summary>
+        public Fix64 MaxCorridorLength { get; }
+
         private GeneratorConfig(
             int minSegments, int maxSegments,
             Fix64 minSegmentLength, Fix64 maxSegmentLength,
             int minTurnSteps, int maxTurnSteps,
             Fix64 halfWidth, Vec2Fix boundsMin, Vec2Fix boundsMax,
             int maxBumpers, int maxSand, int maxWater, int maxIce, int attemptsPerLevel,
+            Fix64 maxCorridorLength,
             int maxGates = 0, int maxRamps = 0, int maxPortals = 0, int maxWindmills = 0)
         {
             MinSegments = minSegments;
@@ -85,6 +95,7 @@ namespace PuttSeed.Core.CourseGen
             MaxWater = maxWater;
             MaxIce = maxIce;
             AttemptsPerLevel = attemptsPerLevel;
+            MaxCorridorLength = maxCorridorLength;
             MaxGates = maxGates;
             MaxRamps = maxRamps;
             MaxPortals = maxPortals;
@@ -110,7 +121,8 @@ namespace PuttSeed.Core.CourseGen
             maxSand: 2,
             maxWater: 1,
             maxIce: 2,
-            attemptsPerLevel: 12);
+            attemptsPerLevel: 12,
+            maxCorridorLength: Fix64.FromInt(12));
 
         /// <summary>Alias of <see cref="Default"/>: the frozen v1.</summary>
         public static GeneratorConfig V1 => Default;
@@ -135,6 +147,37 @@ namespace PuttSeed.Core.CourseGen
             maxWater: 1,
             maxIce: 2,
             attemptsPerLevel: 12,
+            maxCorridorLength: Fix64.FromInt(12),
+            maxGates: 1,
+            maxRamps: 1,
+            maxPortals: 1,
+            maxWindmills: 1);
+
+        /// <summary>
+        /// v4: corridors long enough to be worth more than two strokes. Every
+        /// hole in v1 and v2 is a par 2 — not by rule but because a corridor
+        /// capped at 12 units is two shots of winding progress — so the whole
+        /// scoring language (under par, birdie, the star curve) was compensating
+        /// for a dimension the generator never produced. At 22 units a 200-seed
+        /// scan comes out 64% par 2, 36% par 3, and nothing fails to generate.
+        /// More segments come with the length so holes still turn as often.
+        /// </summary>
+        public static GeneratorConfig V4 { get; } = new GeneratorConfig(
+            minSegments: 5,
+            maxSegments: 12,
+            minSegmentLength: Fix64.FromFraction(5, 4),
+            maxSegmentLength: Fix64.FromFraction(5, 2),
+            minTurnSteps: 64,
+            maxTurnSteps: 192,
+            halfWidth: Fix64.One,
+            boundsMin: new Vec2Fix(Fix64.FromInt(-14), Fix64.FromInt(-14)),
+            boundsMax: new Vec2Fix(Fix64.FromInt(14), Fix64.FromInt(14)),
+            maxBumpers: 3,
+            maxSand: 2,
+            maxWater: 1,
+            maxIce: 2,
+            attemptsPerLevel: 12,
+            maxCorridorLength: Fix64.FromInt(22),
             maxGates: 1,
             maxRamps: 1,
             maxPortals: 1,
@@ -146,7 +189,8 @@ namespace PuttSeed.Core.CourseGen
         {
             1 => V1,
             2 => V2,
-            3 => V2, // wire v3: the same courses, shots carry their timing
+            3 => V2, // v3 is the v2 courses with timed shots, not a new generator
+            4 => V4,
             _ => throw new System.ArgumentException($"Unknown generator version {version}.", nameof(version)),
         };
     }
