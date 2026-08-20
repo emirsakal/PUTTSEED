@@ -12,8 +12,15 @@ compresses to a ~30-character code that replays the exact same shots on any
 device — no backend, no accounts, no uploads.
 
 ```
-PUTTSEED — 2 strokes (par 2). Watch: PUTT-AQMAAAAAAAAAAmD_A2B8Ag
+PUTTSEED day 214 — 3 strokes (par 3)
+⬜🟫⛳
+🔥 12-day streak
+Watch: PUTT-BGUAAAAAAAAAAiD8AwDg_gEA
 ```
+
+One glyph per stroke — what the ball met on its way: a bank off a wall,
+sand, the cup. The code proves the run; the row is the part a stranger can
+read.
 
 <table>
   <tr>
@@ -124,7 +131,9 @@ mechanically, not by care:
   touched, water among them.
 - **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
   end-to-end — generate, replay the author solution — against frozen final
-  hashes and frozen `PUTT-` codes.
+  hashes and frozen `PUTT-` codes, on BOTH the generator the game ships
+  (v4) and the frozen v1 one: a version byte that was ever emitted has to
+  keep decoding forever.
 - **The 1000-seed property suite** (`PropertySuiteTests`): every seed
   generates within bounded attempts, every accepted course's author solution
   replays to a capture within par, and every replay code round-trips.
@@ -140,8 +149,8 @@ mechanically, not by care:
 
 | What | How |
 |---|---|
-| Core test suite (275 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (112 tests) | `scripts\unity-tests.bat` |
+| Core test suite (280 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
+| Unity EditMode tests (130 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
@@ -179,10 +188,14 @@ slides, water costs a stroke and a reset; gates let you through one way
 only, ramps push, portals teleport, and windmill blades sweep whether or
 not you are ready. One day in eighteen adds a twist of its own — ice
 underfoot, springier bumpers, or a crosswind — proven solvable under the
-twist before it ships. Capture needs a slow ball over the
-cup — fast attempts rim out. Stroke limit is par + 3; holing out scores
-stars — 3 at par or better, 2 one over, 1 within the limit. Feel tuning
-lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
+twist before it ships. Capture needs a slow ball over the cup — fast
+attempts rim out. A hole is worth two strokes or three, and which one is
+the generator's answer, proven before you see it. Stroke limit is par + 3;
+holing out scores stars — 3 at par or better, 2 one over, 1 within the
+limit. Retries are unlimited, but **the day's answer is your first
+finish** — a score reached on the thirty-fourth attempt is nobody else's
+score. Feel tuning lives in one ScriptableObject
+(`Assets/PuttSeed/Resources/FeelConfig.asset`).
 
 ## Four modes, one generator
 
@@ -193,8 +206,11 @@ lives in one ScriptableObject (`Assets/PuttSeed/Resources/FeelConfig.asset`).
   picks an unplayed date for you.
 - **Journey** — a 100-level campaign of curated seeds, unlocked in order,
   three stars per level. Levels are literally just seeds, picked from
-  generator scans on a difficulty ramp — the solvability proof and the
-  replay codec apply unchanged.
+  generator scans on a ramp that climbs three axes at once: hazards,
+  rated difficulty, and par. Par 3 is one level in five at the start and
+  four in five at the end — weighted, never staged, so the two lengths stay
+  interleaved the whole way. The solvability proof and the replay codec
+  apply unchanged.
 - **Practice** — unlimited courses by difficulty (Easy / Normal / Hard),
   per-difficulty personal bests, an undo mulligan, and course invites: any
   course shares as a code a friend can play on their own device.

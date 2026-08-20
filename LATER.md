@@ -18,20 +18,23 @@ Nothing below is planned; it is written down so it stops occupying headspace.
 
 - **Ghost gallery** — keep the last N imported replays and race several
   ghosts at once (the lockstep ghost architecture already supports N).
-- **Deeper pars** — raise the solver's tick budget/depth so generation can
-  certify par 4–5 courses; costs generation time, revisit after profiling on
-  device (see SolverConfig notes in STATUS.md).
-  *Now the most load-bearing item on this list (2026-08-18): a 3000-seed
-  scan produced **par 2 for all 3000** — `MaxPar: 5` is dead configuration,
-  and the corridor length pre-check (12 units, ~4 per shot) is what keeps
-  every course two shots deep. This is what forced the star curve
-  recalibration; with real par variety the original 3 = under par would
-  work as designed. Needs longer corridors AND a bigger solver budget, so
-  it is a genuine project, not a knob turn.*
+- **Par 4 holes** — v4 brought par 3 (see Graduated). Par 4 was measured and
+  left here: a 32-unit corridor produced 3% par 4 at nine times the cost,
+  with one seed in five failing to generate at all. Par is not a function of
+  length — a shot carries ~5.5 units and the solver banks off walls, so an
+  open corridor stays cheap however long it gets. Par 4 needs a different
+  KIND of hole: tight throats, blind pockets, hazards placed to close the
+  direct line. A generator project, not a knob turn.
 - **Replay scrubbing** — since replays are re-simulation, a timeline scrubber
   only needs periodic state snapshots (RestoreRest already exists).
 
 ## Graduated (built after parking)
+
+- Deeper pars (generator v4, 2026-08-19): corridors to 22 units and a solver
+  budget that can prove a two-shot solution does not exist. 64% par 2, 36%
+  par 3, nothing failing to generate. The cost was 23x generation time, paid
+  for by a 3x faster simulation and by the menu handing the game the hole it
+  had already grown.
 
 - Async practice generation (background `Task.Run`, 2026-08-16)
 - Course of the day archive (menu Archive panel, 2026-08-17; became a month

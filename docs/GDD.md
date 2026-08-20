@@ -90,11 +90,18 @@ finished history.
 
 Adding elements changes what a seed generates — which would silently
 rewrite every curated Journey level and every archived daily. So the
-generator is versioned: **v1** (the five-element set) is frozen forever
-and still regenerates Journey, the tutorial and every daily before the
-cutover; **v2** (the wave above) runs practice and dailies from day 2430
-(2026-08-27). Replay codes carry their version, so a code always
-regenerates the course it was played on.
+generator is versioned, and a replay code carries its version, so a code
+always regenerates the course it was played on.
+
+**v4** runs everything today: the whole calendar, Journey, the tutorial
+and practice. It is the first generator whose corridors are long enough
+to be worth three strokes. Moving the entire game onto it — rewriting
+every curated level and every past day — was possible exactly once,
+before release, and this was that once; the next change will need a real
+cutover in `GeneratorSchedule`. **v1** (the five-element MVP set) and
+**v2** (the element wave) are frozen and kept because a decoder must
+understand every version byte it ever emitted. **v3** is v2's courses
+with shot timing, not a generator of its own.
 
 ## Modes
 
@@ -118,14 +125,23 @@ regenerates the course it was played on.
 
 ## Scoring & retention surface
 
+- Par is 2 or 3, roughly two holes in three against one (v4). Every hole
+  was a par 2 until 2026-08-19 — not by rule, but because a corridor
+  capped at twelve units is two shots of winding progress.
 - Stars: 3 = par or better, 2 = one over par, 1 = finished within limit.
-  (Recalibrated 2026-08-18. The original 3 = under par was written for
-  courses of varying par; in practice generation certifies par 2 for
-  every seed, so "under par" meant an ace — a tier most layouts have no
-  line for at all, while one star covered three, four and five strokes.
-  The ace keeps its own reward: the hole-out vocabulary and the Ace
-  achievement. See LATER.md "Deeper pars" for the root-cause fix.)
-- Local streak counter (played N days in a row) and per-day best.
+  (Recalibrated 2026-08-18, when par was still always 2 and "under par"
+  therefore meant an ace. With par 3 in the mix, under par is reachable
+  again — two strokes on a par 3 — and the curve now works as written
+  rather than as a workaround.)
+- **The day's answer is its first finish.** Retries are unlimited and
+  instant, as the one-more-try pillar requires, but they feed the
+  personal best rather than the day: a score reached on the thirty-fourth
+  attempt is not comparable with anyone's, and comparability is what a
+  daily is for. The first finish fills the streak, the par streak, the
+  calendar, the closing card and the share.
+- Local streak counter (played N days in a row), a par streak (days whose
+  first finish reached par — the streak that can actually break), and a
+  per-day best.
 - Ghost: the day's best run and any imported replay render as a
   translucent ghost ball with trail.
 - Cosmetics (added post-MVP): ten ball skins unlocked by achievements

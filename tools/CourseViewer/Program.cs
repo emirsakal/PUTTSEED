@@ -12,12 +12,39 @@ using PuttSeed.Core.Sim;
 if (args.Length < 1)
 {
     Console.WriteLine("usage: CourseViewer <seed|yyyy-mm-dd> [--stats] [--v1]");
-    Console.WriteLine("       CourseViewer --scan <count> [--v1|--v4]   (CSV of seed stats, for curation)");
+    Console.WriteLine("       CourseViewer --scan <count> [--v1|--v4] [--feel]   (CSV of seed stats, for curation)");
     Console.WriteLine("seeds default to the v2 generator; dates pick their own version by schedule.");
     return 1;
 }
 
 bool wantV1 = Array.Exists(args, a => a == "--v1");
+bool wantFeel = Array.Exists(args, a => a == "--feel");
+
+// The physics the GAME generates under. Acceptance depends on solvability and
+// solvability depends on friction, so a seed scanned under core's defaults can
+// grow a DIFFERENT course in the app — which is exactly how a tutorial lesson
+// curated as "ice and water" turned up carrying three bumpers.
+// Mirrors Assets/PuttSeed/Resources/FeelConfig.asset through the same 1/10000
+// quantization FeelConfig.BuildSimConfig uses; the tutorial tests, which load
+// the real asset, are what keep the two honest.
+static Fix64 Q(int tenThousandths) => Fix64.FromFraction(tenThousandths, 10000);
+SimConfig PlayConfig() => SimConfig.Create(
+    dt: Fix64.FromFraction(1, 120),
+    ballRadius: Fix64.FromFraction(1, 10),
+    maxShotSpeed: Q(80000),
+    rollDamping: Q(9880),
+    sandDamping: Q(9400),
+    iceDamping: Q(9985),
+    wallRestitution: Q(8000),
+    maxTravelPerSubStep: Fix64.FromFraction(1, 20),
+    bumperRestitution: Q(12000),
+    bumperMaxExitSpeed: Q(80000),
+    holeRadius: Q(1500),
+    holeCaptureSpeedSq: Q(15000) * Q(15000),
+    rimRestitution: Q(4000),
+    restSpeedEpsSq: Q(200) * Q(200),
+    restTicksRequired: 6);
+SimConfig PickSim() => wantFeel ? PlayConfig() : SimConfig.Default;
 bool wantV4 = Array.Exists(args, a => a == "--v4");
 GeneratorConfig PickConfig() => wantV1 ? GeneratorConfig.V1 : wantV4 ? GeneratorConfig.V4 : GeneratorConfig.V2;
 SolverConfig PickSolver() => wantV4 ? SolverConfig.V4 : SolverConfig.Default;
@@ -35,7 +62,7 @@ if (args[0] == "--scan")
         GenerationResult r;
         try
         {
-            r = CourseGenerator.Generate(s, scanCfg, SimConfig.Default, scanSolver);
+            r = CourseGenerator.Generate(s, scanCfg, PickSim(), scanSolver);
         }
         catch (InvalidOperationException)
         {
@@ -134,7 +161,7 @@ var sw = Stopwatch.StartNew();
 GenerationResult result;
 try
 {
-    result = CourseGenerator.Generate(seed, cfg, SimConfig.Default, PickSolver());
+    result = CourseGenerator.Generate(seed, cfg, PickSim(), PickSolver());
 }
 catch (InvalidOperationException e)
 {

@@ -11,15 +11,21 @@ namespace PuttSeed.Core.CourseGen
     public static class GeneratorSchedule
     {
         /// <summary>
-        /// First day number generated with <see cref="GeneratorConfig.V2"/>
-        /// (2026-08-27 UTC): the first daily of the gates/ramps/portals/
-        /// windmills wave. Committed before release, so no shipped daily ever
-        /// changes retroactively.
+        /// First day number generated with <see cref="GeneratorConfig.V4"/> —
+        /// the first generator whose holes can be worth three strokes.
+        ///
+        /// Zero, which is to say all of them. The point of this class is that
+        /// a day never changes once it has been played, and the v2 cutover at
+        /// day 2430 was set with exactly that in mind — but nothing has
+        /// shipped, nobody has a streak, and no archive day has ever been
+        /// answered. The whole calendar can move to the newest generator
+        /// exactly once, and this is that once. The NEXT change will need a
+        /// real cutover here, and this constant is where it goes.
         /// </summary>
-        public const int V2FromDay = 2430;
+        public const int V4FromDay = 0;
 
         /// <summary>Generator config version for a day number.</summary>
         public static int VersionForDay(int dayNumber)
-            => dayNumber >= V2FromDay ? 2 : 1;
+            => dayNumber >= V4FromDay ? 4 : 1;
     }
 }

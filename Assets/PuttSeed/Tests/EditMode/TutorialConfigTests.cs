@@ -28,7 +28,7 @@ namespace PuttSeed.Unity.Tests
             var simConfig = feel != null ? feel.BuildSimConfig() : SimConfig.Default;
             return CourseGenerator.Generate(stage.Seed,
                 GeneratorConfig.ForVersion(stage.ConfigVersion),
-                simConfig, SolverConfig.Default).Course;
+                simConfig, SolverConfig.ForVersion(stage.ConfigVersion)).Course;
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace PuttSeed.Unity.Tests
             {
                 var result = CourseGenerator.Generate(stage.Seed,
                     GeneratorConfig.ForVersion(stage.ConfigVersion),
-                    SimConfig.Default, SolverConfig.Default);
+                    SimConfig.Default, SolverConfig.ForVersion(stage.ConfigVersion));
 
                 Assert.That(result.AuthorStrokes, Is.LessThanOrEqualTo(result.Course.Par),
                     $"seed {stage.Seed}: the author solution must reach par");

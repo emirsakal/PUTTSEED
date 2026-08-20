@@ -129,8 +129,9 @@ namespace PuttSeed.Core.CourseGen
 
         /// <summary>
         /// v2: the 2026-08 element wave (gates, ramps, portals, windmills) on
-        /// top of unchanged v1 budgets. Dailies from
-        /// <see cref="GeneratorSchedule.V2FromDay"/> and practice use this.
+        /// top of unchanged v1 budgets. Superseded by <see cref="V4"/> before
+        /// it ever reached a player; kept because replay codes carry a version
+        /// byte and a decoder must understand every byte it ever emitted.
         /// </summary>
         public static GeneratorConfig V2 { get; } = new GeneratorConfig(
             minSegments: 4,

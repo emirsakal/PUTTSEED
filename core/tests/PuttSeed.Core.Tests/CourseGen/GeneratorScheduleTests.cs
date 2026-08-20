@@ -6,18 +6,18 @@ namespace PuttSeed.Core.Tests.CourseGen
     [TestFixture]
     public class GeneratorScheduleTests
     {
+        /// <summary>
+        /// Every real day is v4: the cutover sits at day zero because nothing
+        /// had shipped when the generator changed, so there was no archive to
+        /// protect. The next change will not have that luxury.
+        /// </summary>
         [Test]
-        public void DaysBeforeCutover_UseVersion1()
+        public void EveryDayOnTheCalendar_UsesTheNewestGenerator()
         {
-            Assert.That(GeneratorSchedule.VersionForDay(0), Is.EqualTo(1));
-            Assert.That(GeneratorSchedule.VersionForDay(GeneratorSchedule.V2FromDay - 1), Is.EqualTo(1));
-        }
-
-        [Test]
-        public void CutoverAndLater_UseVersion2()
-        {
-            Assert.That(GeneratorSchedule.VersionForDay(GeneratorSchedule.V2FromDay), Is.EqualTo(2));
-            Assert.That(GeneratorSchedule.VersionForDay(GeneratorSchedule.V2FromDay + 1000), Is.EqualTo(2));
+            Assert.That(GeneratorSchedule.VersionForDay(0), Is.EqualTo(4));
+            Assert.That(GeneratorSchedule.VersionForDay(1), Is.EqualTo(4));
+            Assert.That(GeneratorSchedule.VersionForDay(2430), Is.EqualTo(4));
+            Assert.That(GeneratorSchedule.VersionForDay(100_000), Is.EqualTo(4));
         }
 
         [Test]

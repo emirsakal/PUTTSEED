@@ -13,12 +13,15 @@ namespace PuttSeed.Unity
     /// elements were paired and the tutorial came out SHORTER than it began:
     /// five lessons for nine elements.
     ///
-    /// The opening lesson was re-picked in the same pass: seed 35 was curated
-    /// as "no hazards" and had since drifted into carrying water and ice, so
-    /// the first hole a new player ever saw opened with two elements the
-    /// tutorial had not reached yet. 304 is bare corridor.
+    /// Re-picked again on 2026-08-19 when the game moved to the v4 generator:
+    /// a seed grows a different hole under a different version, so every
+    /// lesson had to be found again. The pass before it caught the opening
+    /// lesson curated as "no hazards" and long since drifted into carrying
+    /// water and ice — the first hole a new player ever saw, opening with two
+    /// elements the tutorial had not reached yet.
     /// <see cref="PuttSeed.Unity.Tests"/> holds every seed here to its
-    /// declaration, which is how that drift was found.
+    /// declaration, which is how that drift was found and how these five stay
+    /// honest.
     /// </summary>
     public static class TutorialConfig
     {
@@ -70,9 +73,9 @@ namespace PuttSeed.Unity
             public string Hint { get; }
 
             /// <summary>
-            /// The generator the seed was curated against. The first four
-            /// lessons are v1 and stay v1 forever; the element wave only
-            /// exists from v2, so its lessons declare it.
+            /// The generator the seed was curated against — a lesson is a seed
+            /// AND the version that grows it, and a seed carried to another
+            /// version grows a different hole entirely.
             /// </summary>
             public int ConfigVersion { get; }
 
@@ -99,21 +102,28 @@ namespace PuttSeed.Unity
         /// FTUE being the reward rather than the reason.
         ///
         /// Every seed comes from a generator scan and carries EXACTLY the
-        /// elements its lesson declares and nothing else; the wave's two are
-        /// v2, because gates, ramps, portals and windmills do not exist in v1.
+        /// elements its lesson declares and nothing else. All five are v4 and
+        /// all five are par 2: a lesson teaches an element, and a hole worth
+        /// three strokes teaches endurance on top of it.
+        ///
+        /// Scanned under the GAME's physics, not core's defaults. Acceptance
+        /// depends on solvability and solvability depends on friction, so the
+        /// same seed grows a different hole under the two — which is how the
+        /// "ice and water" lesson was first picked as a course that turned out
+        /// to carry three bumpers. The test caught it; the scan was redone.
         /// </summary>
         public static readonly Stage[] Stages =
         {
-            new Stage(304UL, "Drag anywhere and release to shoot — reach the hole within the stroke limit.",
-                Lesson.Shot),
-            new Stage(40UL, "Bumpers boost the ball, sand drags it down — both sit on your way to the cup.",
-                Lesson.Bumper | Lesson.Sand),
-            new Stage(17UL, "Ice barely slows the ball; water costs a stroke and puts it back where it was.",
-                Lesson.Ice | Lesson.Water),
-            new Stage(216UL, "Arrows show the way: gates pass from one side only, ramps push you downhill.",
-                Lesson.Gate | Lesson.Ramp, configVersion: 2),
-            new Stage(522UL, "Portals throw the ball to their twin — and the blades never stop turning.",
-                Lesson.Portal | Lesson.Windmill, configVersion: 2),
+            new Stage(1181UL, "Drag anywhere and release to shoot — reach the hole within the stroke limit.",
+                Lesson.Shot, configVersion: 4),
+            new Stage(225UL, "Bumpers boost the ball, sand drags it down — both sit on your way to the cup.",
+                Lesson.Bumper | Lesson.Sand, configVersion: 4),
+            new Stage(2967UL, "Ice barely slows the ball; water costs a stroke and puts it back where it was.",
+                Lesson.Ice | Lesson.Water, configVersion: 4),
+            new Stage(2190UL, "Arrows show the way: gates pass from one side only, ramps push you downhill.",
+                Lesson.Gate | Lesson.Ramp, configVersion: 4),
+            new Stage(1620UL, "Portals throw the ball to their twin — and the blades never stop turning.",
+                Lesson.Portal | Lesson.Windmill, configVersion: 4),
         };
     }
 }
