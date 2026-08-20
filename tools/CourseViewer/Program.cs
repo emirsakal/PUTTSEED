@@ -50,6 +50,59 @@ if (args[0] == "--scan")
     return 0;
 }
 
+// Where the generator's time actually goes. Par variety needs a deeper
+// solver search, the search is bounded in SIM TICKS, so the tick rate is the
+// exchange rate between search depth and the wait a player sees.
+if (args[0] == "--bench")
+{
+    int courses = args.Length > 1 && int.TryParse(args[1], out int bn) ? bn : 60;
+    var benchCfg = wantV1 ? GeneratorConfig.V1 : GeneratorConfig.V2;
+
+    // 1. Raw tick throughput on a real course, full-power shots to rest.
+    var warm = CourseGenerator.Generate(3UL, benchCfg, SimConfig.Default, SolverConfig.Default);
+    var benchSim = new GolfSim(warm.Course, SimConfig.Default);
+    long ticks = 0;
+    var tickWatch = Stopwatch.StartNew();
+    for (int shot = 0; tickWatch.ElapsedMilliseconds < 2000; shot++)
+    {
+        benchSim.RestoreRest(warm.Course.StartPosition, 0);
+        benchSim.Shoot(new ShotInput((shot * 37) & (FixTrig.AngleSteps - 1), 200 + (shot % 55)));
+        for (int t = 0; t < 700 && !benchSim.IsAtRest && !benchSim.IsHoled; t++)
+        {
+            benchSim.Tick();
+            ticks++;
+        }
+    }
+
+    tickWatch.Stop();
+    double ticksPerSecond = ticks / tickWatch.Elapsed.TotalSeconds;
+
+    // 2. End-to-end generation, which is mostly solving.
+    var genWatch = Stopwatch.StartNew();
+    long attempts = 0;
+    int made = 0;
+    for (ulong s = 1; made < courses; s++)
+    {
+        try
+        {
+            var r = CourseGenerator.Generate(s, benchCfg, SimConfig.Default, SolverConfig.Default);
+            attempts += r.Attempts;
+            made++;
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    genWatch.Stop();
+    Console.WriteLine($"sim throughput   {ticksPerSecond / 1_000_000.0:F2} M ticks/s  ({ticks:N0} ticks measured)");
+    Console.WriteLine($"generation       {genWatch.Elapsed.TotalMilliseconds / made:F1} ms/course over {made} courses");
+    Console.WriteLine($"attempts         {attempts / (double)made:F2} avg per accepted course");
+    Console.WriteLine($"solver budget    {SolverConfig.Default.MaxTotalSimTicks:N0} ticks"
+        + $" = {SolverConfig.Default.MaxTotalSimTicks / ticksPerSecond * 1000.0:F0} ms of ticking at this rate");
+    return 0;
+}
+
 ulong seed;
 GeneratorConfig cfg;
 if (args[0].Contains('-') && DateTime.TryParse(args[0], out var date))

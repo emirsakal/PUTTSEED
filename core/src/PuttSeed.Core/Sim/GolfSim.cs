@@ -14,6 +14,19 @@ namespace PuttSeed.Core.Sim
         private readonly CourseData _course;
         private readonly SimConfig _config;
 
+        /// <summary>
+        /// Clearance the division-free rejection insists on before it skips
+        /// the exact test: 2^-10 world units, some twenty binary orders above
+        /// the rounding of the division it is avoiding.
+        /// </summary>
+        private static readonly Fix64 RejectMargin = Fix64.FromFraction(1, 1024);
+
+        // Wall bounding boxes, grown by the ball radius (see the constructor).
+        private readonly Fix64[] _wallMinX;
+        private readonly Fix64[] _wallMaxX;
+        private readonly Fix64[] _wallMinY;
+        private readonly Fix64[] _wallMaxY;
+
         private Vec2Fix _position;
         private Vec2Fix _velocity;
         private Vec2Fix _lastRestPosition;
@@ -111,6 +124,26 @@ namespace PuttSeed.Core.Sim
             _velocity = Vec2Fix.Zero;
             _lastRestPosition = course.StartPosition;
             IsAtRest = true;
+
+            // Broad-phase boxes for the walls: each segment's own bounding box
+            // grown by the ball radius. The exact test below costs a Fix64
+            // DIVISION per wall per sub-step, and division here is a
+            // shift-subtract loop — at a dozen walls it is most of what the
+            // simulation does, and the solver's budget is denominated in ticks.
+            var walls = course.Walls;
+            _wallMinX = new Fix64[walls.Length];
+            _wallMaxX = new Fix64[walls.Length];
+            _wallMinY = new Fix64[walls.Length];
+            _wallMaxY = new Fix64[walls.Length];
+            for (int i = 0; i < walls.Length; i++)
+            {
+                var a = walls[i].A;
+                var b = walls[i].B;
+                _wallMinX[i] = Fix64.Min(a.X, b.X) - config.BallRadius;
+                _wallMaxX[i] = Fix64.Max(a.X, b.X) + config.BallRadius;
+                _wallMinY[i] = Fix64.Min(a.Y, b.Y) - config.BallRadius;
+                _wallMaxY[i] = Fix64.Max(a.Y, b.Y) + config.BallRadius;
+            }
         }
 
         /// <summary>
@@ -542,6 +575,18 @@ namespace PuttSeed.Core.Sim
             var walls = _course.Walls;
             for (int i = 0; i < walls.Length; i++)
             {
+                // Every point of a segment lies inside the segment's bounding
+                // box, so a ball centre outside that box grown by its radius
+                // cannot be touching the wall. Comparisons only: nothing is
+                // rounded, nothing is approximated, and the exact test still
+                // decides every case it could have decided. The 10k-tick golden
+                // hash is the proof that this changed only the speed.
+                if (_position.X < _wallMinX[i] || _position.X > _wallMaxX[i]
+                    || _position.Y < _wallMinY[i] || _position.Y > _wallMaxY[i])
+                {
+                    continue;
+                }
+
                 if (ResolveSegmentCollision(walls[i].A, walls[i].B))
                 {
                     WallHitCount++;
@@ -558,6 +603,45 @@ namespace PuttSeed.Core.Sim
         private bool ResolveSegmentCollision(Vec2Fix a, Vec2Fix b)
         {
             var ab = b - a;
+
+            // Division-free rejection. Whether a circle touches a segment can be
+            // decided with multiplies alone — perpendicular distance squared
+            // compared as cross² vs r²·|ab|² — but the exact resolution below
+            // rounds through a Fix64 division, so agreeing with it bit for bit
+            // means only rejecting when the ball is clear by a margin far wider
+            // than that rounding could ever move the answer (2^-10 against an
+            // error of order 2^-30). Everything nearer falls through to the
+            // original arithmetic untouched.
+            var abLenSqFast = ab.LengthSq();
+            if (abLenSqFast > Fix64.Zero)
+            {
+                var ap = _position - a;
+                var reach = _config.BallRadius + RejectMargin;
+                var reachSq = reach * reach;
+                var dot = Vec2Fix.Dot(ap, ab);
+                if (dot <= Fix64.Zero)
+                {
+                    if (ap.LengthSq() > reachSq)
+                    {
+                        return false;
+                    }
+                }
+                else if (dot >= abLenSqFast)
+                {
+                    if ((_position - b).LengthSq() > reachSq)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    var cross = ab.X * ap.Y - ab.Y * ap.X;
+                    if (cross * cross > reachSq * abLenSqFast)
+                    {
+                        return false;
+                    }
+                }
+            }
 
             // Closest point on the segment to the ball center.
             var abLenSq = ab.LengthSq();
