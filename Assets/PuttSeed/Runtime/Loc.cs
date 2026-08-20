@@ -133,6 +133,7 @@ namespace PuttSeed.Unity
             ["Random day"] = "Rastgele gün",
             ["Menu"] = "Menü",
             ["Next lesson"] = "Sonraki ders",
+            ["Finish tutorial"] = "Eğitimi bitir",
             ["Watch"] = "İzle",
             ["Retry"] = "Tekrar",
             ["Share"] = "Paylaş",

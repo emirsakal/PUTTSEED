@@ -97,9 +97,16 @@ namespace PuttSeed.Unity
                 {
                     _modes.NextGauntletHole();
                 }
-                else
+                else if (_modes.HasNextTutorialStage)
                 {
                     _modes.NextTutorial();
+                }
+                else
+                {
+                    // The last lesson ends the tutorial rather than looping
+                    // back to the first: a course a player has already been
+                    // taught is not the reward for finishing being taught.
+                    OnMenu();
                 }
             });
             watchButton?.onClick.AddListener(OnImport);
@@ -179,7 +186,8 @@ namespace PuttSeed.Unity
                 {
                     label.text = Loc.Tr(_modes.Mode == GameMode.Journey ? "Next level"
                         : _modes.Mode == GameMode.Gauntlet ? "Next hole"
-                        : "Next lesson");
+                        : _modes.HasNextTutorialStage ? "Next lesson"
+                        : "Finish tutorial");
                 }
             }
 

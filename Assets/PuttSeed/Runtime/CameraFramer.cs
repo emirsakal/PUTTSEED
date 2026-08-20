@@ -12,6 +12,14 @@ namespace PuttSeed.Unity
     /// the top bar and the button row, and a ball resting near the bottom of a
     /// tall hole could sit beneath a button. That is worse than untidy: the
     /// button eats the touch that was meant to aim.
+    ///
+    /// Wide holes are also ROLLED: a course wider than it is tall gets turned
+    /// 90°, so the long side of the phone is spent on the long side of the
+    /// hole instead of on empty felt. (Built 2026-08-19, removed the same day,
+    /// restored on request.) The roll is rendering only — the drag is read
+    /// through the camera before it is quantized, so the same gesture yields
+    /// the same shot index at either orientation, and shots, replays and the
+    /// simulation never learn about it.
     /// </summary>
     public sealed class CameraFramer : MonoBehaviour
     {
@@ -26,17 +34,24 @@ namespace PuttSeed.Unity
         /// <summary>The same, when a hint chip is riding under the top bar.</summary>
         public const float TopChromeWithHint = 0.855f;
 
+        /// <summary>The view roll for a course: 90° when it is wider than tall.</summary>
+        public static float RollFor(Vector2 halfSize) => halfSize.x > halfSize.y ? 90f : 0f;
+
         /// <summary>
         /// Half the view height needed to hold a course inside the free band.
-        /// The band is a fraction of screen HEIGHT, so a course that is height
-        /// limited pays for the chrome and a wide one — limited by width —
-        /// pays nothing.
+        /// "Along" is the world axis the screen's HEIGHT measures and "across"
+        /// the one its width measures; the roll swaps which is which, and that
+        /// swap is the whole trick. The band is a fraction of screen height, so
+        /// a course limited by its long axis pays for the chrome and one
+        /// limited across pays nothing.
         /// </summary>
-        public static float OrthographicSizeFor(Vector2 halfSize, float aspect, float band)
+        public static float OrthographicSizeFor(Vector2 halfSize, float aspect, float band, bool rolled)
         {
             aspect = Mathf.Max(aspect, 0.01f);
             band = Mathf.Clamp(band, 0.2f, 1f);
-            return Mathf.Max((halfSize.y + Padding) / band, (halfSize.x + Padding) / aspect);
+            float halfAlong = rolled ? halfSize.x : halfSize.y;
+            float halfAcross = rolled ? halfSize.y : halfSize.x;
+            return Mathf.Max((halfAlong + Padding) / band, (halfAcross + Padding) / aspect);
         }
 
         /// <summary>
@@ -63,14 +78,17 @@ namespace PuttSeed.Unity
             var center = (min + max) * 0.5f;
             var halfSize = (max - min) * 0.5f;
 
+            float roll = RollFor(halfSize);
             cam.orthographic = true;
-            cam.transform.rotation = Quaternion.identity;
-            float size = OrthographicSizeFor(halfSize, cam.aspect, topFraction - BottomChrome);
+            cam.transform.rotation = Quaternion.Euler(0f, 0f, roll);
+
+            float size = OrthographicSizeFor(halfSize, cam.aspect, topFraction - BottomChrome, roll != 0f);
             cam.orthographicSize = size;
-            cam.transform.position = new Vector3(
-                center.x,
-                center.y + CameraOffsetFor(size, BottomChrome, topFraction),
-                -10f);
+
+            // The band offset is a SCREEN measurement, so it travels along the
+            // camera's own up axis — which the roll has already turned.
+            var offset = cam.transform.up * CameraOffsetFor(size, BottomChrome, topFraction);
+            cam.transform.position = new Vector3(center.x + offset.x, center.y + offset.y, -10f);
             cam.backgroundColor = PaletteMaterials.Rough;
             cam.clearFlags = CameraClearFlags.SolidColor;
         }

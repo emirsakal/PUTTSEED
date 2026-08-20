@@ -845,7 +845,12 @@ namespace PuttSeed.Unity
             {
                 barMesh = MeshFactory.Quad(new Vector2(-50f, -0.5f), new Vector2(50f, 0.5f),
                     new Color(0.02f, 0.04f, 0.03f, 0.85f));
+
+                // Under the camera, not in the world: cinema bars belong to the
+                // top and bottom of the SCREEN, and the camera rolls 90° on
+                // wide courses (see CameraFramer).
                 _letterbox = new GameObject("Letterbox");
+                _letterbox.transform.SetParent(cam.transform, false);
                 topBar = CreateBar(barMesh, "Top");
                 bottomBar = CreateBar(barMesh, "Bottom");
             }
@@ -860,12 +865,13 @@ namespace PuttSeed.Unity
 
                 float h = cam.orthographicSize;
                 float barH = h * 0.16f;
-                var c = cam.transform.position;
                 topBar.localScale = new Vector3(1f, barH, 1f);
                 bottomBar.localScale = new Vector3(1f, barH, 1f);
                 float inset = barH * (slide - 0.5f); // -0.5: fully off, +0.5: flush
-                topBar.position = new Vector3(c.x, c.y + h - inset, -0.87f);
-                bottomBar.position = new Vector3(c.x, c.y - h + inset, -0.87f);
+                // Camera-local: z 9.13 sits where world -0.87 used to, just
+                // behind the vignette.
+                topBar.localPosition = new Vector3(0f, h - inset, 9.13f);
+                bottomBar.localPosition = new Vector3(0f, -h + inset, 9.13f);
             }
 
             for (float t = 0f; t < 0.2f; t += Time.deltaTime)

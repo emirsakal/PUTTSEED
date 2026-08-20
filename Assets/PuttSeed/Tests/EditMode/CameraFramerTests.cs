@@ -6,18 +6,18 @@ namespace PuttSeed.Unity.Tests
 {
     /// <summary>
     /// The framing guarantee: no part of a course is ever drawn under the
-    /// chrome. A ball resting beneath a button is not a tidiness problem — the
-    /// button takes the touch that was meant to aim it — so the free band is
-    /// arithmetic, not eyeballing.
+    /// chrome, at either roll. A ball resting beneath a button is not a
+    /// tidiness problem — the button takes the touch that was meant to aim it
+    /// — so the free band is arithmetic, not eyeballing.
     /// </summary>
     public class CameraFramerTests
     {
         // A 20:9 phone held upright.
         private const float PhoneAspect = 0.462f;
 
-        /// <summary>Where a world Y lands on screen, 0 at the bottom, 1 at the top.</summary>
-        private static float ScreenFraction(float worldY, float camY, float size)
-            => (worldY - (camY - size)) / (2f * size);
+        /// <summary>Where a point on the screen's vertical axis lands, 0 bottom, 1 top.</summary>
+        private static float ScreenFraction(float along, float offset, float size)
+            => (along - (offset - size)) / (2f * size);
 
         [Test]
         public void NoCourseEdge_EverLandsUnderTheChrome()
@@ -32,14 +32,17 @@ namespace PuttSeed.Unity.Tests
                     foreach (float y in halves)
                     {
                         var half = new Vector2(x, y);
+                        bool rolled = CameraFramer.RollFor(half) != 0f;
                         float size = CameraFramer.OrthographicSizeFor(
-                            half, PhoneAspect, top - CameraFramer.BottomChrome);
-                        float camY = CameraFramer.CameraOffsetFor(size, CameraFramer.BottomChrome, top);
+                            half, PhoneAspect, top - CameraFramer.BottomChrome, rolled);
+                        float offset = CameraFramer.CameraOffsetFor(size, CameraFramer.BottomChrome, top);
 
-                        Assert.That(ScreenFraction(half.y, camY, size),
+                        // The screen's height measures the long axis once rolled.
+                        float halfAlong = rolled ? half.x : half.y;
+                        Assert.That(ScreenFraction(halfAlong, offset, size),
                             Is.LessThanOrEqualTo(top + 1e-4f),
                             $"half {half}, top {top}: the course runs under the top bar");
-                        Assert.That(ScreenFraction(-half.y, camY, size),
+                        Assert.That(ScreenFraction(-halfAlong, offset, size),
                             Is.GreaterThanOrEqualTo(CameraFramer.BottomChrome - 1e-4f),
                             $"half {half}, top {top}: the course runs under the button row");
                     }
@@ -50,34 +53,52 @@ namespace PuttSeed.Unity.Tests
         [Test]
         public void TheCourseAlsoFitsAcrossTheScreen()
         {
-            var half = new Vector2(6f, 2f);
-            float size = CameraFramer.OrthographicSizeFor(
-                half, PhoneAspect, CameraFramer.TopChrome - CameraFramer.BottomChrome);
+            float[] halves = { 1f, 2.5f, 6f, 11f };
+            foreach (float x in halves)
+            {
+                foreach (float y in halves)
+                {
+                    var half = new Vector2(x, y);
+                    bool rolled = CameraFramer.RollFor(half) != 0f;
+                    float size = CameraFramer.OrthographicSizeFor(
+                        half, PhoneAspect, CameraFramer.TopChrome - CameraFramer.BottomChrome, rolled);
+                    float halfAcross = rolled ? half.y : half.x;
 
-            Assert.That(size * PhoneAspect, Is.GreaterThanOrEqualTo(half.x + 0.8f - 1e-4f));
+                    Assert.That(size * PhoneAspect,
+                        Is.GreaterThanOrEqualTo(halfAcross + 0.8f - 1e-4f), $"half {half} is cropped sideways");
+                }
+            }
         }
 
         [Test]
-        public void AWideCourse_PaysNothingForTheChrome()
+        public void WideCoursesTurnOntoTheLongAxis_TallOnesStayUpright()
         {
-            // Width-limited: the band only ever constrains the vertical fit, so
-            // reserving chrome must not shrink a hole that was never height
-            // limited in the first place.
-            var wide = new Vector2(9f, 1.5f);
-            float full = CameraFramer.OrthographicSizeFor(wide, PhoneAspect, 1f);
-            float banded = CameraFramer.OrthographicSizeFor(
-                wide, PhoneAspect, CameraFramer.TopChrome - CameraFramer.BottomChrome);
-
-            Assert.That(banded, Is.EqualTo(full).Within(1e-5f));
+            Assert.That(CameraFramer.RollFor(new Vector2(6f, 2f)), Is.EqualTo(90f));
+            Assert.That(CameraFramer.RollFor(new Vector2(2f, 6f)), Is.EqualTo(0f));
+            Assert.That(CameraFramer.RollFor(new Vector2(4f, 4f)), Is.EqualTo(0f),
+                "a square hole gains nothing from turning, so it does not turn");
         }
 
         [Test]
-        public void ATallCourse_ShrinksByExactlyTheBand()
+        public void RollingAWideCourse_FillsFarMoreOfThePhone()
+        {
+            var wide = new Vector2(6f, 2f); // 12 x 4 — the shape that started this
+            float band = CameraFramer.TopChrome - CameraFramer.BottomChrome;
+            float upright = CameraFramer.OrthographicSizeFor(wide, PhoneAspect, band, rolled: false);
+            float rolled = CameraFramer.OrthographicSizeFor(wide, PhoneAspect, band, rolled: true);
+
+            Assert.That(rolled, Is.LessThan(upright * 0.7f),
+                "turning a wide hole onto the long axis should shrink the view a lot, "
+                + "which is the same thing as the course growing on screen");
+        }
+
+        [Test]
+        public void ACourseLimitedByItsLongAxis_ShrinksByExactlyTheBand()
         {
             var tall = new Vector2(1f, 8f);
             float band = CameraFramer.TopChrome - CameraFramer.BottomChrome;
-            float full = CameraFramer.OrthographicSizeFor(tall, PhoneAspect, 1f);
-            float banded = CameraFramer.OrthographicSizeFor(tall, PhoneAspect, band);
+            float full = CameraFramer.OrthographicSizeFor(tall, PhoneAspect, 1f, rolled: false);
+            float banded = CameraFramer.OrthographicSizeFor(tall, PhoneAspect, band, rolled: false);
 
             Assert.That(banded, Is.EqualTo(full / band).Within(1e-4f));
         }
@@ -85,7 +106,7 @@ namespace PuttSeed.Unity.Tests
         [Test]
         public void ADegenerateAspectOrBand_DoesNotDivideByZero()
         {
-            float size = CameraFramer.OrthographicSizeFor(new Vector2(3f, 3f), 0f, 0f);
+            float size = CameraFramer.OrthographicSizeFor(new Vector2(3f, 3f), 0f, 0f, rolled: false);
             Assert.That(float.IsFinite(size), Is.True);
             Assert.That(size, Is.GreaterThan(0f));
         }

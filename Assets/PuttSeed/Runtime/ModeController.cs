@@ -408,6 +408,10 @@ namespace PuttSeed.Unity
             LoadAndShow(stage.Seed, configVersion: stage.ConfigVersion);
         }
 
+        /// <summary>True while a lesson after this one is still waiting.</summary>
+        public bool HasNextTutorialStage =>
+            Mode == GameMode.Tutorial && TutorialIndex + 1 < TutorialConfig.Stages.Length;
+
         /// <summary>Advances to the next tutorial stage (wraps).</summary>
         public void NextTutorial() => StartTutorial(TutorialIndex + 1);
 

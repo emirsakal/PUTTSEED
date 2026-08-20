@@ -95,10 +95,25 @@ namespace PuttSeed.Unity
                 MeshFactory.Quad(greenMin, greenMax,
                     DailyTint(PaletteMaterials.Fringe, seed)), 0.055f);
 
-            MeshFactory.CreateMeshObject(transform, "Stripes",
-                MeshFactory.Stripes(min - margin, max + margin, 0.85f,
+            // The mowing runs across the SCREEN, not across the world. The
+            // camera rolls 90° on wide courses (see CameraFramer), and stripes
+            // left in world space turn with it — so the ground's pattern would
+            // arrive horizontal on some holes and vertical on others, which
+            // reads as a game unsure which way is up.
+            //
+            // The mesh is therefore built CENTRED on the origin (it normally
+            // carries absolute coordinates) so the object can be turned about
+            // the course itself, and its extents are swapped first so the
+            // turned rectangle still covers the same ground.
+            float roll = CameraFramer.RollFor(max - min);
+            var matHalf = (max - min) * 0.5f + margin;
+            var meshHalf = roll != 0f ? new Vector2(matHalf.y, matHalf.x) : matHalf;
+            var stripes = MeshFactory.CreateMeshObject(transform, "Stripes",
+                MeshFactory.Stripes(-meshHalf, meshHalf, 0.85f,
                     DailyTint(PaletteMaterials.Felt, seed),
                     DailyTint(PaletteMaterials.FeltLight, seed)), 0.05f);
+            stripes.transform.localPosition = new Vector3(courseCenter.x, courseCenter.y, 0.05f);
+            stripes.transform.localRotation = Quaternion.Euler(0f, 0f, roll);
 
             int zoneIndex = 0;
             foreach (var zone in course.IceZones)
