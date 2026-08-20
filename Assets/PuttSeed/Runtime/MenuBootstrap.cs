@@ -146,7 +146,7 @@ namespace PuttSeed.Unity
             var genConfig = GeneratorConfig.ForVersion(version);
 
             var task = Task.Run(() => CourseGenerator.Generate(
-                seed, genConfig, simConfig, SolverConfig.Default));
+                seed, genConfig, simConfig, SolverConfig.ForVersion(version)));
             while (!task.IsCompleted)
             {
                 yield return null;
@@ -156,6 +156,12 @@ namespace PuttSeed.Unity
             {
                 yield break;
             }
+
+            // The game scene asks for this very course a moment later; hand it
+            // over rather than making it grow the same hole again.
+            GameSession.PreparedSeed = seed;
+            GameSession.PreparedVersion = version;
+            GameSession.PreparedCourse = task.Result;
 
             var texture = CourseThumbnail.Render(task.Result.Course);
             todayThumb.sprite = Sprite.Create(texture,

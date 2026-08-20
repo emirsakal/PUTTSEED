@@ -610,8 +610,17 @@ namespace PuttSeed.Unity
                 _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default,
                 seed, configVersion);
             var genConfig = GeneratorConfig.ForVersion(configVersion);
-            var task = Task.Run(() => CourseGenerator.Generate(
-                seed, genConfig, config, SolverConfig.Default));
+
+            // The budget a version was PROVEN under: a v4 hole solved on the v2
+            // budget would be discarded before its three-stroke solution was
+            // found, and the generator would quietly hand back a par 2.
+            var solverConfig = SolverConfig.ForVersion(configVersion);
+
+            // The menu may already have grown this exact hole for its thumbnail.
+            var prepared = GameSession.TakePrepared(seed, configVersion);
+            var task = prepared != null
+                ? Task.FromResult(prepared)
+                : Task.Run(() => CourseGenerator.Generate(seed, genConfig, config, solverConfig));
             while (!task.IsCompleted)
             {
                 yield return null; // frames render; the ball rolls while we wait
