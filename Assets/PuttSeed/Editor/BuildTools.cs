@@ -127,6 +127,28 @@ namespace PuttSeed.Unity.Editor
                 importer.SaveAndReimport();
             }
 
+            // A dropped-in typeface, if the project has one. Everything else
+            // in this method GENERATES its asset; a font cannot be generated,
+            // so this half only looks.
+            foreach (string path in Directory.Exists(dir + "/Fonts")
+                ? Directory.GetFiles(dir + "/Fonts")
+                : System.Array.Empty<string>())
+            {
+                if (!path.EndsWith(".ttf", System.StringComparison.OrdinalIgnoreCase)
+                    && !path.EndsWith(".otf", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var font = AssetDatabase.LoadAssetAtPath<Font>(path.Replace(Path.DirectorySeparatorChar, '/'));
+                if (font != null)
+                {
+                    UIFactory.UseFontAsset(font);
+                    Debug.Log($"PuttSeed: UI font is {font.name} ({path}).");
+                    break;
+                }
+            }
+
             var rounded = AssetDatabase.LoadAssetAtPath<Sprite>(roundedPath);
             var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
             var star = AssetDatabase.LoadAssetAtPath<Sprite>(starPath);

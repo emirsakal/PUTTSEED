@@ -466,6 +466,7 @@ namespace PuttSeed.Unity
             if (sim.IsHoled && !_lastHoled)
             {
                 _shotLog?.Record(ShotLog.Mark.Holed);
+                _ballView.Sink();
                 Play(captureClip, 1f);
                 Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);

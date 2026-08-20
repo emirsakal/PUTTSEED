@@ -159,6 +159,14 @@ mechanically, not by care:
 Requirements: .NET SDK 8, Unity 6000.3.x with the Android module (open the
 repo root in Unity Hub).
 
+### Typography
+
+No typeface ships in this repo — a font is licensed, not written. With the
+slot empty the game falls back to Unity's built-in Liberation Sans. Drop one
+OFL `.ttf` into `Assets/PuttSeed/UI/Fonts/` and run **PuttSeed → Rebuild
+Scenes**; every label in the game is set in it from that point on. The face
+must cover Turkish (ı, İ, ğ, ş, ç, ö, ü) — see the note in that folder.
+
 ### Signing (release builds)
 
 Create `keystore.properties` in the repo root — it is gitignored and must

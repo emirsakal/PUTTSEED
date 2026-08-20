@@ -48,6 +48,7 @@ namespace PuttSeed.Unity
         private static Sprite? _circleSprite;
         private static Sprite? _starSprite;
         private static Sprite? _pennantSprite;
+        private static Font? _fontAsset;
 
         /// <summary>
         /// Uses imported sprite ASSETS instead of transient generated sprites.
@@ -62,8 +63,25 @@ namespace PuttSeed.Unity
             _pennantSprite = pennant;
         }
 
-        /// <summary>The built-in legacy font.</summary>
-        public static Font Font() => Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        /// <summary>
+        /// Uses a project font for every label in the game. The editor scene
+        /// builder calls this before baking, so scenes reference a real asset.
+        /// </summary>
+        public static void UseFontAsset(Font font) => _fontAsset = font;
+
+        /// <summary>
+        /// The face every string in the game is set in — a dropped-in font when
+        /// the project has one, Unity's built-in legacy face otherwise.
+        ///
+        /// That fallback is Liberation Sans, and it is the single loudest
+        /// "this is a prototype" signal a game can send: the title, the stroke
+        /// count, every button. No font ships in this repo because a typeface
+        /// is licensed, not written; drop one OFL .ttf into
+        /// Assets/PuttSeed/UI/Fonts/ and the whole game changes face. Check it
+        /// covers Turkish — ı, İ, ğ, ş, ç, ö, ü all appear in the UI.
+        /// </summary>
+        public static Font Font()
+            => _fontAsset != null ? _fontAsset : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
         /// <summary>A 9-sliced rounded-rectangle sprite (asset when set, else generated).</summary>
         public static Sprite RoundedSprite()

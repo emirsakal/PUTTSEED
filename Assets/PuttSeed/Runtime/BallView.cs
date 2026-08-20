@@ -24,6 +24,7 @@ namespace PuttSeed.Unity
         private float _squash;
         private float _squashAngle;
         private float _popIn;
+        private float _sink;
         private Transform _body = null!;
         private Transform? _spin;
         private float _spinAngle;
@@ -134,6 +135,7 @@ namespace PuttSeed.Unity
                 rimRenderer.enabled = true;
                 _trail.enabled = true;
                 _trail.Clear();
+                _sink = 0f; // a retry starts with a ball, not a hole
                 shadowGo.SetActive(true);
             };
         }
@@ -154,6 +156,15 @@ namespace PuttSeed.Unity
 
         /// <summary>Scale-in pop after a teleport (the water reset).</summary>
         public void PopIn() => _popIn = 1f;
+
+        /// <summary>
+        /// The ball drops into the cup. Everything about the capture used to
+        /// happen AROUND the ball — a ring, a flash, a zoom, confetti, a
+        /// slow-motion replay — while the ball itself simply stopped on top of
+        /// the hole and stayed there. The one moment the whole game is about
+        /// had no motion of its own.
+        /// </summary>
+        public void Sink() => _sink = 1f;
 
         private void LateUpdate()
         {
@@ -177,6 +188,16 @@ namespace PuttSeed.Unity
             {
                 _popIn = Mathf.Max(0f, _popIn - Time.deltaTime * 5f);
                 pop = Mathf.SmoothStep(0.25f, 1f, 1f - _popIn);
+            }
+
+            // Down the hole: a quick shrink with a moment of hesitation at the
+            // lip, which is what a real putt looks like when it drops.
+            if (_sink > 0f)
+            {
+                _sink = Mathf.Max(0f, _sink - Time.deltaTime * 5.5f);
+                float fallen = 1f - _sink;
+                pop *= 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((fallen - 0.15f) / 0.85f));
+                _trail.enabled = false;
             }
 
             transform.localScale = Vector3.one * pop;

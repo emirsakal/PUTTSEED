@@ -66,6 +66,14 @@ namespace PuttSeed.Unity
         /// <summary>Wall color.</summary>
         public static readonly Color Wall = new Color(0.16f, 0.15f, 0.18f);
 
+        /// <summary>
+        /// The lit top edge of a wall. Rails on a real course are extruded;
+        /// a flat bar with a drop shadow reads as a line drawn on the felt.
+        /// A thinner strip of this, offset against the shadow, is the whole
+        /// bevel — the cheapest depth cue flat 2D has.
+        /// </summary>
+        public static readonly Color WallEdge = new Color(0.30f, 0.29f, 0.34f);
+
         /// <summary>Sand zone fill.</summary>
         public static readonly Color Sand = new Color(0.85f, 0.76f, 0.54f);
 

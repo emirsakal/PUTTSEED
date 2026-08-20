@@ -179,6 +179,17 @@ namespace PuttSeed.Unity
             MeshFactory.CreateMeshObject(transform, "WallCaps",
                 MeshFactory.WallCaps(course.Walls, WallHalfThickness, PaletteMaterials.Wall), -0.05f);
 
+            // The rail's lit edge: a thinner wall in a lighter tone, offset
+            // AGAINST the shadow, so every wall shows a bright sliver on the
+            // side the light comes from and reads as extruded rather than
+            // drawn. Same geometry, so it miters at the joints for free.
+            var edge = MeshFactory.CreateMeshObject(transform, "WallEdge",
+                MeshFactory.Walls(course.Walls, WallHalfThickness * 0.5f, PaletteMaterials.WallEdge), -0.052f);
+            edge.transform.localPosition = new Vector3(-ShadowOffset.x * 0.42f, -ShadowOffset.y * 0.42f, -0.052f);
+            var edgeCaps = MeshFactory.CreateMeshObject(transform, "WallEdgeCaps",
+                MeshFactory.WallCaps(course.Walls, WallHalfThickness * 0.5f, PaletteMaterials.WallEdge), -0.052f);
+            edgeCaps.transform.localPosition = new Vector3(-ShadowOffset.x * 0.42f, -ShadowOffset.y * 0.42f, -0.052f);
+
             BuildElementWave(course);
 
             _intro = StartCoroutine(IntroReveal());
