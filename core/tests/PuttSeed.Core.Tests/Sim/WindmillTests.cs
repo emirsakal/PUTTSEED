@@ -197,5 +197,66 @@ namespace PuttSeed.Core.Tests.Sim
             Assert.That(sim.MillClock, Is.EqualTo(7), "a full period returns the same phase");
             Assert.That(sim.MillClock, Is.InRange(0, GolfSim.MillClockPeriod - 1));
         }
+
+        [Test]
+        public void SpinningBlade_SweepsARestingBall_WithoutCostingAStroke()
+        {
+            // The ball is parked inside the mill's reach with a shot already
+            // played, which is exactly where a player leaves it: the blade used
+            // to pass straight through, because a resting ball skips the whole
+            // collision pass.
+            var sim = new GolfSim(CourseWithMill(omegaSteps: 6), SimConfig.Default);
+            sim.RestoreRest(new Vec2Fix(Fix64.FromFraction(4, 1), Fix64.Zero), strokes: 1);
+
+            bool moved = false;
+            for (int i = 0; i < 400 && !moved; i++)
+            {
+                sim.Tick();
+                moved = !sim.IsAtRest;
+            }
+
+            Assert.That(moved, Is.True, "a blade swept through the ball and left it sitting there");
+            Assert.That(sim.Strokes, Is.EqualTo(1), "being hit by the course is not a stroke");
+            Assert.That(sim.WindmillHitCount, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void SweptBall_IsThrownClearOfTheMill()
+        {
+            // The soft lock this has to avoid: a knock that leaves the ball
+            // inside the sweep is a knock that happens again next rotation, and
+            // a player cannot shoot while the ball is moving.
+            var mill = new Windmill(V(3, 0), Fix64.FromInt(2), bladeCount: 2, omegaSteps: 6, phase0: 256);
+            var sim = new GolfSim(CourseWithMill(omegaSteps: 6), SimConfig.Default);
+            sim.RestoreRest(new Vec2Fix(Fix64.FromFraction(7, 2), Fix64.Zero), strokes: 1);
+
+            for (int i = 0; i < 4000; i++)
+            {
+                sim.Tick();
+            }
+
+            Assert.That(sim.IsAtRest, Is.True, "the mill never let go of the ball");
+
+            var offset = sim.Ball.Position - mill.Pivot;
+            Assert.That(offset.Length() > mill.BladeLength, Is.True,
+                $"the ball settled inside the sweep again (radius {offset.Length()})");
+            Assert.That(sim.Strokes, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ShotIsRefused_WhileTheMillHasTheBall()
+        {
+            var sim = new GolfSim(CourseWithMill(omegaSteps: 6), SimConfig.Default);
+            sim.RestoreRest(new Vec2Fix(Fix64.FromFraction(4, 1), Fix64.Zero), strokes: 1);
+            for (int i = 0; i < 400 && sim.IsAtRest; i++)
+            {
+                sim.Tick();
+            }
+
+            Assert.That(sim.IsAtRest, Is.False);
+
+            sim.Shoot(new ShotInput(0, 255));
+            Assert.That(sim.Strokes, Is.EqualTo(1), "a shot taken mid-sweep must not register");
+        }
     }
 }

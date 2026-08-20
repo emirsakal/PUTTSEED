@@ -209,6 +209,9 @@ namespace PuttSeed.Core.Sim
         {
             if (IsAtRest)
             {
+                // A blade reaching a parked ball still hits it.
+                BladeCatchesRestingBall();
+
                 // Blades turn while the player lines up, so the clock advances
                 // here too — this branch is the whole point of a free clock.
                 AdvanceMillClock();
@@ -480,6 +483,88 @@ namespace PuttSeed.Core.Sim
         /// direction (radius + ball radius), velocity untouched. The offset
         /// clears the twin portal's disc, so one pass triggers exactly once.
         /// </summary>
+        /// <summary>
+        /// A blade sweeping into a stopped ball throws it clear of the mill.
+        ///
+        /// A resting ball skips the collision pass entirely — that is what
+        /// makes rest cheap — so blades used to turn straight through a ball
+        /// parked in their reach while the player lined up the next shot, which
+        /// reads as the mill being broken. It costs no stroke: the course did
+        /// this, not the player, and <see cref="Shoot"/> already refuses a ball
+        /// that is moving, so the turn simply waits until it settles.
+        ///
+        /// The knock is thrown OUTWARD as well as along the sweep, and that is
+        /// the part that matters. A purely tangential push leaves the ball at
+        /// the same radius from the pivot, where the next blade finds it again
+        /// — and a ball that is always moving is a ball the player can never
+        /// hit. Its speed is the TIP's, so a ball caught near the hub still
+        /// leaves; a knock proportional to the contact radius would nudge a
+        /// ball by the pivot for ever.
+        /// </summary>
+        private bool BladeCatchesRestingBall()
+        {
+            var mills = _course.Windmills;
+            for (int i = 0; i < mills.Length; i++)
+            {
+                var pivot = mills[i].Pivot;
+                int spacing = FixTrig.AngleSteps / mills[i].BladeCount;
+                int baseAngle = mills[i].Phase0 + mills[i].OmegaSteps * _millClock;
+                for (int b = 0; b < mills[i].BladeCount; b++)
+                {
+                    int angle = WrapAngle(baseAngle + b * spacing);
+                    var along = FixTrig.UnitVector(angle);
+                    if (!TouchesSegment(pivot, pivot + along * mills[i].BladeLength))
+                    {
+                        continue;
+                    }
+
+                    // The tip's displacement over one tick IS the blade's
+                    // speed: no angular constant, nothing to convert, and it
+                    // stays exact in fixed point.
+                    var swept = (FixTrig.UnitVector(WrapAngle(angle + mills[i].OmegaSteps)) - along)
+                        * mills[i].BladeLength;
+                    var sweptLength = swept.Length();
+                    if (sweptLength == Fix64.Zero)
+                    {
+                        continue; // a still mill is a wall, and a wall pushes nothing
+                    }
+
+                    var outward = _position - pivot;
+                    var outwardLength = outward.Length();
+                    var outwardUnit = outwardLength > Fix64.Zero ? outward / outwardLength : along;
+                    var away = swept / sweptLength + outwardUnit;
+                    var awayLength = away.Length();
+                    _velocity = (awayLength > Fix64.Zero ? away / awayLength : outwardUnit)
+                        * (sweptLength / _config.Dt);
+                    IsAtRest = false;
+                    _restTicks = 0;
+                    WindmillHitCount++;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>An angle index folded back into [0, AngleSteps).</summary>
+        private static int WrapAngle(int angle)
+        {
+            angle %= FixTrig.AngleSteps;
+            return angle < 0 ? angle + FixTrig.AngleSteps : angle;
+        }
+
+        /// <summary>Whether the ball overlaps a segment, resolving nothing.</summary>
+        private bool TouchesSegment(Vec2Fix a, Vec2Fix b)
+        {
+            var ab = b - a;
+            var abLenSq = ab.LengthSq();
+            var t = abLenSq == Fix64.Zero
+                ? Fix64.Zero
+                : Fix64.Clamp(Vec2Fix.Dot(_position - a, ab) / abLenSq, Fix64.Zero, Fix64.One);
+            var delta = _position - (a + ab * t);
+            return delta.LengthSq() < _config.BallRadius * _config.BallRadius;
+        }
+
         private void ResolvePortalTransits()
         {
             var portals = _course.Portals;

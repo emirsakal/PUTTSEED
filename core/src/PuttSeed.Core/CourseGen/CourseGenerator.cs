@@ -66,6 +66,13 @@ namespace PuttSeed.Core.CourseGen
         private const int RelaxationLevels = 4;
 
         /// <summary>
+        /// Ticks the playback verification may spend. A solution is a handful of
+        /// shots and at most a rotation of waiting each, so this is a runaway
+        /// guard rather than a budget anything reaches.
+        /// </summary>
+        private const int PlaybackTickBudget = 200_000;
+
+        /// <summary>
         /// Generates the course for a seed. Deterministic; bounded by
         /// <c>RelaxationLevels * cfg.AttemptsPerLevel</c> attempts.
         /// </summary>
@@ -129,6 +136,20 @@ namespace PuttSeed.Core.CourseGen
                         continue;
                     }
 
+                    // The solver expands every node from a ball it PUT at rest,
+                    // so it never sees what happens while a player WAITS: on a
+                    // windmill course each author shot is taken at mill phase
+                    // zero, and getting there means sitting still for up to a
+                    // full rotation — with a blade free to sweep the ball off
+                    // its mark. Play the solution the way the player will, and
+                    // keep only what survives it. About one course in eighty
+                    // does not, and that course is simply not this seed's.
+                    if (windmills.Length > 0 && !SolutionSurvivesTheWait(candidate, simConfig,
+                        solve.AuthorSolution, solve.AuthorStrokes))
+                    {
+                        continue;
+                    }
+
                     int par = Math.Min(Math.Max(solve.AuthorStrokes, 2), solverConfig.MaxPar);
                     var course = new CourseData(start, hole, par, walls,
                         bumpers, sand, water, ice, gates, ramps, portals, windmills);
@@ -150,6 +171,40 @@ namespace PuttSeed.Core.CourseGen
 
             throw new InvalidOperationException(
                 $"Course generation failed after {attempts} attempts for seed {seed}.");
+        }
+
+        /// <summary>
+        /// Replays the author solution the way it will actually be played:
+        /// each shot taken at mill phase zero, the ball waiting at rest for the
+        /// blades to come round, and a blade that reaches it in the meantime
+        /// free to sweep it away. Returns whether the ball still finds the cup
+        /// in the strokes the solver promised.
+        /// </summary>
+        private static bool SolutionSurvivesTheWait(CourseData course, SimConfig simConfig,
+            ShotInput[] shots, int authorStrokes)
+        {
+            var sim = new GolfSim(course, simConfig);
+            int shotIndex = 0;
+            for (int tick = 0; tick < PlaybackTickBudget && !sim.IsHoled; tick++)
+            {
+                if (sim.IsAtRest)
+                {
+                    if (shotIndex >= shots.Length)
+                    {
+                        return false; // out of shots with the ball parked
+                    }
+
+                    if (sim.MillClock == 0)
+                    {
+                        sim.Shoot(shots[shotIndex]);
+                        shotIndex++;
+                    }
+                }
+
+                sim.Tick();
+            }
+
+            return sim.IsHoled && sim.Strokes == authorStrokes;
         }
 
         private static bool IsPlausiblyReachable(Corridor corridor, GeneratorConfig cfg)
