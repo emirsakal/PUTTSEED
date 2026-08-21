@@ -228,12 +228,42 @@ namespace PuttSeed.Unity.Editor
         }
 
         /// <summary>
+        /// Prints everything a store upload depends on, so it can be READ
+        /// rather than remembered: package id, version, target API, minimum
+        /// API, architectures, scripting backend and whether the Unity splash
+        /// will appear. Run it before a release; a build that fails Play's
+        /// checks fails days later, in an email.
+        /// </summary>
+        [MenuItem("PuttSeed/Report Release Settings")]
+        public static void ReportReleaseSettings()
+        {
+            ConfigureSplash();
+            ConfigureAndroidTarget();
+            var target = NamedBuildTarget.Android;
+            var lines = new[]
+            {
+                "PuttSeed release settings",
+                $"  package        {PlayerSettings.GetApplicationIdentifier(target)}",
+                $"  version        {PlayerSettings.bundleVersion} (code {PlayerSettings.Android.bundleVersionCode})",
+                $"  target API     {(int)PlayerSettings.Android.targetSdkVersion}",
+                $"  minimum API    {(int)PlayerSettings.Android.minSdkVersion}",
+                $"  architectures  {PlayerSettings.Android.targetArchitectures}",
+                $"  backend        {PlayerSettings.GetScriptingBackend(target)}",
+                $"  unity splash   {(PlayerSettings.SplashScreen.show ? "SHOWN" : "off")}",
+                $"  orientation    {PlayerSettings.defaultInterfaceOrientation}",
+            };
+
+            Debug.Log(string.Join(System.Environment.NewLine, lines));
+        }
+
+        /// <summary>
         /// Batch-mode release build: signed .aab when keystore.properties is
         /// present next to the project (never committed), warning-unsigned
         /// otherwise. Entry point of scripts/build-release.bat.
         /// </summary>
         public static void BuildAndroidRelease()
         {
+            BumpVersionCode();
             bool signed = ApplySigningFromProperties();
             if (!signed)
             {
@@ -243,6 +273,23 @@ namespace PuttSeed.Unity.Editor
 
             EditorUserBuildSettings.development = false;
             BuildAndroidInternal(apk: false, output: "artifacts/PuttSeed-release.aab");
+        }
+
+        /// <summary>
+        /// Raises the Android version code by one and writes it back to
+        /// ProjectSettings.
+        ///
+        /// Play refuses an upload whose version code it has already seen, and
+        /// remembering to raise it by hand is the single most common way a
+        /// release stalls. The human version (bundleVersion, "1.0") is left
+        /// alone — that one is a decision, not bookkeeping.
+        /// </summary>
+        private static void BumpVersionCode()
+        {
+            PlayerSettings.Android.bundleVersionCode++;
+            AssetDatabase.SaveAssets();
+            Debug.Log($"PuttSeed: version {PlayerSettings.bundleVersion} " +
+                $"(code {PlayerSettings.Android.bundleVersionCode}).");
         }
 
         /// <summary>
@@ -260,6 +307,7 @@ namespace PuttSeed.Unity.Editor
             EnsureFeelConfig();
             EnsureAppIcon();
             ConfigureSplash();
+            ConfigureAndroidTarget();
             if (!File.Exists(MenuScenePath) || !File.Exists(GameScenePath))
             {
                 CreateScenes();
@@ -493,8 +541,39 @@ namespace PuttSeed.Unity.Editor
 
         private static void ConfigureSplash()
         {
+            // Off where the licence allows it — two seconds of somebody else's
+            // logo is two seconds of a daily game's whole session. Unity puts
+            // it back at build time when the licence requires it, so the felt
+            // background and the light logo stay configured for that case: if
+            // it must be shown, it will at least be shown on our green.
+            PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SplashScreen.backgroundColor = new Color(0.22f, 0.52f, 0.31f);
             PlayerSettings.SplashScreen.unityLogoStyle = PlayerSettings.SplashScreen.UnityLogoStyle.LightOnDark;
+            Debug.Log(PlayerSettings.SplashScreen.show
+                ? "PuttSeed: the Unity splash stays (licence requires it) — themed green."
+                : "PuttSeed: Unity splash disabled.");
+        }
+
+        /// <summary>
+        /// Pins the Android target API level.
+        ///
+        /// The setting was "Automatic (highest installed)", and the highest
+        /// installed here is a PREVIEW SDK — Play rejects an upload built
+        /// against one, and the failure would arrive months from now on a
+        /// machine that had simply picked up a new SDK. A pinned number also
+        /// makes two machines build the same thing, which is the rest of this
+        /// repo's whole argument.
+        ///
+        /// Raise it when Play raises its requirement, deliberately.
+        /// </summary>
+        private static void ConfigureAndroidTarget()
+        {
+            const int targetApi = 36; // Android 16
+            if ((int)PlayerSettings.Android.targetSdkVersion != targetApi)
+            {
+                PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)targetApi;
+                Debug.Log($"PuttSeed: pinned Android target API to {targetApi}.");
+            }
         }
 
         private static void EnsureFeelConfig()
