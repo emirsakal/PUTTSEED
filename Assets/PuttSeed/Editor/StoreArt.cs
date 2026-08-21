@@ -34,13 +34,30 @@ namespace PuttSeed.Unity.Editor
         [MenuItem("PuttSeed/Generate Store Art")]
         public static void GenerateAll()
         {
-            WriteIcon("Assets/PuttSeed/Icon/app-icon.png", 512, forAdaptive: false);
-            WriteIcon("Assets/PuttSeed/Icon/adaptive-fg.png", 432, forAdaptive: true);
             WriteBackground("Assets/PuttSeed/Icon/adaptive-bg.png", 432);
             WriteFeatureGraphic("docs/store/feature-graphic.png", 1024, 500);
 
             AssetDatabase.Refresh();
-            Debug.Log("PuttSeed: store art generated (icon, adaptive layers, feature graphic).");
+            Debug.Log("PuttSeed: store art generated (adaptive background, feature graphic).");
+        }
+
+        /// <summary>
+        /// Redraws the icon and its adaptive foreground.
+        ///
+        /// Deliberately NOT part of Generate Store Art any more: the shipped
+        /// icon is a rendered diorama, and a stray click on the other menu item
+        /// would quietly replace it with this flat stand-in. What is here is
+        /// the fallback — a complete, correct icon the project can always make
+        /// for itself, which is worth keeping for the day the drawn one has to
+        /// be replaced in a hurry.
+        /// </summary>
+        [MenuItem("PuttSeed/Generate Fallback Icon")]
+        public static void GenerateFallbackIcon()
+        {
+            WriteIcon("Assets/PuttSeed/Icon/app-icon.png", 512, forAdaptive: false);
+            WriteIcon("Assets/PuttSeed/Icon/adaptive-fg.png", 432, forAdaptive: true);
+            AssetDatabase.Refresh();
+            Debug.LogWarning("PuttSeed: the DRAWN icon has been replaced by the generated fallback.");
         }
 
         /// <summary>

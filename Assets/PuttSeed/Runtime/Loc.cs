@@ -199,6 +199,7 @@ namespace PuttSeed.Unity
             ["Daily"] = "Günlük",
             ["Daily · {0}"] = "Günlük · {0}",
             ["{0} · {1}"] = "{0} · {1}",
+            ["New course"] = "Yeni kurs",
             ["Motion"] = "Hareket",
             ["Full"] = "Tam",
             ["Reduced"] = "Azalt",

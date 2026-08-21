@@ -97,6 +97,12 @@ namespace PuttSeed.Unity
                 {
                     _modes.NextGauntletHole();
                 }
+                else if (_modes.Mode == GameMode.Practice)
+                {
+                    // The next one is usually already grown (PrewarmPractice),
+                    // so this is the whole wait.
+                    _modes.StartPractice();
+                }
                 else if (_modes.HasNextTutorialStage)
                 {
                     _modes.NextTutorial();
@@ -167,34 +173,35 @@ namespace PuttSeed.Unity
 
             hintChip?.SetActive(_modes.CurrentHint.Length > 0);
 
-            // One advance button, two modes: every tutorial stage offers the
-            // next lesson; a journey level offers the next level once holed.
-            // A gauntlet hole offers the next one as soon as it is settled —
-            // holed OR out of strokes, because a failed hole still counts its
-            // strokes and the week carries on.
-            bool gauntletHoleDone = _modes.Mode == GameMode.Gauntlet && sim != null
-                && (sim.IsHoled || sim.IsFailed) && _modes.HasNextGauntletHole;
-            bool showNext = _modes.Mode == GameMode.Tutorial
-                || (_modes.Mode == GameMode.Journey && sim != null && sim.IsHoled
-                    && _modes.HasNextJourneyLevel)
-                || gauntletHoleDone;
+            // One advance button, five answers — see AdvanceButton, where the
+            // rules can be tested instead of being re-read.
+            var advance = AdvanceButton.For(_modes.Mode,
+                sim != null && sim.IsHoled,
+                sim != null && sim.IsFailed,
+                _modes.HasNextTutorialStage,
+                _modes.HasNextJourneyLevel,
+                _modes.HasNextGauntletHole);
+            bool showNext = advance.Visible;
             nextLessonButton?.gameObject.SetActive(showNext);
             if (showNext && nextLessonButton != null)
             {
                 var label = nextLessonButton.GetComponentInChildren<Text>();
                 if (label != null)
                 {
-                    label.text = Loc.Tr(_modes.Mode == GameMode.Journey ? "Next level"
-                        : _modes.Mode == GameMode.Gauntlet ? "Next hole"
-                        : _modes.HasNextTutorialStage ? "Next lesson"
-                        : "Finish tutorial");
+                    label.text = Loc.Tr(advance.Label);
                 }
             }
 
             // The mulligan is a teaching tool — practice and tutorial only;
             // the bar reflows so five buttons share the row when Undo is gone.
             bool tutorial = _modes.Mode == GameMode.Tutorial;
-            bool showUndo = _modes.Mode == GameMode.Practice || tutorial;
+
+            // Undo is a mulligan, and there is nothing to take back once the
+            // ball is in the cup or the strokes are gone. Hiding it there also
+            // pays for the advance button that arrives at exactly that moment,
+            // so practice keeps a six-button bar instead of a seven-button one.
+            bool settled = sim != null && (sim.IsHoled || sim.IsFailed);
+            bool showUndo = (_modes.Mode == GameMode.Practice || tutorial) && !settled;
             undoButton?.gameObject.SetActive(showUndo);
 
             // Share arrives with the run worth sharing. It used to sit there

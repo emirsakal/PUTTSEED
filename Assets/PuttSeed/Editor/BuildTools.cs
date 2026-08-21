@@ -579,10 +579,12 @@ namespace PuttSeed.Unity.Editor
             }
 
             // The FLOOR is pinned for the same reason as the ceiling, and for
-            // one more: it moved on its own. A build lowered it from 25 to 23
-            // without being asked, which would have shipped the game to phones
-            // it was never run on. 25 is Android 7.1 and covers all but a
-            // rounding error of active devices.
+            // one more: the editor keeps serializing 23 into ProjectSettings
+            // whatever is asked of it. Setting it here is what actually
+            // reaches the package — read back out of the built APK with
+            // aapt2, which reports minSdkVersion 25 while the file on disk
+            // still says 23. 25 is Android 7.1, the oldest phone this game
+            // has any business claiming to run on.
             const int minimumApi = 25;
             if ((int)PlayerSettings.Android.minSdkVersion != minimumApi)
             {

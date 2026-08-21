@@ -156,13 +156,15 @@ matches the audience; the daily-puzzle crowd is the one that shares codes).
 
 | Asset | Requirement | Status |
 |---|---|---|
-| App icon | 512×512 PNG | generated — `Assets/PuttSeed/Icon/app-icon.png` |
-| Adaptive icon | 432×432 fg + bg | generated — same folder |
+| App icon | 512×512 PNG | done — `Assets/PuttSeed/Icon/app-icon.png` (rendered diorama) |
+| Adaptive icon | 432×432 fg + bg | done — subject measured at 130px from centre, inside the 143px mask |
 | Feature graphic | 1024×500 PNG | generated — `docs/store/feature-graphic.png` |
 | Phone screenshots | 2–8, portrait | **TODO** — Play mode, `PuttSeed → Capture Screenshot` |
 | Promo video | optional | not planned for launch |
 
-Regenerate the art any time with **PuttSeed → Generate Store Art**.
+Regenerate the feature graphic with **PuttSeed → Generate Store Art**. The icon
+is drawn art, not generated; **Generate Fallback Icon** replaces it with the
+code-drawn stand-in and should only be used deliberately.
 
 Screenshots worth taking, in this order: the daily hole mid-aim with the
 power arc drawn, a hole-out with the star reveal, a windy day showing the
