@@ -107,15 +107,6 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), NoOp, 44, primary: true);
             menu.dailyButton = menu.dailyLabel.GetComponentInParent<Button>();
 
-            // The day's hole, named and vouched for. It shares the countdown's
-            // slot because the two never want the screen at the same time: the
-            // countdown is for a day already answered, this is for one that is
-            // not.
-            menu.proofText = UIFactory.CreateText(canvas.transform, "Proof",
-                new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), 24, TextAnchor.MiddleCenter);
-            menu.proofText.color = UIStyle.CreamDim;
-            menu.proofText.gameObject.SetActive(false);
-
             // Next-hole countdown; MenuBootstrap fills it once today is done.
             menu.countdownText = UIFactory.CreateText(canvas.transform, "Countdown",
                 new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), 26, TextAnchor.MiddleCenter);
@@ -685,23 +676,15 @@ namespace PuttSeed.Unity
                 new Vector2(0.10f, 0.31f), new Vector2(0.90f, 0.54f), UIStyle.PanelDark);
             ui.dailyCard = dailyCard.gameObject;
             ui.dailyCardResult = UIFactory.CreateText(dailyCard.transform, "Result",
-                new Vector2(0.05f, 0.71f), new Vector2(0.95f, 0.96f), 32, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.66f), new Vector2(0.95f, 0.95f), 32, TextAnchor.MiddleCenter);
             ui.dailyCardStreak = UIFactory.CreateText(dailyCard.transform, "Streaks",
-                new Vector2(0.05f, 0.55f), new Vector2(0.95f, 0.71f), 25, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.66f), 25, TextAnchor.MiddleCenter);
             ui.dailyCardStreak.color = UIStyle.CreamDim;
             ui.dailyCardCountdown = UIFactory.CreateText(dailyCard.transform, "Countdown",
-                new Vector2(0.05f, 0.40f), new Vector2(0.95f, 0.55f), 24, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.46f), 24, TextAnchor.MiddleCenter);
             ui.dailyCardCountdown.color = UIStyle.CreamDim;
-
-            // The whole run, in the number of characters it takes to store it.
-            // The determinism is the product's one real claim and it lived
-            // only in the README; this is the moment it can be felt, with the
-            // player holding a code that reproduces what they just did.
-            ui.dailyCardProof = UIFactory.CreateText(dailyCard.transform, "Proof",
-                new Vector2(0.05f, 0.27f), new Vector2(0.95f, 0.39f), 21, TextAnchor.MiddleCenter);
-            ui.dailyCardProof.color = UIStyle.CreamDim;
             ui.dailyShareButton = ButtonOf(UIFactory.CreateButton(dailyCard.transform, "Share",
-                new Vector2(0.26f, 0.035f), new Vector2(0.74f, 0.25f), NoOp, 30, primary: true));
+                new Vector2(0.26f, 0.05f), new Vector2(0.74f, 0.26f), NoOp, 30, primary: true));
             ui.dailyCard.SetActive(false);
 
             var toastChip = UIFactory.CreatePanel(canvas.transform, "ToastChip",

@@ -84,7 +84,6 @@ namespace PuttSeed.Unity
             }
         }
 
-        /// <summary>All achievements, in display order.</summary>
         /// <summary>Days in a row for "Seven Days".</summary>
         public const int StreakDays = 7;
 
@@ -97,6 +96,7 @@ namespace PuttSeed.Unity
         /// <summary>Practice courses played for "Range Rat".</summary>
         public const int PracticeCount = 25;
 
+        /// <summary>All achievements, in display order.</summary>
         public static readonly AchievementDef[] All =
         {
             new AchievementDef("first_hole", "First Putt", "hole out for the first time"),
