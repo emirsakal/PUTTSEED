@@ -37,6 +37,9 @@ namespace PuttSeed.Unity
         /// <summary>Streak line on the closing card.</summary>
         public Text? dailyCardStreak;
 
+        /// <summary>The "stored in N characters" line on the closing card.</summary>
+        public Text? dailyCardProof;
+
         /// <summary>Countdown line on the closing card (ticks in Update).</summary>
         public Text? dailyCardCountdown;
 
@@ -388,6 +391,39 @@ namespace PuttSeed.Unity
                 dailyCardStreak.text = string.Format(Loc.Tr("Streak {0} · par streak {1}"),
                     data.streak, data.parStreak);
             }
+
+            if (dailyCardProof != null)
+            {
+                // The code the day was actually saved with, not a fresh
+                // encoding of it — the claim is about what is stored.
+                string code = record != null && record.firstReplay.Length > 0
+                    ? record.firstReplay
+                    : CurrentReplayCode();
+                dailyCardProof.text = code.Length > 0
+                    ? string.Format(Loc.Tr("this run is stored in {0} characters"), code.Length)
+                    : "";
+            }
+        }
+
+        /// <summary>
+        /// The code this run would be shared with — the same encoding Share
+        /// uses, so the character count on the card is the count the player
+        /// gets when they tap it.
+        /// </summary>
+        private string CurrentReplayCode()
+        {
+            if (_runner.Generation == null)
+            {
+                return "";
+            }
+
+            var shots = new PuttSeed.Core.Sim.ShotInput[_runner.PlayedShots.Count];
+            for (int i = 0; i < shots.Length; i++)
+            {
+                shots[i] = _runner.PlayedShots[i];
+            }
+
+            return ReplayCodec.Encode(_runner.Seed, shots, _modes.ShareShotClocks(), _modes.ShareVersion);
         }
 
         /// <summary>

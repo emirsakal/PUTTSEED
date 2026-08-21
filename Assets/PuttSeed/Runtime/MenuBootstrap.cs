@@ -39,7 +39,11 @@ namespace PuttSeed.Unity
         public SegmentedToggle? aimToggle;
         public SegmentedToggle? colorblindToggle;
         public SegmentedToggle? batteryToggle;
+        public SegmentedToggle? motionToggle;
         public SegmentedToggle? languageToggle;
+        /// <summary>"hole #214 · proven solvable in 2" — filled once today's hole is grown.</summary>
+        public Text? proofText;
+
         public Text? countdownText;
         public Button? archiveButton;
         public GameObject? archivePanel;
@@ -81,6 +85,9 @@ namespace PuttSeed.Unity
         public Image[] journeyCellStars = new Image[0];
 
         private int _journeyPage;
+
+        /// <summary>Where the footer goal is finished — where its tap goes.</summary>
+        private GoalPanel _goalPanel = GoalPanel.Stats;
         public Button? settingsButton;
         public GameObject? settingsPanel;
         public Button? settingsCloseButton;
@@ -162,6 +169,16 @@ namespace PuttSeed.Unity
             GameSession.PreparedSeed = seed;
             GameSession.PreparedVersion = version;
             GameSession.PreparedCourse = task.Result;
+
+            // The claim nobody could see: this hole was PROVEN finishable in
+            // that many strokes before it was ever shown to anyone. It lived
+            // in the README, where no player goes.
+            if (proofText != null && !_stats.GetOrCreateDay(today).completed)
+            {
+                proofText.text = string.Format(Loc.Tr("hole #{0} · proven solvable in {1}"),
+                    today, task.Result.AuthorStrokes);
+                proofText.gameObject.SetActive(true);
+            }
 
             var texture = CourseThumbnail.Render(task.Result.Course);
             todayThumb.sprite = Sprite.Create(texture,
@@ -276,7 +293,10 @@ namespace PuttSeed.Unity
 
             if (footerText != null)
             {
-                footerText.text = BuildStatsLine(stats, todayRecord);
+                var goal = NextGoal.For(stats.Data);
+                _goalPanel = goal?.Panel ?? GoalPanel.Stats;
+                footerText.text = goal?.Text ?? BuildStatsLine(stats, todayRecord);
+                footerText.color = goal.HasValue ? UIStyle.Accent : UIStyle.CreamDim;
             }
 
             dailyButton?.onClick.AddListener(() => Launch(GameMode.Daily));
@@ -318,7 +338,23 @@ namespace PuttSeed.Unity
 
             StartCoroutine(EmblemIdle());
 
-            statsButton?.onClick.AddListener(OpenStats);
+            statsButton?.onClick.AddListener(() =>
+            {
+                // The footer line is a goal now, so the tap goes where that
+                // goal is finished rather than always to the stats panel.
+                switch (_goalPanel)
+                {
+                    case GoalPanel.Journey:
+                        OpenJourney();
+                        break;
+                    case GoalPanel.Collection:
+                        OpenCollection();
+                        break;
+                    default:
+                        OpenStats();
+                        break;
+                }
+            });
             statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
             shareBestButton?.onClick.AddListener(ShareTodaysBest);
 
@@ -340,6 +376,7 @@ namespace PuttSeed.Unity
                 stats.SetBatterySaver(!selected); // A = 120 fps
                 Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
             });
+            WireToggle(motionToggle, selected => stats.SetReducedMotion(!selected)); // A = Full
             WireToggle(languageToggle, selected =>
             {
                 stats.SetLanguage(selected ? "en" : "tr"); // A = EN
@@ -438,6 +475,7 @@ namespace PuttSeed.Unity
             aimToggle?.SetSelected(!data.aimDirect);        // A = Sling
             colorblindToggle?.SetSelected(!data.colorblindMode); // A = Std
             batteryToggle?.SetSelected(!data.batterySaver); // A = 120 fps
+            motionToggle?.SetSelected(!data.reducedMotion); // A = Full
             languageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
         }
 
@@ -1194,6 +1232,11 @@ namespace PuttSeed.Unity
             SceneFader.LoadScene("Game");
         }
 
+        /// <summary>
+        /// The old three-number line, kept for the player who has finished
+        /// every countable goal: there is nothing left to point at, and the
+        /// streak is the right thing to say to somebody in that position.
+        /// </summary>
         private static string BuildStatsLine(StatsStore stats, DayRecord today)
         {
             string streak = stats.Data.streak > 0

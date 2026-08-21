@@ -85,6 +85,18 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>All achievements, in display order.</summary>
+        /// <summary>Days in a row for "Seven Days".</summary>
+        public const int StreakDays = 7;
+
+        /// <summary>Different dailies completed for "Regular".</summary>
+        public const int DailyCount = 10;
+
+        /// <summary>Three-star dailies for "Perfectionist".</summary>
+        public const int ThreeStarDays = 10;
+
+        /// <summary>Practice courses played for "Range Rat".</summary>
+        public const int PracticeCount = 25;
+
         public static readonly AchievementDef[] All =
         {
             new AchievementDef("first_hole", "First Putt", "hole out for the first time"),
@@ -183,22 +195,22 @@ namespace PuttSeed.Unity
                 }
             }
 
-            if (ThreeStarDayCount(data) >= 10)
+            if (ThreeStarDayCount(data) >= ThreeStarDays)
             {
                 Earn("three_star_10");
             }
 
-            if (data.streak >= 7)
+            if (data.streak >= StreakDays)
             {
                 Earn("streak7");
             }
 
-            if (CompletedDailyCount(data) >= 10)
+            if (CompletedDailyCount(data) >= DailyCount)
             {
                 Earn("dailies10");
             }
 
-            if (data.practicePlayed >= 25)
+            if (data.practicePlayed >= PracticeCount)
             {
                 Earn("practice25");
             }

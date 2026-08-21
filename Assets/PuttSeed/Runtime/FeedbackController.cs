@@ -38,6 +38,7 @@ namespace PuttSeed.Unity
         private BallView _ballView = null!;
         private AudioSource _source = null!;
         private StatsStore? _settings;
+        private PerfProbe? _probe;
 
         private int _lastWallHits;
         private int _lastBumperHits;
@@ -110,6 +111,13 @@ namespace PuttSeed.Unity
 
         /// <summary>The settings source (menu toggles); null means everything on.</summary>
         public void SetSettings(StatsStore settings) => _settings = settings;
+
+        /// <summary>Wires the frame-time probe (see <see cref="PerfProbe"/>).</summary>
+        public void SetPerfProbe(PerfProbe probe) => _probe = probe;
+
+        /// <summary>Whether a given effect may play for this player.</summary>
+        private bool Allows(MotionEffect effect)
+            => MotionSettings.Allows(effect, _settings != null && _settings.Data.reducedMotion);
 
         /// <summary>Camera effect target (shake, celebration zoom).</summary>
         public void SetCameraJuice(CameraJuice juice) => _cameraJuice = juice;
@@ -381,7 +389,10 @@ namespace PuttSeed.Unity
                 _shotLog?.Record(ShotLog.Mark.Bumper);
                 OnBounce(bumperClip);
                 Tap();
-                _cameraJuice?.Shake(0.05f, 0.18f);
+                if (Allows(MotionEffect.Shake))
+                {
+                    _cameraJuice?.Shake(0.05f, 0.18f);
+                }
                 FlashNearestBumper(FixView.ToVector2(sim.Ball.Position));
             }
 
@@ -401,7 +412,10 @@ namespace PuttSeed.Unity
                 _shotLog?.Record(ShotLog.Mark.Windmill);
                 OnBounce(millClip);
                 Tap();
-                _cameraJuice?.Shake(0.04f, 0.15f);
+                if (Allows(MotionEffect.Shake))
+                {
+                    _cameraJuice?.Shake(0.04f, 0.15f);
+                }
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
                     new Color(1f, 1f, 1f, 0.85f), count: 5, speed: 1.4f, life: 0.22f);
             }
@@ -467,13 +481,17 @@ namespace PuttSeed.Unity
             {
                 _shotLog?.Record(ShotLog.Mark.Holed);
                 _ballView.Sink();
+                // The heaviest moment in the game starts here: zoom, replay,
+                // letterbox, confetti and stars at once. Measure it.
+                _probe?.WatchCelebration();
                 Play(captureClip, 1f);
                 Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);
                 StartCoroutine(CelebrationRing(hole));
                 StartCoroutine(CaptureFlash());
                 _cameraJuice?.CelebrateZoom(hole);
-                if (PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3)
+                if (PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3
+                    && Allows(MotionEffect.Confetti))
                 {
                     EmitConfetti(hole);
                 }
@@ -483,7 +501,12 @@ namespace PuttSeed.Unity
                     StopCoroutine(_slowMoRoutine);
                 }
 
-                _slowMoRoutine = StartCoroutine(SlowMoWinningPutt(sim.Strokes));
+                // The letterbox is built inside the replay, so refusing the
+                // replay refuses both.
+                if (Allows(MotionEffect.SlowMo))
+                {
+                    _slowMoRoutine = StartCoroutine(SlowMoWinningPutt(sim.Strokes));
+                }
 
                 if (_starRoutine != null)
                 {

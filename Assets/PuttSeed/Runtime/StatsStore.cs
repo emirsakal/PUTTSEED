@@ -55,6 +55,7 @@ namespace PuttSeed.Unity
         public string ballTrail = "plain";
         public bool colorblindMode;
         public bool batterySaver;
+        public bool reducedMotion;
         public string language = ""; // "" = follow the device, else "en"/"tr"
 
         // Practice personal bests per difficulty bucket (0 = none yet).
@@ -271,6 +272,17 @@ namespace PuttSeed.Unity
         public void SetBatterySaver(bool enabled)
         {
             Data.batterySaver = enabled;
+            Save();
+        }
+
+        /// <summary>
+        /// Persists the motion preference. Reduced motion drops shake,
+        /// slow-motion, letterbox and confetti and keeps everything that
+        /// carries information (see <see cref="MotionSettings"/>).
+        /// </summary>
+        public void SetReducedMotion(bool reduced)
+        {
+            Data.reducedMotion = reduced;
             Save();
         }
 
