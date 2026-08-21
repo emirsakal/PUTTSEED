@@ -28,6 +28,7 @@ namespace PuttSeed.Unity.Tests
             Assert.That(MotionSettings.Allows(MotionEffect.SlowMo, true), Is.False);
             Assert.That(MotionSettings.Allows(MotionEffect.Letterbox, true), Is.False);
             Assert.That(MotionSettings.Allows(MotionEffect.Confetti, true), Is.False);
+            Assert.That(MotionSettings.Allows(MotionEffect.CameraPush, true), Is.False);
         }
 
         [Test]
@@ -43,8 +44,8 @@ namespace PuttSeed.Unity.Tests
         {
             // "All four and nothing else" as one assertion, so a fifth effect
             // added to Calming later fails here rather than surprising a player.
-            var expected = MotionEffect.Shake | MotionEffect.SlowMo
-                | MotionEffect.Letterbox | MotionEffect.Confetti;
+            var expected = MotionEffect.Shake | MotionEffect.SlowMo | MotionEffect.Letterbox
+                | MotionEffect.Confetti | MotionEffect.CameraPush;
             Assert.That(MotionSettings.Calming, Is.EqualTo(expected));
         }
 

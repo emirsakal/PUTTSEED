@@ -24,6 +24,7 @@ namespace PuttSeed.Unity
         public AudioClip? iceClip;
         public AudioClip? readyClip;
         public AudioClip? starClip;
+        public AudioClip? rimClip;
         public AudioClip? jingleClip;
         public AudioClip? rampClip;
         public AudioClip? gateClip;
@@ -39,6 +40,7 @@ namespace PuttSeed.Unity
         private AudioSource _source = null!;
         private StatsStore? _settings;
         private PerfProbe? _probe;
+        private readonly NearMissWatch _nearMiss = new NearMissWatch();
 
         private int _lastWallHits;
         private int _lastBumperHits;
@@ -100,6 +102,7 @@ namespace PuttSeed.Unity
             if (iceClip == null) { iceClip = Resources.Load<AudioClip>("Sfx/ice"); }
             if (readyClip == null) { readyClip = Resources.Load<AudioClip>("Sfx/ready"); }
             if (starClip == null) { starClip = Resources.Load<AudioClip>("Sfx/star"); }
+            if (rimClip == null) { rimClip = Resources.Load<AudioClip>("Sfx/rim"); }
             if (jingleClip == null) { jingleClip = Resources.Load<AudioClip>("Sfx/jingle"); }
             if (rampClip == null) { rampClip = Resources.Load<AudioClip>("Sfx/ramp"); }
             if (gateClip == null) { gateClip = Resources.Load<AudioClip>("Sfx/gate"); }
@@ -374,6 +377,8 @@ namespace PuttSeed.Unity
             {
                 return;
             }
+
+            WatchForNearMiss(sim);
 
             if (sim.WallHitCount > _lastWallHits)
             {
@@ -982,22 +987,60 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>Flat expanding ring at the hole, fading out over ~0.8 s.</summary>
-        private IEnumerator CelebrationRing(Vector2 center)
+        /// <summary>
+        /// The shot that almost dropped. Golf's best beat went unremarked here:
+        /// a ball that grazed the cup sounded exactly like one that missed by a
+        /// metre, and on Easy and Normal — where any touch captures — a rim-out
+        /// cannot even happen, so this is the only place a near miss can exist.
+        ///
+        /// Reads the sim and changes nothing in it.
+        /// </summary>
+        private void WatchForNearMiss(PuttSeed.Core.Sim.GolfSim sim)
+        {
+            var generation = _runner.Generation;
+            if (generation == null)
+            {
+                return;
+            }
+
+            var cup = FixView.ToVector2(generation.Course.HolePosition);
+            var ball = FixView.ToVector2(sim.Ball.Position);
+            float cupRadius = FixView.ToFloat(_runner.PlayConfig.HoleRadius);
+            if (!_nearMiss.Observe(Vector2.Distance(ball, cup), cupRadius, sim.IsHoled, !sim.IsAtRest))
+            {
+                return;
+            }
+
+            Play(rimClip, 0.75f);
+            Tap();
+            StartCoroutine(CelebrationRing(cup, start: cupRadius * 1.2f, growth: 0.5f,
+                duration: 0.34f, width: 0.035f));
+            if (Allows(MotionEffect.CameraPush))
+            {
+                _cameraJuice?.Tighten(cup);
+            }
+        }
+
+        /// <summary>
+        /// An expanding ring at a point. The capture keeps the big slow one it
+        /// always had; the near miss borrows it small and quick.
+        /// </summary>
+        private IEnumerator CelebrationRing(Vector2 center, float start = 0.2f, float growth = 1.6f,
+            float duration = 0.8f, float width = 0.06f)
         {
             const int segments = 48;
             var go = new GameObject("CelebrationRing");
             var line = go.AddComponent<LineRenderer>();
             line.loop = true;
             line.positionCount = segments;
-            line.widthMultiplier = 0.06f;
+            line.widthMultiplier = width;
             line.material = PaletteMaterials.Shared;
             line.sortingOrder = 20;
 
-            const float duration = 0.8f;
             for (float t = 0f; t < duration; t += Time.deltaTime)
             {
                 float k = t / duration;
-                float radius = 0.2f + k * 1.6f;
+                float radius = start + k * growth;
                 var color = new Color(1f, 1f, 1f, 1f - k);
                 line.startColor = color;
                 line.endColor = color;

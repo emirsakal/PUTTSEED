@@ -38,8 +38,9 @@ namespace PuttSeed.Unity.Editor
             Write("ramp", RampEntry());
             Write("gate", GatePass());
             Write("mill", MillHit());
+            Write("rim", Rim());
             AssetDatabase.Refresh();
-            Debug.Log($"PuttSeed: synthesized 15 SFX clips into {OutDir}.");
+            Debug.Log($"PuttSeed: synthesized 16 SFX clips into {OutDir}.");
         }
 
         // --- sound recipes -------------------------------------------------
@@ -259,6 +260,28 @@ namespace PuttSeed.Unity.Editor
         }
 
         /// <summary>UI click: a barely-there 30 ms tick.</summary>
+        /// <summary>
+        /// The cup's edge, caught and not taken: a dry, thin tick. It has to
+        /// be distinguishable from the wall knock in the half-second a player
+        /// spends deciding what just happened, so it sits an octave and a half
+        /// above it and dies four times faster.
+        /// </summary>
+        private static float[] Rim()
+        {
+            var s = NewBuffer(0.055f);
+            var rng = new System.Random(1010);
+            for (int i = 0; i < s.Length; i++)
+            {
+                float t = (float)i / SampleRate;
+                float tick = (float)(rng.NextDouble() * 2.0 - 1.0) * Mathf.Exp(-t * 900f);
+                float body = (Mathf.Sin(2f * Mathf.PI * 430f * t)
+                    + 0.5f * Mathf.Sin(2f * Mathf.PI * 690f * t)) * Mathf.Exp(-t * 120f);
+                s[i] = 0.32f * body + 0.2f * tick;
+            }
+
+            return s;
+        }
+
         private static float[] UiClick()
         {
             var s = NewBuffer(0.03f);

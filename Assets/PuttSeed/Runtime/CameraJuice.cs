@@ -26,6 +26,11 @@ namespace PuttSeed.Unity
         private bool _zooming;
         private float _zoomTime;
         private Vector2 _zoomTarget;
+        private float _zoomScale = ZoomScale;
+        private float _zoomIn = ZoomInTime;
+        private float _zoomHold = ZoomHoldTime;
+        private float _zoomOut = ZoomOutTime;
+        private float _zoomPull = 0.4f;
 
         private bool EffectActive => _shakeTime > 0f || _zooming;
 
@@ -44,10 +49,27 @@ namespace PuttSeed.Unity
 
         /// <summary>Zoom toward a point and back (hole capture celebration).</summary>
         public void CelebrateZoom(Vector2 target)
+            => StartZoom(target, ZoomScale, ZoomInTime, ZoomHoldTime, ZoomOutTime, pull: 0.4f);
+
+        /// <summary>
+        /// A small, quick tightening — the near miss. It is deliberately a
+        /// twelfth of the celebration's zoom and a third of its length: the
+        /// ball is still rolling and the player is still watching it, so this
+        /// has to register without moving the thing being watched.
+        /// </summary>
+        public void Tighten(Vector2 target)
+            => StartZoom(target, 0.965f, 0.09f, 0.05f, 0.18f, pull: 0.12f);
+
+        private void StartZoom(Vector2 target, float scale, float inTime, float hold, float outTime, float pull)
         {
             _zooming = true;
             _zoomTime = 0f;
             _zoomTarget = target;
+            _zoomScale = scale;
+            _zoomIn = inTime;
+            _zoomHold = hold;
+            _zoomOut = outTime;
+            _zoomPull = pull;
         }
 
         /// <summary>Stops all effects and restores the framed view (run reset).</summary>
@@ -87,10 +109,10 @@ namespace PuttSeed.Unity
             if (_zooming)
             {
                 _zoomTime += Time.deltaTime;
-                float total = ZoomInTime + ZoomHoldTime + ZoomOutTime;
-                float w = _zoomTime < ZoomInTime ? _zoomTime / ZoomInTime
-                    : _zoomTime < ZoomInTime + ZoomHoldTime ? 1f
-                    : 1f - (_zoomTime - ZoomInTime - ZoomHoldTime) / ZoomOutTime;
+                float total = _zoomIn + _zoomHold + _zoomOut;
+                float w = _zoomTime < _zoomIn ? _zoomTime / _zoomIn
+                    : _zoomTime < _zoomIn + _zoomHold ? 1f
+                    : 1f - (_zoomTime - _zoomIn - _zoomHold) / _zoomOut;
                 if (_zoomTime >= total)
                 {
                     _zooming = false;
@@ -98,9 +120,9 @@ namespace PuttSeed.Unity
                 }
 
                 w = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(w));
-                size = Mathf.Lerp(_baseSize, _baseSize * ZoomScale, w);
+                size = Mathf.Lerp(_baseSize, _baseSize * _zoomScale, w);
                 var toward = new Vector3(_zoomTarget.x, _zoomTarget.y, _basePos.z);
-                pos = Vector3.Lerp(pos, toward, 0.4f * w);
+                pos = Vector3.Lerp(pos, toward, _zoomPull * w);
             }
 
             transform.position = pos;
