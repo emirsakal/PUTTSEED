@@ -304,26 +304,45 @@ namespace PuttSeed.Unity
             menu.setupPanel = dim.gameObject;
 
             UIFactory.CreateFramedCard(dim, "Card",
-                new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.78f));
+                new Vector2(0.08f, 0.20f), new Vector2(0.92f, 0.80f));
 
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.685f), new Vector2(0.9f, 0.75f), 54, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.705f), new Vector2(0.9f, 0.775f), 54, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Welcome";
 
             var blurb = UIFactory.CreateText(dim, "Blurb",
-                new Vector2(0.12f, 0.615f), new Vector2(0.88f, 0.675f), 26, TextAnchor.UpperCenter);
+                new Vector2(0.12f, 0.635f), new Vector2(0.88f, 0.70f), 26, TextAnchor.UpperCenter);
             blurb.text = "Three quick things. All of them can be changed later in Settings.";
             blurb.color = UIStyle.CreamDim;
 
-            menu.setupLanguageToggle = CreateSettingRow(dim, 0.565f, "Language", "EN", "TR");
-            menu.setupColorblindToggle = CreateSettingRow(dim, 0.475f, "Colors", "Std", "Vivid");
-            menu.setupMotionToggle = CreateSettingRow(dim, 0.385f, "Motion", "Full", "Reduced");
+            menu.setupLanguageToggle = CreateSettingRow(dim, 0.59f, "Language", "EN", "TR");
+
+            // Each of the two below gets a line of its own. A player choosing
+            // blind needs to know what the choice DOES — "Vivid" said nothing
+            // about colour blindness, and "Reduced" says nothing about what it
+            // removes or which one most people want.
+            menu.setupColorblindToggle = CreateSettingRow(dim, 0.49f, "Colors", "Standard", "Colorblind");
+            SetupHint(dim, "ColorsHint", 0.40f,
+                "Colorblind shifts sand, water and bumpers apart for red-green colour blindness.");
+
+            menu.setupMotionToggle = CreateSettingRow(dim, 0.36f, "Motion", "Full", "Reduced");
+            SetupHint(dim, "MotionHint", 0.27f,
+                "Full is recommended. Reduced removes shake, slow motion and confetti.");
 
             var start = UIFactory.CreateButton(dim, "Start",
-                new Vector2(0.25f, 0.29f), new Vector2(0.75f, 0.355f), NoOp, 36, primary: true);
+                new Vector2(0.25f, 0.215f), new Vector2(0.75f, 0.285f), NoOp, 36, primary: true);
             menu.setupStartButton = start.GetComponentInParent<Button>();
 
             menu.setupPanel.SetActive(false);
+        }
+
+        /// <summary>One dim line of explanation under a first-run row.</summary>
+        private static void SetupHint(RectTransform dim, string name, float yMin, string text)
+        {
+            var hint = UIFactory.CreateText(dim, name,
+                new Vector2(0.15f, yMin), new Vector2(0.85f, yMin + 0.075f), 21, TextAnchor.UpperLeft);
+            hint.text = text;
+            hint.color = UIStyle.CreamDim;
         }
 
         /// <summary>The settings overlay: every toggle chip in one place.</summary>
@@ -348,7 +367,7 @@ namespace PuttSeed.Unity
             menu.soundToggle = CreateSettingRow(dim, y, "Sound", "On", "Off");
             menu.hapticsToggle = CreateSettingRow(dim, y -= step, "Haptics", "On", "Off");
             menu.aimToggle = CreateSettingRow(dim, y -= step, "Aim", "Sling", "Direct");
-            menu.colorblindToggle = CreateSettingRow(dim, y -= step, "Colors", "Std", "Vivid");
+            menu.colorblindToggle = CreateSettingRow(dim, y -= step, "Colors", "Standard", "Colorblind");
             menu.batteryToggle = CreateSettingRow(dim, y -= step, "FPS", "120", "60");
             menu.motionToggle = CreateSettingRow(dim, y -= step, "Motion", "Full", "Reduced");
             menu.languageToggle = CreateSettingRow(dim, y -= step, "Language", "EN", "TR");

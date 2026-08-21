@@ -38,3 +38,9 @@ docs/media/shot-*.png
 # OS
 Thumbs.db
 .DS_Store
+
+# Icon candidates dropped in for comparison. The chosen artwork is committed
+# as Assets/PuttSeed/Icon/artwork.png; these are the rejected auditions and a
+# duplicate of the winner, and `git add -A` kept sweeping them into commits.
+Assets/PuttSeed/Icon/ChatGPT*
+Assets/PuttSeed/Icon/Gemini*

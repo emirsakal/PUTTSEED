@@ -149,7 +149,6 @@ namespace PuttSeed.Unity
             ["Colors"] = "Renkler",
             ["Sling"] = "Sapan",
             ["Direct"] = "Direkt",
-            ["Vivid"] = "Canlı",
             ["On"] = "Açık",
             ["Off"] = "Kapalı",
             ["Export save"] = "Kaydı dışa aktar",
@@ -200,6 +199,12 @@ namespace PuttSeed.Unity
             ["Daily · {0}"] = "Günlük · {0}",
             ["{0} · {1}"] = "{0} · {1}",
             ["New course"] = "Yeni kurs",
+            ["Standard"] = "Standart",
+            ["Colorblind"] = "Renk körü",
+            ["Colorblind shifts sand, water and bumpers apart for red-green colour blindness."] =
+                "Renk körü modu kum, su ve tamponları kırmızı-yeşil renk körlüğü için birbirinden ayırır.",
+            ["Full is recommended. Reduced removes shake, slow motion and confetti."] =
+                "Önerilen: Tam. Azalt; sarsıntıyı, ağır çekimi ve konfetiyi kaldırır.",
             ["Welcome"] = "Hoş geldin",
             ["Three quick things. All of them can be changed later in Settings."] =
                 "Üç kısa soru. Hepsi sonradan Ayarlar'dan değiştirilebilir.",
