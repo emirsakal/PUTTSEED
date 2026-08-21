@@ -251,6 +251,9 @@ namespace PuttSeed.Unity.Editor
                 $"  backend        {PlayerSettings.GetScriptingBackend(target)}",
                 $"  unity splash   {(PlayerSettings.SplashScreen.show ? "SHOWN" : "off")}",
                 $"  orientation    {PlayerSettings.defaultInterfaceOrientation}",
+                $"  il2cpp codegen {PlayerSettings.GetIl2CppCodeGeneration(target)}",
+                $"  il2cpp config  {PlayerSettings.GetIl2CppCompilerConfiguration(target)}",
+                $"  stripping      {PlayerSettings.GetManagedStrippingLevel(target)}",
             };
 
             Debug.Log(string.Join(System.Environment.NewLine, lines));
@@ -573,6 +576,18 @@ namespace PuttSeed.Unity.Editor
             {
                 PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)targetApi;
                 Debug.Log($"PuttSeed: pinned Android target API to {targetApi}.");
+            }
+
+            // The FLOOR is pinned for the same reason as the ceiling, and for
+            // one more: it moved on its own. A build lowered it from 25 to 23
+            // without being asked, which would have shipped the game to phones
+            // it was never run on. 25 is Android 7.1 and covers all but a
+            // rounding error of active devices.
+            const int minimumApi = 25;
+            if ((int)PlayerSettings.Android.minSdkVersion != minimumApi)
+            {
+                PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)minimumApi;
+                Debug.Log($"PuttSeed: pinned Android minimum API to {minimumApi}.");
             }
         }
 

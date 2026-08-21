@@ -53,6 +53,9 @@ namespace PuttSeed.Unity
         private StatsStore _stats = null!;
         private ShotLog? _shotLog;
         private PerfProbe? _probe;
+
+        /// <summary>Which course the practice pool hands over next.</summary>
+        private readonly System.Random _practiceDraw = new System.Random();
         private LoadingOverlay? _overlay;
 
         // The ACTIVE daily: today's, or a past day picked from the archive.
@@ -596,11 +599,34 @@ namespace PuttSeed.Unity
         /// <summary>Builds the background search for the current bucket.</summary>
         private Func<PracticeCourses.Candidate> SearchArguments()
         {
-            var seeds = PracticeCourses.DrawSeeds();
             var baseConfig = _runner.feel != null ? _runner.feel.BuildSimConfig() : SimConfig.Default;
             var want = PracticeDifficulty;
+
+            // A search is up to eight generations — two minutes on a 2018
+            // phone, for a mode whose whole promise is "another one, now". The
+            // pool was searched on a desktop instead: pick one and hand it
+            // over. Resources only answer on the main thread, which is where
+            // this method runs; the delegate it returns does no work at all.
+            if (BakedCourses.TryDrawPractice(want, PracticeVersion, _practiceDraw,
+                out ulong pooled, out var course))
+            {
+                var config = DailyMutators.Apply(baseConfig, pooled, PracticeVersion);
+                var ready = new PracticeCourses.Candidate(pooled, config, course);
+                return () => ready;
+            }
+
+            var seeds = PracticeCourses.DrawSeeds();
             return () => PracticeCourses.Search(seeds, want, baseConfig);
         }
+
+        /// <summary>Which shipped pack this mode's courses live in.</summary>
+        private BakedCourses.Pack PackForMode() => Mode switch
+        {
+            GameMode.Tutorial => BakedCourses.Pack.Tutorial,
+            GameMode.Journey => BakedCourses.Pack.Journey,
+            GameMode.Practice => BakedCourses.Pack.Practice,
+            _ => BakedCourses.Pack.Daily,
+        };
 
         /// <summary>Starts growing the next practice course, if one is wanted.</summary>
         private void PrewarmPractice()
@@ -652,8 +678,19 @@ namespace PuttSeed.Unity
             // found, and the generator would quietly hand back a par 2.
             var solverConfig = SolverConfig.ForVersion(configVersion);
 
-            // The menu may already have grown this exact hole for its thumbnail.
+            // Three ways this hole can arrive, cheapest first. It may have
+            // been SOLVED ALREADY and shipped in the build — a phone takes
+            // fifteen to thirty seconds to prove a course, and the proof is
+            // the same proof on every device, so it is made once on a desktop.
+            // Or the menu may have grown this exact hole for its thumbnail.
+            // Or nobody has, and we pay for it now.
             var prepared = GameSession.TakePrepared(seed, configVersion);
+            if (prepared == null
+                && BakedCourses.TryGet(PackForMode(), seed, configVersion, out var baked))
+            {
+                prepared = baked;
+            }
+
             var grown = System.Diagnostics.Stopwatch.StartNew();
             var task = prepared != null
                 ? Task.FromResult(prepared)

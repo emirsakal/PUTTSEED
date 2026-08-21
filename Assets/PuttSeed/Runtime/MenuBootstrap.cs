@@ -118,6 +118,7 @@ namespace PuttSeed.Unity
 
         private bool _showCountdown;
         private StatsStore _stats = null!;
+        private readonly System.Random _practiceDraw = new System.Random();
         // First day of the month the calendar is showing.
         private DateTime _archiveMonth;
 
@@ -146,8 +147,20 @@ namespace PuttSeed.Unity
                 feel != null ? feel.BuildSimConfig() : SimConfig.Default, seed, version);
             var genConfig = GeneratorConfig.ForVersion(version);
 
-            var task = Task.Run(() => CourseGenerator.Generate(
-                seed, genConfig, simConfig, SolverConfig.ForVersion(version)));
+            // The day may already be solved and shipped — see BakedCourses.
+            // On a phone this is the difference between the menu picture
+            // appearing at once and appearing half a minute later.
+            Task<GenerationResult> task;
+            if (BakedCourses.TryGet(BakedCourses.Pack.Daily, seed, version, out var baked))
+            {
+                task = Task.FromResult(baked);
+            }
+            else
+            {
+                task = Task.Run(() => CourseGenerator.Generate(
+                    seed, genConfig, simConfig, SolverConfig.ForVersion(version)));
+            }
+
             while (!task.IsCompleted)
             {
                 yield return null;
@@ -186,8 +199,18 @@ namespace PuttSeed.Unity
         private IEnumerator PrewarmPractice(FeelConfig? feel)
         {
             var want = GameSession.PracticeDifficulty;
-            var seeds = PracticeCourses.DrawSeeds();
             var baseConfig = feel != null ? feel.BuildSimConfig() : SimConfig.Default;
+
+            if (BakedCourses.TryDrawPractice(want, PracticeCourses.Version, _practiceDraw,
+                out ulong pooled, out var pooledCourse))
+            {
+                GameSession.PreparedPracticeBucket = want;
+                GameSession.PreparedPractice = new PracticeCourses.Candidate(pooled,
+                    DailyMutators.Apply(baseConfig, pooled, PracticeCourses.Version), pooledCourse);
+                yield break;
+            }
+
+            var seeds = PracticeCourses.DrawSeeds();
             var search = Task.Run(() => PracticeCourses.Search(seeds, want, baseConfig));
             while (!search.IsCompleted)
             {
