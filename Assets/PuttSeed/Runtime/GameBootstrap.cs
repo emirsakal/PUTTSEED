@@ -73,12 +73,18 @@ namespace PuttSeed.Unity
             // turns events into sound, the share text reads it.
             var shotLog = new ShotLog();
 
+            // The measuring stick. Present in every build: it costs a float
+            // compare per frame and a log line per hole-out, and a number that
+            // only exists in a special build is a number nobody has.
+            var probe = new GameObject("PerfProbe").AddComponent<PerfProbe>();
+
             var feedbackGo = new GameObject("Feedback");
             var feedback = feedbackGo.AddComponent<FeedbackController>();
             feedback.LoadDefaultClips();
             feedback.SetSettings(stats);
             feedback.SetCameraJuice(cameraJuice);
             feedback.SetShotLog(shotLog);
+            feedback.SetPerfProbe(probe);
             feedback.Initialize(runner, ballView);
 
             var ghostsGo = new GameObject("Ghosts");
@@ -106,6 +112,7 @@ namespace PuttSeed.Unity
             var modes = modesGo.AddComponent<ModeController>();
             modes.Initialize(runner, courseRenderer, cam, overlay, stats);
             modes.SetShotLog(shotLog);
+            modes.SetPerfProbe(probe);
 
             ui.Initialize(runner, modes);
             devReload.Initialize(runner, courseRenderer, cam);

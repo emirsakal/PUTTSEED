@@ -52,6 +52,7 @@ namespace PuttSeed.Unity
         private Camera _camera = null!;
         private StatsStore _stats = null!;
         private ShotLog? _shotLog;
+        private PerfProbe? _probe;
         private LoadingOverlay? _overlay;
 
         // The ACTIVE daily: today's, or a past day picked from the archive.
@@ -244,6 +245,9 @@ namespace PuttSeed.Unity
 
         /// <summary>The run's scorecard, filled by the feedback observer.</summary>
         public void SetShotLog(ShotLog log) => _shotLog = log;
+
+        /// <summary>Wires the generation-time probe (see <see cref="PerfProbe"/>).</summary>
+        public void SetPerfProbe(PerfProbe probe) => _probe = probe;
 
         /// <summary>The day being played (0 outside daily and archive runs).</summary>
         public int ActiveDayNumber => _activeDayNumber;
@@ -650,6 +654,7 @@ namespace PuttSeed.Unity
 
             // The menu may already have grown this exact hole for its thumbnail.
             var prepared = GameSession.TakePrepared(seed, configVersion);
+            var grown = System.Diagnostics.Stopwatch.StartNew();
             var task = prepared != null
                 ? Task.FromResult(prepared)
                 : Task.Run(() => CourseGenerator.Generate(seed, genConfig, config, solverConfig));
@@ -657,6 +662,12 @@ namespace PuttSeed.Unity
             {
                 yield return null; // frames render; the ball rolls while we wait
             }
+
+            grown.Stop();
+
+            // A prepared course was grown somewhere else and reports as free,
+            // which is the truth from here: it cost this load nothing.
+            _probe?.ReportGeneration(grown.ElapsedMilliseconds);
 
             if (task.Status == TaskStatus.RanToCompletion)
             {
