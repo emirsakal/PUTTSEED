@@ -5,8 +5,12 @@ _Last updated: 21 August 2026_
 PUTTSEED collects nothing.
 
 There is no account, no login, no server, and no analytics. The game works
-with the network switched off, because it never uses it: the app requests
-**no Android permissions at all**, including internet access.
+with the network switched off, because it never uses it: the app has **no
+internet permission**, so it cannot send anything anywhere, to anyone, ever.
+
+The only permission you will see on your device is vibration — for the small
+tap you feel when the ball hits something. It can be silenced in the game's
+settings, and it grants access to nothing.
 
 ## What is stored, and where
 
@@ -69,8 +73,12 @@ _Son güncelleme: 21 Ağustos 2026_
 PUTTSEED hiçbir veri toplamaz.
 
 Hesap yok, giriş yok, sunucu yok, analitik yok. Oyun ağ kapalıyken de
-çalışır, çünkü ağı hiç kullanmaz: uygulama, internet erişimi dahil
-**hiçbir Android izni istemez**.
+çalışır, çünkü ağı hiç kullanmaz: uygulamanın **internet izni yoktur**,
+yani hiçbir şeyi hiçbir yere, hiç kimseye gönderemez.
+
+Cihazında göreceğin tek izin titreşimdir — top bir şeye çarptığında elinde
+hissettiğin küçük dokunuş için. Oyunun ayarlarından kapatılabilir ve hiçbir
+şeye erişim vermez.
 
 ## Ne saklanıyor, nerede
 

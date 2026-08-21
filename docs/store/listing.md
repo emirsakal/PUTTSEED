@@ -53,8 +53,9 @@ round fits in a short code. Send it to a friend and they watch your ball take
 your line, shot for shot, on their own phone.
 
 NO ADS. NO TRACKING. NO INTERNET.
-PUTTSEED asks for no permissions at all — not even internet access. There is
-no account, no analytics and nothing to buy. Your progress lives on your
+PUTTSEED has no internet permission — it cannot send anything anywhere. The
+only permission it asks for is vibration, for the tap you feel when the ball
+hits. No account, no analytics, nothing to buy. Your progress lives on your
 phone and nowhere else.
 
 Turkish and English. Colourblind palette, reduced motion, and a 60 fps
@@ -112,9 +113,10 @@ kısa bir koda sığar. Arkadaşına gönder, senin topunun senin çizgini
 vuruş vuruş takip edişini kendi telefonunda izlesin.
 
 REKLAM YOK. TAKİP YOK. İNTERNET YOK.
-PUTTSEED hiçbir izin istemez — internet erişimi bile. Hesap yok, analitik
-yok, satın alınacak hiçbir şey yok. İlerlemen telefonunda durur, başka
-hiçbir yerde.
+PUTTSEED'in internet izni yoktur — hiçbir şeyi hiçbir yere gönderemez.
+İstediği tek izin titreşim, topun bir şeye çarptığında hissettiğin dokunuş
+için. Hesap yok, analitik yok, satın alınacak bir şey yok. İlerlemen
+telefonunda durur, başka hiçbir yerde.
 
 Türkçe ve İngilizce. Renk körlüğü paleti, hareket azaltma ve 60 fps pil
 modu.
@@ -129,7 +131,9 @@ published.
 
 **Data safety:** no data collected, no data shared, no data types at all.
 Nothing is transmitted off the device — the app has no internet permission,
-which is the strongest possible form of that answer. Data is not encrypted in
+which is the strongest possible form of that answer. (Verified from the built
+APK: the only declared permissions are VIBRATE and an internal AndroidX
+receiver permission that never reaches a user-facing screen.) Data is not encrypted in
 transit because there is no transit; there is no deletion request mechanism
 because there is nothing held to delete.
 
