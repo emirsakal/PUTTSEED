@@ -373,7 +373,7 @@ namespace PuttSeed.Unity
             WireToggle(aimToggle, selected => stats.SetAimDirect(!selected)); // A = Sling
             WireToggle(colorblindToggle, selected =>
             {
-                stats.SetColorblindMode(!selected); // A = Std
+                stats.SetColorblindMode(selected); // A = On
                 PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
             });
             WireToggle(batteryToggle, selected =>
@@ -478,7 +478,7 @@ namespace PuttSeed.Unity
             soundToggle?.SetSelected(data.soundEnabled);
             hapticsToggle?.SetSelected(data.hapticsEnabled);
             aimToggle?.SetSelected(!data.aimDirect);        // A = Sling
-            colorblindToggle?.SetSelected(!data.colorblindMode); // A = Std
+            colorblindToggle?.SetSelected(data.colorblindMode); // A = On
             batteryToggle?.SetSelected(!data.batterySaver); // A = 120 fps
             motionToggle?.SetSelected(!data.reducedMotion); // A = Full
             languageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
@@ -1252,12 +1252,12 @@ namespace PuttSeed.Unity
 
             setupPanel.SetActive(true);
             setupLanguageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
-            setupColorblindToggle?.SetSelected(!_stats.Data.colorblindMode);       // A = Std
+            setupColorblindToggle?.SetSelected(_stats.Data.colorblindMode);        // A = On
             setupMotionToggle?.SetSelected(!_stats.Data.reducedMotion);            // A = Full
 
             WireToggle(setupColorblindToggle, selected =>
             {
-                _stats.SetColorblindMode(!selected);
+                _stats.SetColorblindMode(selected); // A = On
                 PaletteMaterials.ColorblindMode = _stats.Data.colorblindMode;
             });
             WireToggle(setupMotionToggle, selected => _stats.SetReducedMotion(!selected));

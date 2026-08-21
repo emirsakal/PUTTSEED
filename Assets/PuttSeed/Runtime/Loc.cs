@@ -199,10 +199,9 @@ namespace PuttSeed.Unity
             ["Daily · {0}"] = "Günlük · {0}",
             ["{0} · {1}"] = "{0} · {1}",
             ["New course"] = "Yeni kurs",
-            ["Standard"] = "Standart",
-            ["Colorblind"] = "Renk körü",
-            ["Colorblind shifts sand, water and bumpers apart for red-green colour blindness."] =
-                "Renk körü modu kum, su ve tamponları kırmızı-yeşil renk körlüğü için birbirinden ayırır.",
+            ["Colorblind mode"] = "Renk körü modu",
+            ["Shifts sand, water and bumpers apart for red-green colour blindness."] =
+                "Kum, su ve tamponları kırmızı-yeşil renk körlüğü için birbirinden ayırır.",
             ["Full is recommended. Reduced removes shake, slow motion and confetti."] =
                 "Önerilen: Tam. Azalt; sarsıntıyı, ağır çekimi ve konfetiyi kaldırır.",
             ["Welcome"] = "Hoş geldin",

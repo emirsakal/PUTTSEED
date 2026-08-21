@@ -318,12 +318,13 @@ namespace PuttSeed.Unity
             menu.setupLanguageToggle = CreateSettingRow(dim, 0.59f, "Language", "EN", "TR");
 
             // Each of the two below gets a line of its own. A player choosing
-            // blind needs to know what the choice DOES — "Vivid" said nothing
-            // about colour blindness, and "Reduced" says nothing about what it
-            // removes or which one most people want.
-            menu.setupColorblindToggle = CreateSettingRow(dim, 0.49f, "Colors", "Standard", "Colorblind");
+            // blind needs to know what the choice DOES — the colour row went
+            // from "Std / Vivid", which named a look rather than a purpose, to
+            // a mode with an on and an off, and "Reduced" still says nothing
+            // about what it removes or which one most people want.
+            menu.setupColorblindToggle = CreateSettingRow(dim, 0.49f, "Colorblind mode", "On", "Off");
             SetupHint(dim, "ColorsHint", 0.40f,
-                "Colorblind shifts sand, water and bumpers apart for red-green colour blindness.");
+                "Shifts sand, water and bumpers apart for red-green colour blindness.");
 
             menu.setupMotionToggle = CreateSettingRow(dim, 0.36f, "Motion", "Full", "Reduced");
             SetupHint(dim, "MotionHint", 0.27f,
@@ -367,7 +368,7 @@ namespace PuttSeed.Unity
             menu.soundToggle = CreateSettingRow(dim, y, "Sound", "On", "Off");
             menu.hapticsToggle = CreateSettingRow(dim, y -= step, "Haptics", "On", "Off");
             menu.aimToggle = CreateSettingRow(dim, y -= step, "Aim", "Sling", "Direct");
-            menu.colorblindToggle = CreateSettingRow(dim, y -= step, "Colors", "Standard", "Colorblind");
+            menu.colorblindToggle = CreateSettingRow(dim, y -= step, "Colorblind mode", "On", "Off");
             menu.batteryToggle = CreateSettingRow(dim, y -= step, "FPS", "120", "60");
             menu.motionToggle = CreateSettingRow(dim, y -= step, "Motion", "Full", "Reduced");
             menu.languageToggle = CreateSettingRow(dim, y -= step, "Language", "EN", "TR");
