@@ -43,6 +43,7 @@ namespace PuttSeed.Unity
         public int lastCompletedDay;
         public int practicePlayed;
         public bool tutorialSeen;
+        public bool setupSeen;
         public List<string> achievements = new List<string>();
 
         // Settings ride in the same file. Field initializers double as the
@@ -272,6 +273,13 @@ namespace PuttSeed.Unity
         public void SetBatterySaver(bool enabled)
         {
             Data.batterySaver = enabled;
+            Save();
+        }
+
+        /// <summary>Remembers that the opening questions have been answered.</summary>
+        public void MarkSetupSeen()
+        {
+            Data.setupSeen = true;
             Save();
         }
 

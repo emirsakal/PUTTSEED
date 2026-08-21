@@ -40,6 +40,13 @@ namespace PuttSeed.Unity
         public SegmentedToggle? colorblindToggle;
         public SegmentedToggle? batteryToggle;
         public SegmentedToggle? motionToggle;
+
+        /// <summary>The opening questions, shown once on a new save.</summary>
+        public GameObject? setupPanel;
+        public SegmentedToggle? setupLanguageToggle;
+        public SegmentedToggle? setupColorblindToggle;
+        public SegmentedToggle? setupMotionToggle;
+        public Button? setupStartButton;
         public SegmentedToggle? languageToggle;
         public Text? countdownText;
         public Button? archiveButton;
@@ -250,6 +257,16 @@ namespace PuttSeed.Unity
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
+
+            // Before anything else on a brand new save: three questions the
+            // player can answer without having played (see FirstRun). The
+            // tutorial waits behind it — being dropped into a lesson in the
+            // wrong language is a poor first thirty seconds.
+            if (FirstRun.NeedsSetup(stats.Data))
+            {
+                ShowSetup();
+                return;
+            }
 
             // FTUE (GDD): the very first launch drops straight into Tutorial 1.
             // One-shot — quitting the tutorial returns to a normal menu.
@@ -1218,6 +1235,48 @@ namespace PuttSeed.Unity
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
             SceneFader.LoadScene("Game");
+        }
+
+        /// <summary>
+        /// Opens the first-run questions with every answer already filled in:
+        /// the language the device is set to, and the two accessibility rows
+        /// at the settings most players want. Answering is a confirmation, not
+        /// homework.
+        /// </summary>
+        private void ShowSetup()
+        {
+            if (setupPanel == null)
+            {
+                return; // an old baked scene: skip rather than block the game
+            }
+
+            setupPanel.SetActive(true);
+            setupLanguageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
+            setupColorblindToggle?.SetSelected(!_stats.Data.colorblindMode);       // A = Std
+            setupMotionToggle?.SetSelected(!_stats.Data.reducedMotion);            // A = Full
+
+            WireToggle(setupColorblindToggle, selected =>
+            {
+                _stats.SetColorblindMode(!selected);
+                PaletteMaterials.ColorblindMode = _stats.Data.colorblindMode;
+            });
+            WireToggle(setupMotionToggle, selected => _stats.SetReducedMotion(!selected));
+            WireToggle(setupLanguageToggle, selected =>
+            {
+                // The scene reloads to re-localize its baked labels, and this
+                // panel comes straight back up in the new language — which is
+                // the clearest possible confirmation that the tap worked.
+                _stats.SetLanguage(selected ? "en" : "tr");
+                Loc.Apply(_stats.Data.language);
+                SceneFader.LoadScene("Menu");
+            });
+
+            setupStartButton?.onClick.AddListener(() =>
+            {
+                _stats.MarkSetupSeen();
+                setupPanel.SetActive(false);
+                SceneFader.LoadScene("Menu"); // rejoin the normal first-launch flow
+            });
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)

@@ -208,6 +208,7 @@ namespace PuttSeed.Unity
             BuildArchivePanel(canvasRoot, menu);
             BuildStatsPanel(canvasRoot, menu);
             BuildSettingsPanel(canvasRoot, menu);
+            BuildSetupPanel(canvasRoot, menu);
             BuildCollectionPanel(canvasRoot, menu);
             BuildJourneyPanel(canvasRoot, menu);
         }
@@ -285,6 +286,44 @@ namespace PuttSeed.Unity
             menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
 
             menu.journeyPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// The opening questions, shown once on a brand new save and never
+        /// again. Three rows, each already answered: the language comes from
+        /// the device, and both accessibility rows start where most players
+        /// want them. A first-run screen that arrives pre-filled is a
+        /// confirmation; one that arrives blank is an interrogation.
+        /// </summary>
+        private static void BuildSetupPanel(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "SetupPanel", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.97f);
+            dimImage.raycastTarget = true;
+            menu.setupPanel = dim.gameObject;
+
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.78f));
+
+            var title = UIFactory.CreateText(dim, "Title",
+                new Vector2(0.1f, 0.685f), new Vector2(0.9f, 0.75f), 54, TextAnchor.MiddleCenter, shadow: true);
+            title.text = "Welcome";
+
+            var blurb = UIFactory.CreateText(dim, "Blurb",
+                new Vector2(0.12f, 0.615f), new Vector2(0.88f, 0.675f), 26, TextAnchor.UpperCenter);
+            blurb.text = "Three quick things. All of them can be changed later in Settings.";
+            blurb.color = UIStyle.CreamDim;
+
+            menu.setupLanguageToggle = CreateSettingRow(dim, 0.565f, "Language", "EN", "TR");
+            menu.setupColorblindToggle = CreateSettingRow(dim, 0.475f, "Colors", "Std", "Vivid");
+            menu.setupMotionToggle = CreateSettingRow(dim, 0.385f, "Motion", "Full", "Reduced");
+
+            var start = UIFactory.CreateButton(dim, "Start",
+                new Vector2(0.25f, 0.29f), new Vector2(0.75f, 0.355f), NoOp, 36, primary: true);
+            menu.setupStartButton = start.GetComponentInParent<Button>();
+
+            menu.setupPanel.SetActive(false);
         }
 
         /// <summary>The settings overlay: every toggle chip in one place.</summary>

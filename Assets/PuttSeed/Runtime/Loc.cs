@@ -200,6 +200,10 @@ namespace PuttSeed.Unity
             ["Daily · {0}"] = "Günlük · {0}",
             ["{0} · {1}"] = "{0} · {1}",
             ["New course"] = "Yeni kurs",
+            ["Welcome"] = "Hoş geldin",
+            ["Three quick things. All of them can be changed later in Settings."] =
+                "Üç kısa soru. Hepsi sonradan Ayarlar'dan değiştirilebilir.",
+            ["Start"] = "Başla",
             ["Motion"] = "Hareket",
             ["Full"] = "Tam",
             ["Reduced"] = "Azalt",
