@@ -59,6 +59,7 @@ namespace PuttSeed.Unity
         public bool reducedMotion;
         public bool reminderEnabled;
         public bool reminderAsked;
+        public int streakCelebratedDay;
         public string language = ""; // "" = follow the device, else "en"/"tr"
 
         // Practice personal bests per difficulty bucket (0 = none yet).
@@ -275,6 +276,13 @@ namespace PuttSeed.Unity
         public void SetBatterySaver(bool enabled)
         {
             Data.batterySaver = enabled;
+            Save();
+        }
+
+        /// <summary>Remembers the menu already applauded this day's streak.</summary>
+        public void MarkStreakCelebrated(int day)
+        {
+            Data.streakCelebratedDay = day;
             Save();
         }
 

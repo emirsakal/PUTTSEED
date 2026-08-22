@@ -64,6 +64,7 @@ namespace PuttSeed.Unity
             // The renderer builds wind streaks per course, so it asks live
             // rather than copying a value that Settings may change later.
             courseRenderer.reducedMotion = () => stats.Data.reducedMotion;
+            SceneFader.ReducedMotion = stats.Data.reducedMotion;
             PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
 
             var ballGo = new GameObject("Ball");

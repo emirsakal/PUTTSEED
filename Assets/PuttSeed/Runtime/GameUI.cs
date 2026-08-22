@@ -71,6 +71,7 @@ namespace PuttSeed.Unity
         private Coroutine? _toastAnim;
         private int _lastStrokesShown;
         private Coroutine? _counterPulse;
+        private Coroutine? _strokePulse;
         private int _barShape = -1;
         private string _lastCountdown = "";
 
@@ -288,6 +289,16 @@ namespace PuttSeed.Unity
             if (strokeText != null)
             {
                 strokeText.text = $"{sim.Strokes}<size=26>/{sim.StrokeLimit}</size>";
+
+                // The counter's colour is a warning gauge: cream while there
+                // is room, amber on the LAST stroke, red once the run is
+                // failed — so the number carries the stakes before the fail
+                // panel has to say them.
+                strokeText.color = sim.IsFailed
+                    ? new Color(0.95f, 0.4f, 0.34f)
+                    : !sim.IsHoled && sim.Strokes == sim.StrokeLimit - 1
+                        ? UIStyle.Accent
+                        : UIStyle.Cream;
             }
 
             RefreshParChip(sim.Strokes, gen.Course.Par);
@@ -300,6 +311,12 @@ namespace PuttSeed.Unity
                 }
 
                 _counterPulse = StartCoroutine(PulseCounter());
+                if (_strokePulse != null)
+                {
+                    StopCoroutine(_strokePulse);
+                }
+
+                _strokePulse = StartCoroutine(PulseStroke());
             }
 
             _lastStrokesShown = sim.Strokes;
@@ -507,6 +524,33 @@ namespace PuttSeed.Unity
         }
 
         /// <summary>A quick swell on the counter when a stroke is spent.</summary>
+        /// <summary>
+        /// The stroke number pops as it changes — the same settle the top-bar
+        /// counter has, a touch bigger because this is the number the whole
+        /// run is spent against. Skipped under reduced motion; the colour
+        /// gauge above carries the information without moving anything.
+        /// </summary>
+        private System.Collections.IEnumerator PulseStroke()
+        {
+            if (strokeText == null || _modes.Stats.Data.reducedMotion)
+            {
+                _strokePulse = null;
+                yield break;
+            }
+
+            var rect = strokeText.transform;
+            const float duration = 0.22f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                rect.localScale = Vector3.one * (1f + 0.16f * Mathf.Sin(k * Mathf.PI));
+                yield return null;
+            }
+
+            rect.localScale = Vector3.one;
+            _strokePulse = null;
+        }
+
         private System.Collections.IEnumerator PulseCounter()
         {
             var rect = counterText!.transform;

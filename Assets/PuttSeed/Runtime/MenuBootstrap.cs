@@ -268,6 +268,7 @@ namespace PuttSeed.Unity
             PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
             Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
             UiPolish.EnsureButtonFeedback();
+            SceneFader.ReducedMotion = stats.Data.reducedMotion;
 
             // Yesterday's scheduled reminders may be lying by now — the hole
             // they pointed at got answered, or the timezone moved. Cheaper to
@@ -334,6 +335,17 @@ namespace PuttSeed.Unity
             if (footerText != null)
             {
                 footerText.text = BuildStatsLine(stats, todayRecord);
+
+                // The streak's one moment: the first menu visit after the
+                // day's first finish, the line that grew glows amber and
+                // settles. Once per day — a daily ritual's applause is a
+                // single clap, not a loop.
+                if (todayRecord.completed && stats.Data.streak > 0
+                    && stats.Data.streakCelebratedDay != today)
+                {
+                    stats.MarkStreakCelebrated(today);
+                    StartCoroutine(ApplaudStreak());
+                }
             }
 
             dailyButton?.onClick.AddListener(() => Launch(GameMode.Daily));
@@ -1426,6 +1438,36 @@ namespace PuttSeed.Unity
                 setupPanel.SetActive(false);
                 SceneFader.LoadScene("Menu"); // rejoin the normal first-launch flow
             });
+        }
+
+        /// <summary>
+        /// The footer glows amber and settles back to its quiet grey. Under
+        /// reduced motion the scale stays put and only the colour speaks.
+        /// </summary>
+        private System.Collections.IEnumerator ApplaudStreak()
+        {
+            if (footerText == null)
+            {
+                yield break;
+            }
+
+            bool still = _stats.Data.reducedMotion;
+            var rect = footerText.transform;
+            const float duration = 1.3f;
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = t / duration;
+                footerText.color = Color.Lerp(UIStyle.Accent, UIStyle.CreamDim, Mathf.SmoothStep(0f, 1f, k));
+                if (!still)
+                {
+                    rect.localScale = Vector3.one * (1f + 0.1f * Mathf.Sin(Mathf.Min(k * 3f, 1f) * Mathf.PI));
+                }
+
+                yield return null;
+            }
+
+            footerText.color = UIStyle.CreamDim;
+            rect.localScale = Vector3.one;
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)

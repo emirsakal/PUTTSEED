@@ -42,6 +42,17 @@ namespace PuttSeed.Unity
         private PerfProbe? _probe;
         private readonly NearMissWatch _nearMiss = new NearMissWatch();
 
+        /// <summary>
+        /// Courses already celebrated this session. The first finish of a
+        /// course earns the full show; the thirty-fourth retry earns the sound
+        /// and a ring, because the loop is built on retries and a nine-tenths
+        /// second zoom taxes every one of them. Session-scoped on purpose: a
+        /// player returning tomorrow to yesterday's hole has earned the show
+        /// again.
+        /// </summary>
+        private readonly System.Collections.Generic.HashSet<ulong> _celebratedSeeds =
+            new System.Collections.Generic.HashSet<ulong>();
+
         private int _lastWallHits;
         private int _lastBumperHits;
         private int _lastWaterEntries;
@@ -507,10 +518,22 @@ namespace PuttSeed.Unity
                 Play(captureClip, 1f);
                 Tap(strong: true);
                 var hole = FixView.ToVector2(_runner.Generation!.Course.HolePosition);
-                StartCoroutine(CelebrationRing(hole));
+                bool firstFinishHere = _celebratedSeeds.Add(_runner.Seed);
+                StartCoroutine(firstFinishHere
+                    ? CelebrationRing(hole)
+                    : CelebrationRing(hole, start: 0.18f, growth: 0.8f, duration: 0.45f, width: 0.05f));
                 StartCoroutine(CaptureFlash());
-                _cameraJuice?.CelebrateZoom(hole);
-                if (PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3
+                if (firstFinishHere)
+                {
+                    _cameraJuice?.CelebrateZoom(hole);
+                }
+                else if (Allows(MotionEffect.CameraPush))
+                {
+                    _cameraJuice?.Tighten(hole);
+                }
+
+                if (firstFinishHere
+                    && PuttSeed.Core.Sim.Scoring.Stars(sim.Strokes, _runner.Generation.Course.Par) == 3
                     && Allows(MotionEffect.Confetti))
                 {
                     EmitConfetti(hole);
@@ -522,8 +545,9 @@ namespace PuttSeed.Unity
                 }
 
                 // The letterbox is built inside the replay, so refusing the
-                // replay refuses both.
-                if (Allows(MotionEffect.SlowMo))
+                // replay refuses both — and a repeat finish refuses the whole
+                // parade, keeping only the sound, the flash and a ring.
+                if (firstFinishHere && Allows(MotionEffect.SlowMo))
                 {
                     _slowMoRoutine = StartCoroutine(SlowMoWinningPutt(sim.Strokes));
                 }
