@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using PuttSeed.Core.CourseGen;
 using PuttSeed.Core.Daily;
+using PuttSeed.Core.Replay;
 using PuttSeed.Core.Sim;
 using UnityEngine;
 using UnityEngine.UI;
@@ -70,6 +71,9 @@ namespace PuttSeed.Unity
         public Image? splashLogo;
         public SegmentedToggle? languageToggle;
         public Text? countdownText;
+
+        /// <summary>The archive's month heading, tappable: back to this month.</summary>
+        public Button? archiveMonthButton;
         public Button? archiveButton;
         public GameObject? archivePanel;
         public Button[] archiveCellButtons = new Button[0];
@@ -110,6 +114,10 @@ namespace PuttSeed.Unity
         public Image[] journeyCellStars = new Image[0];
 
         private int _journeyPage;
+        private bool _rolledOver;
+
+        /// <summary>A replay code found on the clipboard and offered in the footer.</summary>
+        private string? _clipboardCode;
 
         /// <summary>The studio mark greets an app run, not every trip to the menu.</summary>
         private static bool _splashPlayed;
@@ -337,8 +345,8 @@ namespace PuttSeed.Unity
 
             if (difficultyLabel != null)
             {
-                difficultyLabel.text = Loc.Tr(GameSession.PracticeDifficulty.ToString());
-                difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
+                difficultyLabel.text = DifficultyChipText(GameSession.PracticeDifficulty);
+                difficultyLabel.color = UIStyle.Cream;
             }
 
             RefreshGauntletChip();
@@ -354,6 +362,7 @@ namespace PuttSeed.Unity
             if (footerText != null)
             {
                 footerText.text = BuildStatsLine(stats, todayRecord);
+                OfferClipboardCodeInFooter();
 
                 // The streak's one moment: the first menu visit after the
                 // day's first finish, the line that grew glows amber and
@@ -406,7 +415,20 @@ namespace PuttSeed.Unity
 
             StartCoroutine(EmblemIdle());
 
-            statsButton?.onClick.AddListener(OpenStats);
+            statsButton?.onClick.AddListener(() =>
+            {
+                // The footer is the stats door — unless the clipboard holds a
+                // code, in which case it is the code's door for this visit.
+                if (_clipboardCode != null)
+                {
+                    OpenClipboardCode();
+                }
+                else
+                {
+                    OpenStats();
+                }
+            });
+            archiveMonthButton?.onClick.AddListener(JumpArchiveToToday);
             statsCloseButton?.onClick.AddListener(() => statsPanel?.SetActive(false));
             shareBestButton?.onClick.AddListener(ShareTodaysBest);
 
@@ -614,9 +636,22 @@ namespace PuttSeed.Unity
             }
 
             var remaining = DailyCountdown.UntilNextHole(DateTime.UtcNow);
-            countdownText.text = remaining.TotalSeconds <= 0
-                ? Loc.Tr("New hole is ready — restart to play!")
-                : string.Format(Loc.Tr("next hole in {0}"), DailyCountdown.Format(remaining));
+            if (remaining.TotalSeconds <= 0)
+            {
+                // Midnight passed with the menu open. This used to ask the
+                // player to restart the app; the menu simply rebuilds itself
+                // on the new day instead — once, so a clock skew cannot loop.
+                countdownText.text = Loc.Tr("New hole is ready!");
+                if (!_rolledOver)
+                {
+                    _rolledOver = true;
+                    SceneFader.LoadScene("Menu");
+                }
+            }
+            else
+            {
+                countdownText.text = string.Format(Loc.Tr("next hole in {0}"), DailyCountdown.Format(remaining));
+            }
         }
 
         /// <summary>
@@ -1270,9 +1305,13 @@ namespace PuttSeed.Unity
             {
                 var data = _stats.Data;
                 bool hasRecord = weekReady && data.gauntletWeek == latestWeek;
-                gauntletLabel.text = hasRecord
-                    ? string.Format(Loc.Tr("Gauntlet · {0}"), data.gauntletBestStrokes)
-                    : Loc.Tr("Gauntlet");
+                bool inProgress = weekReady && data.gauntletProgressWeek == latestWeek
+                    && data.gauntletProgressHole > 0;
+                gauntletLabel.text = inProgress
+                    ? string.Format(Loc.Tr("Gauntlet · resume {0}/7"), data.gauntletProgressHole + 1)
+                    : hasRecord
+                        ? string.Format(Loc.Tr("Gauntlet · {0}"), data.gauntletBestStrokes)
+                        : Loc.Tr("Gauntlet");
                 gauntletLabel.color = hasRecord ? UIStyle.Accent
                     : weekReady ? UIStyle.Cream
                     : UIStyle.CreamDim;
@@ -1531,6 +1570,86 @@ namespace PuttSeed.Unity
             rect.localScale = Vector3.one;
         }
 
+        /// <summary>
+        /// A friend's code on the clipboard used to need a course loaded first
+        /// — Daily or Practice, then Watch, then paste. The loop this game
+        /// grows by is people sending codes, so the menu now notices the code
+        /// itself and turns the footer into its door: one tap opens the
+        /// course the code describes, with the ghost already on it.
+        /// </summary>
+        private void OfferClipboardCodeInFooter()
+        {
+            string clip = GUIUtility.systemCopyBuffer ?? "";
+            int at = clip.IndexOf("PUTT-", StringComparison.Ordinal);
+            if (at < 0)
+            {
+                return;
+            }
+
+            int end = at;
+            while (end < clip.Length && !char.IsWhiteSpace(clip[end]))
+            {
+                end++;
+            }
+
+            string token = clip.Substring(at, end - at);
+            if (token == GameSession.ConsumedClipboardCode
+                || !ReplayCodec.TryDecode(token, out _, out _))
+            {
+                return;
+            }
+
+            _clipboardCode = token;
+            if (footerText != null)
+            {
+                footerText.text = Loc.Tr("Replay code on the clipboard · open ›");
+                footerText.color = UIStyle.Accent;
+            }
+        }
+
+        private void OpenClipboardCode()
+        {
+            if (_clipboardCode == null)
+            {
+                return;
+            }
+
+            GameSession.PendingReplayCode = _clipboardCode;
+            GameSession.ConsumedClipboardCode = _clipboardCode;
+            GameSession.UseFixedSeed = false;
+            GameSession.ArchiveDayNumber = -1;
+            GameSession.Mode = GameMode.Daily; // the import decides the real mode
+            SceneFader.LoadScene("Game");
+        }
+
+        /// <summary>Tapping the month heading brings the calendar home.</summary>
+        private void JumpArchiveToToday()
+        {
+            var utc = DateTime.UtcNow.Date;
+            _archiveMonth = new DateTime(utc.Year, utc.Month, 1);
+            RefreshArchive();
+        }
+
+        /// <summary>
+        /// The practice difficulty chip names all three buckets with the
+        /// active one lit, so the state is read rather than guessed and the
+        /// next tap's effect is visible before it happens.
+        /// </summary>
+        private static string DifficultyChipText(Difficulty active)
+        {
+            var parts = new string[3];
+            var all = new[] { Difficulty.Easy, Difficulty.Normal, Difficulty.Hard };
+            for (int i = 0; i < all.Length; i++)
+            {
+                string name = Loc.Tr(all[i].ToString());
+                parts[i] = all[i] == active
+                    ? "<color=#" + ColorUtility.ToHtmlStringRGB(DifficultyColor(active)) + ">" + name + "</color>"
+                    : "<color=#F7F5E666>" + name + "</color>";
+            }
+
+            return string.Join(" · ", parts);
+        }
+
         private static string BuildStatsLine(StatsStore stats, DayRecord today)
         {
             string streak = stats.Data.streak > 0
@@ -1542,7 +1661,7 @@ namespace PuttSeed.Unity
             string practice = stats.Data.practicePlayed > 0
                 ? string.Format(Loc.Tr(" · Practice: {0}"), stats.Data.practicePlayed)
                 : "";
-            return streak + attempts + practice;
+            return streak + attempts + practice + " ›"; // a door, not a caption
         }
 
         private void CycleDifficulty()
@@ -1550,8 +1669,8 @@ namespace PuttSeed.Unity
             GameSession.PracticeDifficulty = (Difficulty)(((int)GameSession.PracticeDifficulty + 1) % 3);
             if (difficultyLabel != null)
             {
-                difficultyLabel.text = Loc.Tr(GameSession.PracticeDifficulty.ToString());
-                difficultyLabel.color = DifficultyColor(GameSession.PracticeDifficulty);
+                difficultyLabel.text = DifficultyChipText(GameSession.PracticeDifficulty);
+                difficultyLabel.color = UIStyle.Cream;
             }
         }
 

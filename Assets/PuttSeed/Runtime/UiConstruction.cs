@@ -191,6 +191,7 @@ namespace PuttSeed.Unity
             footerHitImage.raycastTarget = true;
             menu.statsButton = footerHit.gameObject.AddComponent<Button>();
             footerHit.gameObject.AddComponent<UiClickSound>();
+            footerHit.gameObject.AddComponent<ButtonPressScale>(); // it is a door, it should press
 
             // The menu stays clean: everything configurable lives behind two
             // buttons — Settings (toggles) and Collection (ball skins).
@@ -690,8 +691,13 @@ namespace PuttSeed.Unity
             var prev = UIFactory.CreateButton(dim, "\u2039",
                 new Vector2(0.12f, 0.695f), new Vector2(0.24f, 0.745f), NoOp, UIStyle.FontSize.Body);
             menu.archivePrevMonthButton = prev.GetComponentInParent<Button>();
+            // The heading is also the way home: months of stepping back end
+            // with one tap on the name of the month.
             menu.archiveMonthLabel = UIFactory.CreateText(dim, "Month",
                 new Vector2(0.26f, 0.695f), new Vector2(0.74f, 0.745f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
+            menu.archiveMonthLabel.raycastTarget = true;
+            menu.archiveMonthButton = menu.archiveMonthLabel.gameObject.AddComponent<Button>();
+            menu.archiveMonthLabel.gameObject.AddComponent<UiClickSound>();
             var next = UIFactory.CreateButton(dim, "\u203a",
                 new Vector2(0.76f, 0.695f), new Vector2(0.88f, 0.745f), NoOp, UIStyle.FontSize.Body);
             menu.archiveNextMonthButton = next.GetComponentInParent<Button>();
@@ -853,8 +859,12 @@ namespace PuttSeed.Unity
             ui.dailyCardCountdown = UIFactory.CreateText(dailyCard.transform, "Countdown",
                 new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.46f), UIStyle.FontSize.Caption, TextAnchor.MiddleCenter);
             ui.dailyCardCountdown.color = UIStyle.CreamDim;
+            // Two doors out of a finished day: share it, or keep playing.
+            // The card used to end in a countdown and nothing to do.
             ui.dailyShareButton = ButtonOf(UIFactory.CreateButton(dailyCard.transform, "Share",
-                new Vector2(0.26f, 0.05f), new Vector2(0.74f, 0.26f), NoOp, UIStyle.FontSize.Body, primary: true));
+                new Vector2(0.08f, 0.05f), new Vector2(0.50f, 0.26f), NoOp, UIStyle.FontSize.Body, primary: true));
+            ui.dailyPracticeButton = ButtonOf(UIFactory.CreateButton(dailyCard.transform, "Practice",
+                new Vector2(0.54f, 0.05f), new Vector2(0.92f, 0.26f), NoOp, UIStyle.FontSize.Body));
             ui.dailyCard.SetActive(false);
 
             var toastChip = UIFactory.CreatePanel(canvas.transform, "ToastChip",

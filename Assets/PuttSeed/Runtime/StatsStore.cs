@@ -79,6 +79,13 @@ namespace PuttSeed.Unity
         public int gauntletWeek = -1;
         public int gauntletBestStrokes;
         public int gauntletsFinished;
+
+        // A week in progress: which week, how many holes are banked, the
+        // strokes so far, and the banked holes as the week's own code.
+        public int gauntletProgressWeek = -1;
+        public int gauntletProgressHole;
+        public int gauntletProgressStrokes;
+        public string gauntletProgressCode = "";
     }
 
     /// <summary>
@@ -276,6 +283,26 @@ namespace PuttSeed.Unity
         public void SetBatterySaver(bool enabled)
         {
             Data.batterySaver = enabled;
+            Save();
+        }
+
+        /// <summary>Keeps a half-finished gauntlet week so it can be resumed.</summary>
+        public void SaveGauntletProgress(int week, int hole, int strokes, string code)
+        {
+            Data.gauntletProgressWeek = week;
+            Data.gauntletProgressHole = hole;
+            Data.gauntletProgressStrokes = strokes;
+            Data.gauntletProgressCode = code;
+            Save();
+        }
+
+        /// <summary>Forgets the week in progress (it finished, or was replaced).</summary>
+        public void ClearGauntletProgress()
+        {
+            Data.gauntletProgressWeek = -1;
+            Data.gauntletProgressHole = 0;
+            Data.gauntletProgressStrokes = 0;
+            Data.gauntletProgressCode = "";
             Save();
         }
 

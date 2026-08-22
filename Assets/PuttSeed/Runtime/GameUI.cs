@@ -40,6 +40,9 @@ namespace PuttSeed.Unity
         /// <summary>Countdown line on the closing card (ticks in Update).</summary>
         public Text? dailyCardCountdown;
 
+        /// <summary>"Practice" on the closing card: the next thing to do once the day is done.</summary>
+        public Button? dailyPracticeButton;
+
         /// <summary>The card's primary share button.</summary>
         public Button? dailyShareButton;
         public GameObject? hintChip;
@@ -88,6 +91,12 @@ namespace PuttSeed.Unity
             _modes = modes;
 
             menuButton?.onClick.AddListener(OnMenu);
+            dailyPracticeButton?.onClick.AddListener(() =>
+            {
+                UiSounds.Click();
+                _modes.StartPractice();
+            });
+            _modes.LoadFailed += OnLoadFailed;
             nextLessonButton?.onClick.AddListener(() =>
             {
                 if (_modes.Mode == GameMode.Journey)
@@ -216,7 +225,14 @@ namespace PuttSeed.Unity
             // a teaching aid that only belongs in one, and pasting a
             // stranger's replay code belongs to neither.
             bool showShare = CanShare() && !cardUp && !(showNext && tutorial);
-            bool showGhost = !showNext || tutorial;
+            // The author ghost is the solver's own answer. In practice and
+            // the tutorial it is a teaching aid; in the daily, journey and
+            // gauntlet it was a spoiler available before the first finish —
+            // "the day's answer is your first finish" means nothing if the
+            // answer key is one tap away. It unlocks once the hole is holed.
+            bool ghostAllowed = _modes.Mode == GameMode.Practice || tutorial
+                || (sim != null && sim.IsHoled);
+            bool showGhost = (!showNext || tutorial) && ghostAllowed;
             bool showWatch = !showNext;
             shareButton?.gameObject.SetActive(showShare);
             ghostButton?.gameObject.SetActive(showGhost);
@@ -630,6 +646,7 @@ namespace PuttSeed.Unity
 
             string token = clip.Substring(at, end - at);
             if (token == _promptedClipboardCode
+                || token == GameSession.ConsumedClipboardCode
                 || !ReplayCodec.TryDecode(token, out _, out _))
             {
                 return;
@@ -646,6 +663,22 @@ namespace PuttSeed.Unity
 
                 ShowToast(Loc.Tr("Replay code found in clipboard — tap Watch."));
             }
+        }
+
+        /// <summary>
+        /// A course that would not load used to leave the player looking at
+        /// nothing, with only the console told. Say it, then go home.
+        /// </summary>
+        private void OnLoadFailed()
+        {
+            ShowToast(Loc.Tr("This course could not be loaded."));
+            StartCoroutine(ReturnToMenuSoon());
+        }
+
+        private System.Collections.IEnumerator ReturnToMenuSoon()
+        {
+            yield return new WaitForSeconds(1.8f);
+            OnMenu();
         }
 
         private void OnUndo()

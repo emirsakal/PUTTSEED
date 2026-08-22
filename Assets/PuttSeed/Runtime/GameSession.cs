@@ -22,6 +22,19 @@ namespace PuttSeed.Unity
         /// <summary>Archive pick: the past day number to play, -1 for today.</summary>
         public static int ArchiveDayNumber = -1;
 
+        /// <summary>
+        /// A replay code the menu found on the clipboard and the player chose
+        /// to open — the game scene imports it directly instead of loading a
+        /// daily first and swapping it out.
+        /// </summary>
+        public static string? PendingReplayCode;
+
+        /// <summary>
+        /// The clipboard code already offered (and taken) on the menu, so the
+        /// game scene does not offer the same one a second time.
+        /// </summary>
+        public static string? ConsumedClipboardCode;
+
         /// <summary>Journey level to start at (0-based).</summary>
         public static int JourneyLevel;
 

@@ -44,6 +44,9 @@ namespace PuttSeed.Unity
         /// </summary>
         public const int JourneyVersion = 4;
 
+        /// <summary>How long a load may take before the cover comes down.</summary>
+        private const int OverlayAfterMs = 150;
+
         /// <summary>The generator practice runs (see <see cref="PracticeCourses"/>).</summary>
         public const int PracticeVersion = PracticeCourses.Version;
 
@@ -202,6 +205,13 @@ namespace PuttSeed.Unity
             Mode == GameMode.Tutorial
             || (Mode == GameMode.Practice && _runner.Generation?.Difficulty == Difficulty.Easy);
 
+        /// <summary>
+        /// A course that would not load. Generation failing is rare — every
+        /// shipped seed is baked — but an archive day past the baked window
+        /// can still miss, and the player used to be told nothing at all.
+        /// </summary>
+        public event Action? LoadFailed;
+
         /// <summary>Wires dependencies; the store is shared with FeedbackController.</summary>
         public void Initialize(SimRunner runner, CourseRenderer courseRenderer, Camera cam,
             LoadingOverlay? overlay, StatsStore stats)
@@ -262,6 +272,22 @@ namespace PuttSeed.Unity
         public void StartFromSession()
         {
             PracticeDifficulty = GameSession.PracticeDifficulty;
+
+            // A replay code handed over by the menu opens its own course
+            // directly, instead of loading a daily first and swapping it out.
+            // The daily identity is resolved first so that a code for today's
+            // hole is played as the daily, not as practice.
+            var pending = GameSession.PendingReplayCode;
+            if (pending != null)
+            {
+                GameSession.PendingReplayCode = null;
+                ResolveDailyIdentity();
+                if (ImportReplay(pending))
+                {
+                    return;
+                }
+            }
+
             if (GameSession.UseFixedSeed)
             {
                 StartFixedSeed(GameSession.FixedSeed, GameSession.FixedSeedConfigVersion);
@@ -317,6 +343,29 @@ namespace PuttSeed.Unity
                 _gauntletClocks[h] = Array.Empty<int>();
             }
 
+            // A week interrupted is a week resumed. The progress used to live
+            // only in this object, so Menu or the back button mid-week threw
+            // away every banked hole without a word. The banked holes ride
+            // the same codec a finished week shares with, so nothing new had
+            // to be invented to keep them.
+            var saved = _stats.Data;
+            if (saved.gauntletProgressWeek == weekIndex
+                && saved.gauntletProgressHole > 0
+                && saved.gauntletProgressHole < GauntletWeek.Length
+                && GauntletCodec.TryDecode(saved.gauntletProgressCode, out int codeWeek,
+                    out var shotsPerHole, out var clocksPerHole)
+                && codeWeek == weekIndex)
+            {
+                for (int h = 0; h < GauntletWeek.Length && h < shotsPerHole.Length; h++)
+                {
+                    _gauntletShots[h] = shotsPerHole[h];
+                    _gauntletClocks[h] = clocksPerHole[h];
+                }
+
+                _gauntletHole = saved.gauntletProgressHole;
+                _gauntletBankedStrokes = saved.gauntletProgressStrokes;
+            }
+
             LoadGauntletHole();
         }
 
@@ -330,6 +379,8 @@ namespace PuttSeed.Unity
 
             BankGauntletHole();
             _gauntletHole++;
+            _stats.SaveGauntletProgress(_gauntletWeek, _gauntletHole, _gauntletBankedStrokes,
+                BuildGauntletCode());
             LoadGauntletHole();
         }
 
@@ -383,6 +434,7 @@ namespace PuttSeed.Unity
 
             BankGauntletHole();
             _stats.RecordGauntlet(_gauntletWeek, _gauntletBankedStrokes);
+            _stats.ClearGauntletProgress();
             GauntletFinished?.Invoke(_gauntletBankedStrokes);
         }
 
@@ -398,11 +450,17 @@ namespace PuttSeed.Unity
             IsArchiveDay = false;
             JourneyLevel = -1;
             _gauntletWeek = -1;
+            ResolveDailyIdentity();
+            LoadAndShow(_dailySeed, configVersion: GeneratorSchedule.VersionForDay(_activeDayNumber));
+        }
+
+        /// <summary>Which day it is, and which seed makes that day's hole.</summary>
+        private void ResolveDailyIdentity()
+        {
             var utc = DateTime.UtcNow;
             _activeDayNumber = DayNumber(utc);
             _activeDayDate = utc.Date;
             _dailySeed = DailySeed.FromUtcDate(utc.Year, utc.Month, utc.Day);
-            LoadAndShow(_dailySeed, configVersion: GeneratorSchedule.VersionForDay(_activeDayNumber));
         }
 
         /// <summary>
@@ -548,9 +606,7 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay?.Show(Loc.Tr("Generating course"));
             ModeChanged?.Invoke();
-            yield return null; // let the overlay render first
 
             // The next course may already be growing (see PrewarmPractice).
             // A candidate search is up to eight generations, and a v4
@@ -567,8 +623,16 @@ namespace PuttSeed.Unity
                     : Task.Run(SearchArguments());
             _nextPractice = null;
 
+            bool overlayShown = false;
+            var waited = System.Diagnostics.Stopwatch.StartNew();
             while (!search.IsCompleted)
             {
+                if (!overlayShown && waited.ElapsedMilliseconds > OverlayAfterMs)
+                {
+                    _overlay?.Show(Loc.Tr("Generating course"));
+                    overlayShown = true;
+                }
+
                 yield return null; // frames render; the loading putt rolls on
             }
 
@@ -583,10 +647,17 @@ namespace PuttSeed.Unity
                 RebuildView();
                 _stats.RecordPracticePlayed();
             }
+            else
+            {
+                LoadFailed?.Invoke();
+            }
 
             PrewarmPractice();
 
-            _overlay?.Hide();
+            if (overlayShown)
+            {
+                _overlay?.Hide();
+            }
             IsLoading = false;
             ModeChanged?.Invoke();
         }
@@ -660,7 +731,6 @@ namespace PuttSeed.Unity
             }
 
             IsLoading = true;
-            _overlay?.Show(Loc.Tr("Generating course"));
             ModeChanged?.Invoke();
 
             // Read Unity-side state (the ScriptableObject) on the main thread;
@@ -695,8 +765,19 @@ namespace PuttSeed.Unity
             var task = prepared != null
                 ? Task.FromResult(prepared)
                 : Task.Run(() => CourseGenerator.Generate(seed, genConfig, config, solverConfig));
+
+            // The cover only comes down for a wait worth covering. Baked
+            // courses arrive inside a frame, and a cover that flashes for one
+            // frame on every hole is a flicker, not a loading screen.
+            bool overlayShown = false;
             while (!task.IsCompleted)
             {
+                if (!overlayShown && grown.ElapsedMilliseconds > OverlayAfterMs)
+                {
+                    _overlay?.Show(Loc.Tr("Generating course"));
+                    overlayShown = true;
+                }
+
                 yield return null; // frames render; the ball rolls while we wait
             }
 
@@ -726,9 +807,14 @@ namespace PuttSeed.Unity
             {
                 Debug.LogError($"PuttSeed: generation failed for seed {seed}: " +
                     task.Exception?.GetBaseException().Message);
+                LoadFailed?.Invoke();
             }
 
-            _overlay?.Hide();
+            if (overlayShown)
+            {
+                _overlay?.Hide();
+            }
+
             IsLoading = false;
             ModeChanged?.Invoke();
         }
