@@ -24,14 +24,19 @@ namespace PuttSeed.Unity
 
         private Coroutine? _intro;
 
+        /// <summary>The day's twist, for the themed light (see DailyTint).</summary>
+        private PuttSeed.Core.Daily.DailyMutator _mutator;
+
         /// <summary>
         /// Clears and rebuilds all course meshes. The seed nudges the felt
         /// tone a touch warmer or cooler — every day's course has its own
         /// light, identical for every player (presentation only; the sim
         /// never sees colors).
         /// </summary>
-        public void Rebuild(CourseData course, ulong seed = 0)
+        public void Rebuild(CourseData course, ulong seed = 0,
+            PuttSeed.Core.Daily.DailyMutator mutator = PuttSeed.Core.Daily.DailyMutator.None)
         {
+            _mutator = mutator;
             if (_intro != null)
             {
                 StopCoroutine(_intro);
@@ -127,7 +132,14 @@ namespace PuttSeed.Unity
 
             foreach (var zone in course.SandZones)
             {
-                MeshFactory.CreateMeshObject(transform, "Sand", MeshFactory.Zone(zone, PaletteMaterials.SandColor), -0.01f);
+                // A pit, not a patch: the darker base shows only as a rim
+                // around the inset fill, and that ring of shade is what makes
+                // the sand read as LOWER than the felt.
+                var sandBase = PaletteMaterials.SandColor;
+                MeshFactory.CreateMeshObject(transform, "SandBase", MeshFactory.Zone(zone,
+                    new Color(sandBase.r * 0.78f, sandBase.g * 0.76f, sandBase.b * 0.72f)), -0.0098f);
+                MeshFactory.CreateMeshObject(transform, "Sand",
+                    MeshFactory.Zone(ShrunkTowardCentroid(zone, 0.9f), sandBase), -0.01f);
                 DecorateZone(zone, zoneIndex++, ZoneKind.Sand);
             }
 
@@ -138,6 +150,14 @@ namespace PuttSeed.Unity
             }
 
             // Tee marker: the start pad is always readable (also after resets).
+            // Under the ring, an actual PAD — a breath-lighter disc of mown
+            // felt, so "start here" is a place on the ground and not only a
+            // symbol floating over it.
+            var padTone = DailyTint(PaletteMaterials.FeltLight, seed);
+            MeshFactory.CreateMeshObject(transform, "TeePad",
+                MeshFactory.Disc(FixView.ToVector2(course.StartPosition), 0.24f,
+                    new Color(Mathf.Clamp01(padTone.r * 1.05f), Mathf.Clamp01(padTone.g * 1.05f),
+                        Mathf.Clamp01(padTone.b * 1.05f))), -0.013f);
             MeshFactory.CreateMeshObject(transform, "Tee",
                 MeshFactory.Ring(FixView.ToVector2(course.StartPosition), 0.15f, 0.185f,
                     new Color(0.97f, 0.96f, 0.90f, 0.45f)), -0.015f);
@@ -309,6 +329,17 @@ namespace PuttSeed.Unity
                         var tip = Bilerp(quad, 0.25f + 0.25f * i, 0.5f) + dir * 0.22f;
                         DrawChevron(tip, dir, 0.16f, arrow, -0.0065f, "RampArrow");
                     }
+
+                    // The conveyor read: one bright chevron gliding downhill.
+                    // Decorative ambient motion, same class as the wind
+                    // streaks, gated the same way — the static arrows keep
+                    // carrying the direction without it.
+                    if (!(reducedMotion != null && reducedMotion()))
+                    {
+                        var flowGo = new GameObject("RampFlow");
+                        flowGo.transform.SetParent(transform, false);
+                        flowGo.AddComponent<RampFlow>().Initialize(quad, dir);
+                    }
                 }
             }
 
@@ -330,6 +361,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            int portalIndex = 0;
             foreach (var portal in course.Portals)
             {
                 var mouth = FixView.ToVector2(portal.Entry);
@@ -338,10 +370,40 @@ namespace PuttSeed.Unity
                     MeshFactory.Disc(mouth, radius, new Color(
                         PaletteMaterials.Portal.r, PaletteMaterials.Portal.g,
                         PaletteMaterials.Portal.b, 0.20f)), -0.018f);
-                MeshFactory.CreateMeshObject(transform, "PortalRing",
-                    MeshFactory.Ring(mouth, radius * 0.82f, radius, PaletteMaterials.Portal), -0.019f);
+
+                // The ring is a DASHED one on its own pivot, turning slowly —
+                // paired mouths counter-rotate, and a thing that turns reads
+                // as switched on. Origin-centred so the object can spin in
+                // place (a mesh with absolute coordinates orbits the world
+                // origin instead — the stripe lesson, learned once already).
+                var ringGo = new GameObject("PortalRing");
+                ringGo.transform.SetParent(transform, false);
+                ringGo.transform.localPosition = new Vector3(mouth.x, mouth.y, -0.019f);
+                const int dashes = 4;
+                for (int d = 0; d < dashes; d++)
+                {
+                    float a0 = d * (360f / dashes) * Mathf.Deg2Rad;
+                    var seg = new Vector2[9];
+                    for (int k = 0; k <= 8; k++)
+                    {
+                        float ang = a0 + k * (300f / dashes / 8f) * Mathf.Deg2Rad;
+                        seg[k] = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * radius * 0.91f;
+                    }
+
+                    MeshFactory.CreateMeshObject(ringGo.transform, "PortalDash",
+                        MeshFactory.Outline(seg, radius * 0.18f, PaletteMaterials.Portal,
+                            closed: false), 0f);
+                }
+
+                if (!(reducedMotion != null && reducedMotion()))
+                {
+                    ringGo.AddComponent<SlowSpin>().degreesPerSecond =
+                        portalIndex % 2 == 0 ? 22f : -22f;
+                }
+
                 MeshFactory.CreateMeshObject(transform, "PortalCore",
                     MeshFactory.Disc(mouth, radius * 0.30f, PaletteMaterials.Portal), -0.019f);
+                portalIndex++;
             }
 
             foreach (var mill in course.Windmills)
@@ -365,6 +427,13 @@ namespace PuttSeed.Unity
                     MeshFactory.CreateMeshObject(bladesGo.transform, "MillBlade",
                         MeshFactory.Outline(new[] { Vector2.zero, dir * blade }, 0.07f,
                             PaletteMaterials.Wall, closed: false), 0f);
+
+                    // A cream cap on each tip — the fastest-moving point wears
+                    // the brightest mark, so the sweep radius reads at a
+                    // glance and the hub's cream dot has kin.
+                    MeshFactory.CreateMeshObject(bladesGo.transform, "MillBladeTip",
+                        MeshFactory.Disc(dir * blade, 0.05f,
+                            new Color(0.97f, 0.96f, 0.90f)), -0.001f);
                 }
 
                 if (runner != null)
@@ -541,8 +610,15 @@ namespace PuttSeed.Unity
             }
         }
 
-        /// <summary>Seed-derived subtle felt tint (±3% warm/cool shift).</summary>
-        private static Color DailyTint(Color felt, ulong seed)
+        /// <summary>
+        /// Seed-derived subtle felt tint (±3% warm/cool shift), plus the
+        /// day's weather: a themed day grades the LIGHT before the top bar
+        /// gets a word in — icy cools the green a touch, bouncy warms it,
+        /// windy washes it slightly pale. All of it small on purpose, all of
+        /// it a pure function of seed and mutator, so every device grades the
+        /// same day identically.
+        /// </summary>
+        private Color DailyTint(Color felt, ulong seed)
         {
             if (seed == 0)
             {
@@ -552,11 +628,60 @@ namespace PuttSeed.Unity
             uint h = (uint)(seed ^ (seed >> 32)) * 2654435761u;
             float warm = ((h & 0xFF) / 255f - 0.5f) * 0.055f;
             float bright = (((h >> 8) & 0xFF) / 255f - 0.5f) * 0.04f;
-            return new Color(
+            var tinted = new Color(
                 Mathf.Clamp01(felt.r + warm + bright),
                 Mathf.Clamp01(felt.g + bright),
                 Mathf.Clamp01(felt.b - warm * 0.7f + bright),
                 felt.a);
+
+            switch (_mutator)
+            {
+                case PuttSeed.Core.Daily.DailyMutator.Icy:
+                    return new Color(
+                        Mathf.Clamp01(tinted.r * 0.93f),
+                        Mathf.Clamp01(tinted.g * 1.00f),
+                        Mathf.Clamp01(tinted.b * 1.09f), tinted.a);
+                case PuttSeed.Core.Daily.DailyMutator.Bouncy:
+                    return new Color(
+                        Mathf.Clamp01(tinted.r * 1.07f),
+                        Mathf.Clamp01(tinted.g * 1.00f),
+                        Mathf.Clamp01(tinted.b * 0.93f), tinted.a);
+                case PuttSeed.Core.Daily.DailyMutator.Windy:
+                    float grey = (tinted.r + tinted.g + tinted.b) / 3f;
+                    return new Color(
+                        Mathf.Clamp01(Mathf.Lerp(tinted.r, grey, 0.12f) * 1.03f),
+                        Mathf.Clamp01(Mathf.Lerp(tinted.g, grey, 0.12f) * 1.03f),
+                        Mathf.Clamp01(Mathf.Lerp(tinted.b, grey, 0.12f) * 1.03f), tinted.a);
+                default:
+                    return tinted;
+            }
+        }
+
+        /// <summary>A zone shrunk toward its centroid — the sand pit's inset fill.</summary>
+        private static PuttSeed.Core.Sim.ZonePolygon ShrunkTowardCentroid(
+            PuttSeed.Core.Sim.ZonePolygon zone, float factor)
+        {
+            var verts = zone.Vertices;
+            var cx = PuttSeed.Core.FixedMath.Fix64.Zero;
+            var cy = PuttSeed.Core.FixedMath.Fix64.Zero;
+            for (int i = 0; i < verts.Length; i++)
+            {
+                cx += verts[i].X;
+                cy += verts[i].Y;
+            }
+
+            var n = PuttSeed.Core.FixedMath.Fix64.FromInt(verts.Length);
+            cx /= n;
+            cy /= n;
+            var k = PuttSeed.Core.FixedMath.Fix64.FromFraction((int)(factor * 1000f), 1000);
+            var shrunk = new PuttSeed.Core.FixedMath.Vec2Fix[verts.Length];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                shrunk[i] = new PuttSeed.Core.FixedMath.Vec2Fix(
+                    cx + (verts[i].X - cx) * k, cy + (verts[i].Y - cy) * k);
+            }
+
+            return new PuttSeed.Core.Sim.ZonePolygon(shrunk);
         }
 
         /// <summary>Bilinear point inside a quad zone (u along, v across).</summary>

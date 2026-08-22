@@ -735,7 +735,7 @@ namespace PuttSeed.Unity
 
         private void RebuildView()
         {
-            _courseRenderer.Rebuild(_runner.Generation!.Course, _runner.Seed);
+            _courseRenderer.Rebuild(_runner.Generation!.Course, _runner.Seed, ActiveMutator);
 
             // A hint chip rides under the top bar in teaching modes, so the
             // course gets less room on exactly the holes that show one.

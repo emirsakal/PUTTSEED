@@ -434,6 +434,11 @@ namespace PuttSeed.Unity
                     count: 10, speed: 1.2f, life: 0.35f);
                 EmitBurst(_burstPs, FixView.ToVector2(sim.Ball.Position),
                     new Color(0.62f, 0.40f, 0.92f, 0.9f), count: 10, speed: 1.2f, life: 0.35f);
+                // And a quick violet ring where the ball REAPPEARED — the puffs
+                // say something happened, the ring says where to look now.
+                StartCoroutine(CelebrationRing(FixView.ToVector2(sim.Ball.Position),
+                    start: 0.08f, growth: 0.4f, duration: 0.3f, width: 0.035f,
+                    tint: PaletteMaterials.Portal));
             }
 
             if (sim.WaterEntryCount > _lastWaterEntries)
@@ -1026,8 +1031,9 @@ namespace PuttSeed.Unity
         /// always had; the near miss borrows it small and quick.
         /// </summary>
         private IEnumerator CelebrationRing(Vector2 center, float start = 0.2f, float growth = 1.6f,
-            float duration = 0.8f, float width = 0.06f)
+            float duration = 0.8f, float width = 0.06f, Color? tint = null)
         {
+            var ringColor = tint ?? Color.white;
             const int segments = 48;
             var go = new GameObject("CelebrationRing");
             var line = go.AddComponent<LineRenderer>();
@@ -1041,7 +1047,7 @@ namespace PuttSeed.Unity
             {
                 float k = t / duration;
                 float radius = start + k * growth;
-                var color = new Color(1f, 1f, 1f, 1f - k);
+                var color = new Color(ringColor.r, ringColor.g, ringColor.b, 1f - k);
                 line.startColor = color;
                 line.endColor = color;
                 for (int i = 0; i < segments; i++)
