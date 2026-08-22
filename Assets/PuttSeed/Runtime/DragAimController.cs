@@ -52,8 +52,8 @@ namespace PuttSeed.Unity
         // at 25/50/75/100%, then the same quarters as colour snaps) was built
         // and tried on device: the bars fought the arrow and the snapping read
         // worse than the smooth climb. Kept smooth deliberately (2026-08-18).
-        private static readonly Color LowPower = new Color(0.55f, 0.9f, 0.55f);
-        private static readonly Color HighPower = new Color(0.95f, 0.35f, 0.3f);
+        // The ramp's two ends live in PaletteMaterials now, because they have
+        // to change with the colorblind setting — see PowerLow there.
 
         /// <summary>
         /// The aim inside the cancel zone. Releasing a drag shorter than
@@ -272,7 +272,7 @@ namespace PuttSeed.Unity
             float minDrag = feel != null ? feel.minDragLength : 0.15f;
             var color = _aim.magnitude < minDrag
                 ? CancelTint
-                : Color.Lerp(LowPower, HighPower, power);
+                : Color.Lerp(PaletteMaterials.PowerLow, PaletteMaterials.PowerHigh, power);
             var tip = ball + dir * length;
 
             // Dashed shaft: evenly spaced dots from the ball to just short of

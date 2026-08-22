@@ -107,11 +107,11 @@ namespace PuttSeed.Unity
             }
 
             var title = UIFactory.CreateText(canvas.transform, "Title",
-                new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), 124, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), UIStyle.FontSize.Display, TextAnchor.MiddleCenter, shadow: true);
             title.text = "PUTTSEED";
 
             var tagline = UIFactory.CreateText(canvas.transform, "Tagline",
-                new Vector2(0.05f, 0.705f), new Vector2(0.95f, 0.745f), 33, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.705f), new Vector2(0.95f, 0.745f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             tagline.text = "one hole a day · same for everyone";
             tagline.color = UIStyle.CreamDim;
             menu.taglineText = tagline;
@@ -120,12 +120,12 @@ namespace PuttSeed.Unity
                 new Vector2(0.06f, 0.25f), new Vector2(0.94f, 0.67f), UIStyle.PanelSoft);
 
             menu.dailyLabel = UIFactory.CreateButton(canvas.transform, "Play today's hole",
-                new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), NoOp, 44, primary: true);
+                new Vector2(0.1f, 0.545f), new Vector2(0.9f, 0.635f), NoOp, UIStyle.FontSize.Lead, primary: true);
             menu.dailyButton = menu.dailyLabel.GetComponentInParent<Button>();
 
             // Next-hole countdown; MenuBootstrap fills it once today is done.
             menu.countdownText = UIFactory.CreateText(canvas.transform, "Countdown",
-                new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), 26, TextAnchor.MiddleCenter);
+                new Vector2(0.1f, 0.517f), new Vector2(0.9f, 0.545f), UIStyle.FontSize.Small, TextAnchor.MiddleCenter);
             menu.countdownText.color = UIStyle.CreamDim;
             menu.countdownText.gameObject.SetActive(false);
 
@@ -180,7 +180,7 @@ namespace PuttSeed.Unity
             UIFactory.CreatePanel(canvas.transform, "FooterChip",
                 new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f), UIStyle.PanelSoft);
             menu.footerText = UIFactory.CreateText(canvas.transform, "Footer",
-                new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f), 30, TextAnchor.MiddleCenter);
+                new Vector2(0.14f, 0.196f), new Vector2(0.86f, 0.241f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             menu.footerText.color = UIStyle.CreamDim;
 
             // Invisible hit area: tapping the stats chip opens the stats panel.
@@ -195,10 +195,10 @@ namespace PuttSeed.Unity
             // The menu stays clean: everything configurable lives behind two
             // buttons — Settings (toggles) and Collection (ball skins).
             var settingsLabel = UIFactory.CreateButton(canvas.transform, "Settings",
-                new Vector2(0.10f, 0.13f), new Vector2(0.48f, 0.185f), NoOp, 30);
+                new Vector2(0.10f, 0.13f), new Vector2(0.48f, 0.185f), NoOp, UIStyle.FontSize.Body);
             menu.settingsButton = settingsLabel.GetComponentInParent<Button>();
             var collectionLabel = UIFactory.CreateButton(canvas.transform, "Collection",
-                new Vector2(0.52f, 0.13f), new Vector2(0.90f, 0.185f), NoOp, 30);
+                new Vector2(0.52f, 0.13f), new Vector2(0.90f, 0.185f), NoOp, UIStyle.FontSize.Body);
             menu.collectionButton = collectionLabel.GetComponentInParent<Button>();
 
             // Today's hole, drawn from the day's own seed — the one thing on
@@ -218,10 +218,10 @@ namespace PuttSeed.Unity
             var todayChip = UIFactory.CreatePanel(todayCard, "InfoChip",
                 new Vector2(0.58f, 0.02f), new Vector2(0.99f, 0.34f), UIStyle.PanelDark);
             menu.todayInfoText = UIFactory.CreateText(todayChip.transform, "Info",
-                new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), 20, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), UIStyle.FontSize.Caption, TextAnchor.MiddleCenter);
             menu.todayInfoText.resizeTextForBestFit = true;
             menu.todayInfoText.resizeTextMinSize = 14;
-            menu.todayInfoText.resizeTextMaxSize = 20;
+            menu.todayInfoText.resizeTextMaxSize = UIStyle.FontSize.Caption;
 
             menu.todayThumbButton = todayCard.gameObject.AddComponent<Button>();
             menu.todayThumbButton.targetGraphic = todayImage;
@@ -260,7 +260,7 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.07f, 0.13f), new Vector2(0.93f, 0.80f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.725f), new Vector2(0.9f, 0.785f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.725f), new Vector2(0.9f, 0.785f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Journey";
 
             const int columns = 5;
@@ -277,7 +277,7 @@ namespace PuttSeed.Unity
                     float x0 = 0.12f + c * 0.1565f;
                     float yMax = 0.70f - r * 0.082f;
                     var cellLabel = UIFactory.CreateButton(dim, "—",
-                        new Vector2(x0, yMax - 0.068f), new Vector2(x0 + 0.134f, yMax), NoOp, 28);
+                        new Vector2(x0, yMax - 0.068f), new Vector2(x0 + 0.134f, yMax), NoOp, UIStyle.FontSize.Small);
                     var labelRect = cellLabel.rectTransform;
                     labelRect.anchorMin = new Vector2(0f, 0.38f);
                     labelRect.anchorMax = new Vector2(1f, 1f);
@@ -315,17 +315,17 @@ namespace PuttSeed.Unity
             // Pager arrows are language-free; MenuBootstrap fills the center
             // label with the visible range and the star total.
             var older = UIFactory.CreateButton(dim, "‹",
-                new Vector2(0.12f, 0.235f), new Vector2(0.28f, 0.288f), NoOp, 30);
+                new Vector2(0.12f, 0.235f), new Vector2(0.28f, 0.288f), NoOp, UIStyle.FontSize.Body);
             menu.journeyPrevButton = older.GetComponentInParent<Button>();
             menu.journeyPageLabel = UIFactory.CreateText(dim, "Page",
-                new Vector2(0.29f, 0.235f), new Vector2(0.71f, 0.288f), 26, TextAnchor.MiddleCenter);
+                new Vector2(0.29f, 0.235f), new Vector2(0.71f, 0.288f), UIStyle.FontSize.Small, TextAnchor.MiddleCenter);
             menu.journeyPageLabel.color = UIStyle.CreamDim;
             var newer = UIFactory.CreateButton(dim, "›",
-                new Vector2(0.72f, 0.235f), new Vector2(0.88f, 0.288f), NoOp, 30);
+                new Vector2(0.72f, 0.235f), new Vector2(0.88f, 0.288f), NoOp, UIStyle.FontSize.Body);
             menu.journeyNextButton = newer.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.155f), new Vector2(0.7f, 0.215f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.155f), new Vector2(0.7f, 0.215f), NoOp, UIStyle.FontSize.Body, primary: true);
             menu.journeyCloseButton = close.GetComponentInParent<Button>();
             menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -349,14 +349,14 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.10f, 0.37f), new Vector2(0.90f, 0.62f));
             var question = UIFactory.CreateText(dim, "Question",
-                new Vector2(0.15f, 0.475f), new Vector2(0.85f, 0.585f), 32, TextAnchor.MiddleCenter);
+                new Vector2(0.15f, 0.475f), new Vector2(0.85f, 0.585f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             question.text = "Want a nudge when tomorrow's hole is ready?";
 
             var yes = UIFactory.CreateButton(dim, "Yes please",
-                new Vector2(0.15f, 0.395f), new Vector2(0.485f, 0.458f), NoOp, 28, primary: true);
+                new Vector2(0.15f, 0.395f), new Vector2(0.485f, 0.458f), NoOp, UIStyle.FontSize.Small, primary: true);
             menu.reminderYesButton = yes.GetComponentInParent<Button>();
             var no = UIFactory.CreateButton(dim, "No thanks",
-                new Vector2(0.515f, 0.395f), new Vector2(0.85f, 0.458f), NoOp, 28);
+                new Vector2(0.515f, 0.395f), new Vector2(0.85f, 0.458f), NoOp, UIStyle.FontSize.Small);
             menu.reminderNoButton = no.GetComponentInParent<Button>();
 
             menu.reminderAskPanel.SetActive(false);
@@ -412,11 +412,11 @@ namespace PuttSeed.Unity
                 new Vector2(0.08f, 0.20f), new Vector2(0.92f, 0.80f));
 
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.705f), new Vector2(0.9f, 0.775f), 54, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.705f), new Vector2(0.9f, 0.775f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Welcome";
 
             var blurb = UIFactory.CreateText(dim, "Blurb",
-                new Vector2(0.12f, 0.635f), new Vector2(0.88f, 0.70f), 26, TextAnchor.UpperCenter);
+                new Vector2(0.12f, 0.635f), new Vector2(0.88f, 0.70f), UIStyle.FontSize.Small, TextAnchor.UpperCenter);
             blurb.text = "Three quick things. All of them can be changed later in Settings.";
             blurb.color = UIStyle.CreamDim;
 
@@ -436,7 +436,7 @@ namespace PuttSeed.Unity
                 "Full is recommended. Reduced removes shake, slow motion and confetti.");
 
             var start = UIFactory.CreateButton(dim, "Start",
-                new Vector2(0.25f, 0.215f), new Vector2(0.75f, 0.285f), NoOp, 36, primary: true);
+                new Vector2(0.25f, 0.215f), new Vector2(0.75f, 0.285f), NoOp, UIStyle.FontSize.Strong, primary: true);
             menu.setupStartButton = start.GetComponentInParent<Button>();
 
             menu.setupPanel.SetActive(false);
@@ -446,7 +446,7 @@ namespace PuttSeed.Unity
         private static void SetupHint(RectTransform dim, string name, float yMin, string text)
         {
             var hint = UIFactory.CreateText(dim, name,
-                new Vector2(0.15f, yMin), new Vector2(0.85f, yMin + 0.075f), 21, TextAnchor.UpperLeft);
+                new Vector2(0.15f, yMin), new Vector2(0.85f, yMin + 0.075f), UIStyle.FontSize.Caption, TextAnchor.UpperLeft);
             hint.text = text;
             hint.color = UIStyle.CreamDim;
         }
@@ -463,7 +463,7 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.10f, 0.15f), new Vector2(0.90f, 0.83f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.745f), new Vector2(0.9f, 0.805f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.745f), new Vector2(0.9f, 0.805f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Settings";
 
             // Eight rows now, stepped rather than hand-placed, and re-measured
@@ -483,7 +483,7 @@ namespace PuttSeed.Unity
             menu.languageToggle = CreateSettingRow(dim, y -= step, "Language", "EN", "TR");
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.165f), new Vector2(0.7f, 0.225f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.165f), new Vector2(0.7f, 0.225f), NoOp, UIStyle.FontSize.Body, primary: true);
             menu.settingsCloseButton = close.GetComponentInParent<Button>();
             menu.settingsCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -503,19 +503,19 @@ namespace PuttSeed.Unity
             var toggle = row.gameObject.AddComponent<SegmentedToggle>();
 
             var rowLabel = UIFactory.CreateText(row, "Label",
-                new Vector2(0.02f, 0f), new Vector2(0.40f, 1f), 30, TextAnchor.MiddleLeft);
+                new Vector2(0.02f, 0f), new Vector2(0.40f, 1f), UIStyle.FontSize.Body, TextAnchor.MiddleLeft);
             rowLabel.text = label;
             rowLabel.resizeTextForBestFit = true; // "Renk körü modu" outgrows "Colors"
             rowLabel.resizeTextMinSize = 20;
-            rowLabel.resizeTextMaxSize = 30;
+            rowLabel.resizeTextMaxSize = UIStyle.FontSize.Body;
 
             toggle.optionALabel = UIFactory.CreateButton(row, optionA,
-                new Vector2(0.44f, 0.06f), new Vector2(0.70f, 0.94f), NoOp, 26);
+                new Vector2(0.44f, 0.06f), new Vector2(0.70f, 0.94f), NoOp, UIStyle.FontSize.Small);
             toggle.optionAButton = toggle.optionALabel.GetComponentInParent<Button>();
             toggle.optionABg = toggle.optionAButton.GetComponent<Image>();
 
             toggle.optionBLabel = UIFactory.CreateButton(row, optionB,
-                new Vector2(0.72f, 0.06f), new Vector2(0.98f, 0.94f), NoOp, 26);
+                new Vector2(0.72f, 0.06f), new Vector2(0.98f, 0.94f), NoOp, UIStyle.FontSize.Small);
             toggle.optionBButton = toggle.optionBLabel.GetComponentInParent<Button>();
             toggle.optionBBg = toggle.optionBButton.GetComponent<Image>();
 
@@ -539,7 +539,7 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.09f, 0.12f), new Vector2(0.91f, 0.80f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.72f), new Vector2(0.9f, 0.78f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.72f), new Vector2(0.9f, 0.78f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Collection";
 
             const int columns = 4;
@@ -560,7 +560,7 @@ namespace PuttSeed.Unity
                 float x0 = 0.135f + c * 0.19f;
                 float yMax = 0.625f - r * 0.115f;
                 var cellLabel = UIFactory.CreateButton(dim, "—",
-                    new Vector2(x0, yMax - 0.101f), new Vector2(x0 + 0.175f, yMax), NoOp, 20);
+                    new Vector2(x0, yMax - 0.101f), new Vector2(x0 + 0.175f, yMax), NoOp, UIStyle.FontSize.Caption);
                 var labelRect = cellLabel.rectTransform;
                 labelRect.anchorMin = new Vector2(0.03f, 0.04f);
                 labelRect.anchorMax = new Vector2(0.97f, 0.30f);
@@ -592,11 +592,11 @@ namespace PuttSeed.Unity
             // Clears the third grid row (bottom 0.294) and the Close button
             // (top 0.21) — the panel's tightest sandwich.
             menu.collectionHintText = UIFactory.CreateText(dim, "Hint",
-                new Vector2(0.12f, 0.222f), new Vector2(0.88f, 0.286f), 24, TextAnchor.MiddleCenter);
+                new Vector2(0.12f, 0.222f), new Vector2(0.88f, 0.286f), UIStyle.FontSize.Caption, TextAnchor.MiddleCenter);
             menu.collectionHintText.color = UIStyle.CreamDim;
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.15f), new Vector2(0.7f, 0.21f), NoOp, UIStyle.FontSize.Body, primary: true);
             menu.collectionCloseButton = close.GetComponentInParent<Button>();
             menu.collectionCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -618,43 +618,43 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.07f, 0.10f), new Vector2(0.93f, 0.84f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.765f), new Vector2(0.9f, 0.82f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.765f), new Vector2(0.9f, 0.82f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Stats";
 
             menu.statsBlock = UIFactory.CreateText(dim, "StatsBlock",
-                new Vector2(0.13f, 0.545f), new Vector2(0.64f, 0.76f), 26, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.545f), new Vector2(0.64f, 0.76f), UIStyle.FontSize.Small, TextAnchor.UpperLeft);
 
             // Stroke distribution: a titled column of bullet bars. Narrow, so
             // the stats column has room to spell its labels out.
             menu.histogramBlock = UIFactory.CreateText(dim, "Histogram",
-                new Vector2(0.66f, 0.545f), new Vector2(0.88f, 0.76f), 24, TextAnchor.UpperLeft);
+                new Vector2(0.66f, 0.545f), new Vector2(0.88f, 0.76f), UIStyle.FontSize.Caption, TextAnchor.UpperLeft);
             menu.histogramBlock.color = UIStyle.CreamDim;
 
             var achTitle = UIFactory.CreateText(dim, "AchTitle",
-                new Vector2(0.13f, 0.515f), new Vector2(0.87f, 0.56f), 36, TextAnchor.MiddleLeft);
+                new Vector2(0.13f, 0.515f), new Vector2(0.87f, 0.56f), UIStyle.FontSize.Strong, TextAnchor.MiddleLeft);
             achTitle.text = "Achievements";
             achTitle.color = UIStyle.Hint;
 
             menu.achievementsBlock = UIFactory.CreateText(dim, "AchBlock",
-                new Vector2(0.13f, 0.26f), new Vector2(0.87f, 0.51f), 26, TextAnchor.UpperLeft);
+                new Vector2(0.13f, 0.26f), new Vector2(0.87f, 0.51f), UIStyle.FontSize.Small, TextAnchor.UpperLeft);
 
             // Save transfer: export copies a PUTTSAVE- code; import reads one
             // pasted into the field (double-tap confirms the overwrite).
             menu.saveField = UIFactory.CreateInputField(dim,
                 new Vector2(0.12f, 0.20f), new Vector2(0.55f, 0.25f), "paste PUTTSAVE- code…");
             menu.importSaveLabel = UIFactory.CreateButton(dim, "Import",
-                new Vector2(0.58f, 0.20f), new Vector2(0.88f, 0.25f), NoOp, 24);
+                new Vector2(0.58f, 0.20f), new Vector2(0.88f, 0.25f), NoOp, UIStyle.FontSize.Caption);
             menu.importSaveButton = menu.importSaveLabel.GetComponentInParent<Button>();
 
             menu.exportSaveLabel = UIFactory.CreateButton(dim, "Export save",
-                new Vector2(0.12f, 0.135f), new Vector2(0.42f, 0.19f), NoOp, 24);
+                new Vector2(0.12f, 0.135f), new Vector2(0.42f, 0.19f), NoOp, UIStyle.FontSize.Caption);
             menu.exportSaveButton = menu.exportSaveLabel.GetComponentInParent<Button>();
             menu.shareBestLabel = UIFactory.CreateButton(dim, "Share best",
-                new Vector2(0.45f, 0.135f), new Vector2(0.72f, 0.19f), NoOp, 24);
+                new Vector2(0.45f, 0.135f), new Vector2(0.72f, 0.19f), NoOp, UIStyle.FontSize.Caption);
             menu.shareBestButton = menu.shareBestLabel.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.75f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 26, primary: true);
+                new Vector2(0.75f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, UIStyle.FontSize.Small, primary: true);
             menu.statsCloseButton = close.GetComponentInParent<Button>();
             menu.statsCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -683,17 +683,17 @@ namespace PuttSeed.Unity
             UIFactory.CreateFramedCard(dim, "Card",
                 new Vector2(0.07f, 0.12f), new Vector2(0.93f, 0.84f));
             var title = UIFactory.CreateText(dim, "Title",
-                new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.755f), new Vector2(0.9f, 0.815f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Archive";
 
             // Month header: arrows either side of the month name.
             var prev = UIFactory.CreateButton(dim, "\u2039",
-                new Vector2(0.12f, 0.695f), new Vector2(0.24f, 0.745f), NoOp, 30);
+                new Vector2(0.12f, 0.695f), new Vector2(0.24f, 0.745f), NoOp, UIStyle.FontSize.Body);
             menu.archivePrevMonthButton = prev.GetComponentInParent<Button>();
             menu.archiveMonthLabel = UIFactory.CreateText(dim, "Month",
-                new Vector2(0.26f, 0.695f), new Vector2(0.74f, 0.745f), 30, TextAnchor.MiddleCenter);
+                new Vector2(0.26f, 0.695f), new Vector2(0.74f, 0.745f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             var next = UIFactory.CreateButton(dim, "\u203a",
-                new Vector2(0.76f, 0.695f), new Vector2(0.88f, 0.745f), NoOp, 30);
+                new Vector2(0.76f, 0.695f), new Vector2(0.88f, 0.745f), NoOp, UIStyle.FontSize.Body);
             menu.archiveNextMonthButton = next.GetComponentInParent<Button>();
 
             const int columns = 7;
@@ -712,8 +712,7 @@ namespace PuttSeed.Unity
             {
                 float x0 = gridLeft + c * columnStep;
                 var day = UIFactory.CreateText(dim, $"Weekday{c}",
-                    new Vector2(x0, 0.652f), new Vector2(x0 + cellWidth, 0.682f), 20,
-                    TextAnchor.MiddleCenter);
+                    new Vector2(x0, 0.652f), new Vector2(x0 + cellWidth, 0.682f), UIStyle.FontSize.Caption, TextAnchor.MiddleCenter);
                 day.color = UIStyle.CreamDim;
                 menu.archiveWeekdayLabels[c] = day;
             }
@@ -729,7 +728,7 @@ namespace PuttSeed.Unity
                     float x0 = gridLeft + c * columnStep;
                     float yMax = gridTop - r * rowStep;
                     var cellLabel = UIFactory.CreateButton(dim, "—",
-                        new Vector2(x0, yMax - cellHeight), new Vector2(x0 + cellWidth, yMax), NoOp, 22);
+                        new Vector2(x0, yMax - cellHeight), new Vector2(x0 + cellWidth, yMax), NoOp, UIStyle.FontSize.Caption);
                     var labelRect = cellLabel.rectTransform;
                     labelRect.anchorMin = new Vector2(0f, 0.40f);
                     labelRect.anchorMax = new Vector2(1f, 1f);
@@ -753,11 +752,11 @@ namespace PuttSeed.Unity
             }
 
             var randomLabel = UIFactory.CreateButton(dim, "Random day",
-                new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, 26);
+                new Vector2(0.12f, 0.135f), new Vector2(0.48f, 0.19f), NoOp, UIStyle.FontSize.Small);
             menu.archiveRandomButton = randomLabel.GetComponentInParent<Button>();
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.52f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, 30, primary: true);
+                new Vector2(0.52f, 0.135f), new Vector2(0.88f, 0.19f), NoOp, UIStyle.FontSize.Body, primary: true);
             menu.archiveCloseButton = close.GetComponentInParent<Button>();
             menu.archiveCloseButton.GetComponent<UiClickSound>().downTone = true;
 
@@ -778,27 +777,27 @@ namespace PuttSeed.Unity
             // where that stands against par — the thing a golfer actually
             // reads — and mode, par and streak are small print on the right.
             ui.strokeText = UIFactory.CreateText(canvas.transform, "Strokes",
-                new Vector2(0.05f, 0.925f), new Vector2(0.25f, 0.985f), 58, TextAnchor.MiddleLeft);
+                new Vector2(0.05f, 0.925f), new Vector2(0.25f, 0.985f), UIStyle.FontSize.Heading, TextAnchor.MiddleLeft);
 
             var parChip = UIFactory.CreatePanel(canvas.transform, "ParChip",
                 new Vector2(0.255f, 0.938f), new Vector2(0.365f, 0.974f), UIStyle.PanelDark);
             ui.parChip = parChip.gameObject;
             ui.parChipText = UIFactory.CreateText(parChip.transform, "ParChipText",
-                Vector2.zero, Vector2.one, 27, TextAnchor.MiddleCenter);
+                Vector2.zero, Vector2.one, UIStyle.FontSize.Small, TextAnchor.MiddleCenter);
 
             ui.counterText = UIFactory.CreateText(canvas.transform, "Counter",
-                new Vector2(0.38f, 0.925f), new Vector2(0.95f, 0.985f), 25, TextAnchor.MiddleRight);
+                new Vector2(0.38f, 0.925f), new Vector2(0.95f, 0.985f), UIStyle.FontSize.Small, TextAnchor.MiddleRight);
             ui.counterText.color = UIStyle.CreamDim;
 
             var hintChip = UIFactory.CreatePanel(canvas.transform, "HintChip",
                 new Vector2(0.06f, 0.865f), new Vector2(0.94f, 0.915f), UIStyle.PanelSoft);
             ui.hintChip = hintChip.gameObject;
             ui.hintText = UIFactory.CreateText(ui.hintChip.transform, "Hint",
-                new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), 30, TextAnchor.MiddleCenter);
+                new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             ui.hintText.color = UIStyle.Hint;
 
             ui.statusText = UIFactory.CreateText(canvas.transform, "Status",
-                new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), 76, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), UIStyle.FontSize.Hero, TextAnchor.MiddleCenter, shadow: true);
 
             // Star row (GDD scoring: 3 at par or better / 2 one over / 1 within limit) —
             // shown by GameUI on hole-out, dimmed stars stay as empty slots.
@@ -828,14 +827,14 @@ namespace PuttSeed.Unity
                 new Vector2(0.12f, 0.38f), new Vector2(0.88f, 0.62f), UIStyle.PanelDark);
             ui.failPanel = failPanel.gameObject;
             var failTitle = UIFactory.CreateText(failPanel.transform, "FailTitle",
-                new Vector2(0.05f, 0.6f), new Vector2(0.95f, 0.94f), 56, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.05f, 0.6f), new Vector2(0.95f, 0.94f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             failTitle.text = "Out of strokes!";
             var failSub = UIFactory.CreateText(failPanel.transform, "FailSubtitle",
-                new Vector2(0.05f, 0.42f), new Vector2(0.95f, 0.6f), 28, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.42f), new Vector2(0.95f, 0.6f), UIStyle.FontSize.Small, TextAnchor.MiddleCenter);
             failSub.text = "The limit is par + 3 — line up and go again.";
             failSub.color = UIStyle.CreamDim;
             ui.failRetryButton = ButtonOf(UIFactory.CreateButton(failPanel.transform, "Retry",
-                new Vector2(0.28f, 0.08f), new Vector2(0.72f, 0.36f), NoOp, 36, primary: true));
+                new Vector2(0.28f, 0.08f), new Vector2(0.72f, 0.36f), NoOp, UIStyle.FontSize.Strong, primary: true));
             ui.failPanel.SetActive(false);
 
             // The day's closing card. The ritual had no end: the result, the
@@ -847,22 +846,22 @@ namespace PuttSeed.Unity
                 new Vector2(0.10f, 0.31f), new Vector2(0.90f, 0.54f), UIStyle.PanelDark);
             ui.dailyCard = dailyCard.gameObject;
             ui.dailyCardResult = UIFactory.CreateText(dailyCard.transform, "Result",
-                new Vector2(0.05f, 0.66f), new Vector2(0.95f, 0.95f), 32, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.66f), new Vector2(0.95f, 0.95f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             ui.dailyCardStreak = UIFactory.CreateText(dailyCard.transform, "Streaks",
-                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.66f), 25, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.66f), UIStyle.FontSize.Small, TextAnchor.MiddleCenter);
             ui.dailyCardStreak.color = UIStyle.CreamDim;
             ui.dailyCardCountdown = UIFactory.CreateText(dailyCard.transform, "Countdown",
-                new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.46f), 24, TextAnchor.MiddleCenter);
+                new Vector2(0.05f, 0.28f), new Vector2(0.95f, 0.46f), UIStyle.FontSize.Caption, TextAnchor.MiddleCenter);
             ui.dailyCardCountdown.color = UIStyle.CreamDim;
             ui.dailyShareButton = ButtonOf(UIFactory.CreateButton(dailyCard.transform, "Share",
-                new Vector2(0.26f, 0.05f), new Vector2(0.74f, 0.26f), NoOp, 30, primary: true));
+                new Vector2(0.26f, 0.05f), new Vector2(0.74f, 0.26f), NoOp, UIStyle.FontSize.Body, primary: true));
             ui.dailyCard.SetActive(false);
 
             var toastChip = UIFactory.CreatePanel(canvas.transform, "ToastChip",
                 new Vector2(0.12f, 0.25f), new Vector2(0.88f, 0.3f), UIStyle.PanelDark);
             ui.toastChip = toastChip.gameObject;
             ui.toastText = UIFactory.CreateText(ui.toastChip.transform, "Toast",
-                new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), 32, TextAnchor.MiddleCenter);
+                new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), UIStyle.FontSize.Body, TextAnchor.MiddleCenter);
             ui.toastChip.SetActive(false);
 
             // Compact control bar: ONE row of six buttons — the old triple-row
@@ -871,17 +870,17 @@ namespace PuttSeed.Unity
                 new Vector2(0.01f, 0.008f), new Vector2(0.99f, 0.085f), UIStyle.PanelSoft);
 
             ui.menuButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Menu",
-                new Vector2(0.02f, 0.016f), new Vector2(0.17f, 0.077f), NoOp, 25));
+                new Vector2(0.02f, 0.016f), new Vector2(0.17f, 0.077f), NoOp, UIStyle.FontSize.Small));
             ui.retryButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Retry",
-                new Vector2(0.182f, 0.016f), new Vector2(0.332f, 0.077f), NoOp, 25));
+                new Vector2(0.182f, 0.016f), new Vector2(0.332f, 0.077f), NoOp, UIStyle.FontSize.Small));
             ui.shareButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Share",
-                new Vector2(0.344f, 0.016f), new Vector2(0.494f, 0.077f), NoOp, 25));
+                new Vector2(0.344f, 0.016f), new Vector2(0.494f, 0.077f), NoOp, UIStyle.FontSize.Small));
             ui.ghostButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Ghost",
-                new Vector2(0.506f, 0.016f), new Vector2(0.656f, 0.077f), NoOp, 25));
+                new Vector2(0.506f, 0.016f), new Vector2(0.656f, 0.077f), NoOp, UIStyle.FontSize.Small));
             ui.watchButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Watch",
-                new Vector2(0.668f, 0.016f), new Vector2(0.818f, 0.077f), NoOp, 25));
+                new Vector2(0.668f, 0.016f), new Vector2(0.818f, 0.077f), NoOp, UIStyle.FontSize.Small));
             ui.undoButton = ButtonOf(UIFactory.CreateButton(canvas.transform, "Undo",
-                new Vector2(0.83f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, 25));
+                new Vector2(0.83f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, UIStyle.FontSize.Small));
 
             // The paste field only exists while wanted: Watch opens this chip,
             // a second tap (or a successful import) closes it again.
@@ -898,7 +897,7 @@ namespace PuttSeed.Unity
             // on a tall hole it could land on the ball and eat the touch meant
             // to aim it. GameUI lays it out with the rest of the bar.
             var next = UIFactory.CreateButton(canvas.transform, "Next lesson",
-                new Vector2(0.60f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, 25, primary: true);
+                new Vector2(0.60f, 0.016f), new Vector2(0.98f, 0.077f), NoOp, UIStyle.FontSize.Small, primary: true);
             ui.nextLessonButton = ButtonOf(next);
         }
 
@@ -977,7 +976,7 @@ namespace PuttSeed.Unity
             clubRoot.localEulerAngles = new Vector3(0f, 0f, -42f); // baked wind-up: head behind the ball
 
             overlay.label = UIFactory.CreateText(cover, "Label",
-                new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f), 52, TextAnchor.MiddleCenter, shadow: true);
+                new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f), UIStyle.FontSize.Heading, TextAnchor.MiddleCenter, shadow: true);
             overlay.root = canvasGo;
             canvasGo.SetActive(false);
         }

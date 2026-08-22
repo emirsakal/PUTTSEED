@@ -266,8 +266,8 @@ namespace PuttSeed.Unity
 
         private static Color DifficultyColor(Difficulty difficulty) => difficulty switch
         {
-            Difficulty.Easy => new Color(0.45f, 0.85f, 0.45f),
-            Difficulty.Hard => new Color(0.95f, 0.36f, 0.3f),
+            Difficulty.Easy => PaletteMaterials.DifficultyEasy,
+            Difficulty.Hard => PaletteMaterials.DifficultyHard,
             _ => new Color(0.99f, 0.85f, 0.35f),
         };
 

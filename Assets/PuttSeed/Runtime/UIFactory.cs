@@ -34,6 +34,41 @@ namespace PuttSeed.Unity
 
         /// <summary>Hint/emphasis tint (soft yellow).</summary>
         public static readonly Color Hint = new Color(1f, 0.95f, 0.7f);
+
+        /// <summary>
+        /// The type scale. Nineteen distinct point sizes had accumulated across
+        /// the UI — 20, 21, 22, 24, 25, 26, 27, 28, 30, 32, 33 … — each picked
+        /// by eye for one label, none of them related. Eight named steps now;
+        /// a new label picks a ROLE and inherits the size, and two labels with
+        /// the same role can no longer drift a point apart without anyone
+        /// noticing.
+        /// </summary>
+        public static class FontSize
+        {
+            /// <summary>The wordmark, and nothing else.</summary>
+            public const int Display = 124;
+
+            /// <summary>One number the screen is about (the stroke count).</summary>
+            public const int Hero = 76;
+
+            /// <summary>Panel titles.</summary>
+            public const int Heading = 52;
+
+            /// <summary>The one primary action on a screen.</summary>
+            public const int Lead = 44;
+
+            /// <summary>Mode buttons and emphasised lines.</summary>
+            public const int Strong = 36;
+
+            /// <summary>Running text, row labels, standard buttons.</summary>
+            public const int Body = 30;
+
+            /// <summary>Secondary buttons, cell labels, options.</summary>
+            public const int Small = 26;
+
+            /// <summary>Chips, hints, footnotes.</summary>
+            public const int Caption = 22;
+        }
     }
 
     /// <summary>
@@ -311,7 +346,7 @@ namespace PuttSeed.Unity
         /// amber accent for the main action. Returns the label for relabeling.
         /// </summary>
         public static Text CreateButton(Transform parent, string label, Vector2 anchorMin, Vector2 anchorMax,
-            UnityEngine.Events.UnityAction onClick, int fontSize = 34, bool primary = false)
+            UnityEngine.Events.UnityAction onClick, int fontSize = UIStyle.FontSize.Strong, bool primary = false)
         {
             var rect = CreateRect(parent, $"Button{label}", anchorMin, anchorMax);
             var image = rect.gameObject.AddComponent<Image>();

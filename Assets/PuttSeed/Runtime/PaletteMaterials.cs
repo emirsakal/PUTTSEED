@@ -125,6 +125,33 @@ namespace PuttSeed.Unity
         /// <summary>Active flag cloth.</summary>
         public static Color FlagColor => ColorblindMode ? new Color(0.98f, 0.60f, 0.12f) : Flag;
 
+        /// <summary>
+        /// The two ends of the aim's power ramp. Green-to-red is the most
+        /// natural gauge there is and the single worst one for red-green
+        /// colour blindness — and it had escaped the mode entirely while the
+        /// sand, water and bumpers were being shifted for exactly that
+        /// player. In colorblind mode the ramp runs blue to orange instead,
+        /// which deutan and protan vision both keep apart.
+        /// </summary>
+        public static Color PowerLow => ColorblindMode
+            ? new Color(0.45f, 0.72f, 1f)
+            : new Color(0.55f, 0.9f, 0.55f);
+
+        /// <summary>The hot end of the power ramp (see <see cref="PowerLow"/>).</summary>
+        public static Color PowerHigh => ColorblindMode
+            ? new Color(1f, 0.58f, 0.18f)
+            : new Color(0.95f, 0.35f, 0.3f);
+
+        /// <summary>The Easy label's tint — the same red-green pair, same fix.</summary>
+        public static Color DifficultyEasy => ColorblindMode
+            ? new Color(0.5f, 0.75f, 1f)
+            : new Color(0.45f, 0.85f, 0.45f);
+
+        /// <summary>The Hard label's tint.</summary>
+        public static Color DifficultyHard => ColorblindMode
+            ? new Color(1f, 0.6f, 0.2f)
+            : new Color(0.95f, 0.36f, 0.3f);
+
         /// <summary>One-way gate bar (amber reads as a signal in both palettes).</summary>
         public static readonly Color Gate = new Color(0.99f, 0.80f, 0.38f);
 
