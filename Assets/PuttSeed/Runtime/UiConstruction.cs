@@ -98,7 +98,7 @@ namespace PuttSeed.Unity
             if (studioLogo != null)
             {
                 var mark = UIFactory.CreateRect(canvas.transform, "StudioMark",
-                    new Vector2(0.045f, 0.945f), new Vector2(0.29f, 0.99f));
+                    new Vector2(0.71f, 0.945f), new Vector2(0.955f, 0.99f));
                 var markImage = mark.gameObject.AddComponent<Image>();
                 markImage.sprite = studioLogo;
                 markImage.preserveAspect = true;
@@ -313,8 +313,8 @@ namespace PuttSeed.Unity
         /// It is deliberately built on the FELT colour rather than black. The
         /// Unity splash was switched off to stop a daily game spending two
         /// seconds of a two-minute session on somebody's logo, and the same
-        /// argument applies to ours: this one plays once per app run, is over
-        /// in well under two seconds, and a tap anywhere skips it.
+        /// argument applies to ours: this one plays once per app run, runs
+        /// about two and a third seconds, and a tap anywhere skips it.
         /// </summary>
         private static void BuildStudioSplash(Transform canvas, MenuBootstrap menu)
         {

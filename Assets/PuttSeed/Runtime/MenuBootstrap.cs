@@ -1276,9 +1276,9 @@ namespace PuttSeed.Unity
         /// </summary>
         private System.Collections.IEnumerator PlayStudioSplash(System.Action then)
         {
-            const float fadeIn = 0.7f;
-            const float hold = 0.5f;
-            const float lift = 0.45f;
+            const float fadeIn = 0.85f;
+            const float hold = 1.0f;
+            const float lift = 0.5f;
 
             var cover = splashCoverImage;
             var logo = splashLogo;
