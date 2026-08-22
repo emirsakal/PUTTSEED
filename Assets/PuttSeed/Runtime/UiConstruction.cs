@@ -211,6 +211,18 @@ namespace PuttSeed.Unity
             todayImage.preserveAspect = true; // the hole's own aspect, never stretched
             todayImage.raycastTarget = true;
             menu.todayThumb = todayImage;
+
+            // What the picture cannot say: the day's par and its rated
+            // difficulty, in one chip riding the card's corner. Both numbers
+            // exist the moment the thumbnail does, so the chip costs nothing.
+            var todayChip = UIFactory.CreatePanel(todayCard, "InfoChip",
+                new Vector2(0.58f, 0.02f), new Vector2(0.99f, 0.34f), UIStyle.PanelDark);
+            menu.todayInfoText = UIFactory.CreateText(todayChip.transform, "Info",
+                new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), 20, TextAnchor.MiddleCenter);
+            menu.todayInfoText.resizeTextForBestFit = true;
+            menu.todayInfoText.resizeTextMinSize = 14;
+            menu.todayInfoText.resizeTextMaxSize = 20;
+
             menu.todayThumbButton = todayCard.gameObject.AddComponent<Button>();
             menu.todayThumbButton.targetGraphic = todayImage;
             todayCard.gameObject.AddComponent<UiClickSound>();
@@ -256,6 +268,7 @@ namespace PuttSeed.Unity
             menu.journeyCellButtons = new Button[columns * rows];
             menu.journeyCellLabels = new Text[columns * rows];
             menu.journeyCellStars = new Image[columns * rows * 3];
+            menu.journeyCellThumbs = new Image[columns * rows];
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < columns; c++)
@@ -270,6 +283,19 @@ namespace PuttSeed.Unity
                     labelRect.anchorMax = new Vector2(1f, 1f);
                     menu.journeyCellLabels[cell] = cellLabel;
                     menu.journeyCellButtons[cell] = cellLabel.GetComponentInParent<Button>();
+
+                    // A finished level shows ITS OWN course behind the number
+                    // — the grid becomes a scrapbook of holes actually played.
+                    // Built dim and behind everything; the menu fills it.
+                    var thumbRect = UIFactory.CreateRect(menu.journeyCellButtons[cell].transform,
+                        "Thumb", new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.95f));
+                    thumbRect.SetAsFirstSibling(); // behind the label and stars
+                    var thumbImage = thumbRect.gameObject.AddComponent<Image>();
+                    thumbImage.preserveAspect = true;
+                    thumbImage.raycastTarget = false;
+                    thumbImage.color = new Color(1f, 1f, 1f, 0.55f);
+                    thumbImage.enabled = false;
+                    menu.journeyCellThumbs[cell] = thumbImage;
 
                     for (int s = 0; s < 3; s++)
                     {
@@ -479,6 +505,9 @@ namespace PuttSeed.Unity
             var rowLabel = UIFactory.CreateText(row, "Label",
                 new Vector2(0.02f, 0f), new Vector2(0.40f, 1f), 30, TextAnchor.MiddleLeft);
             rowLabel.text = label;
+            rowLabel.resizeTextForBestFit = true; // "Renk körü modu" outgrows "Colors"
+            rowLabel.resizeTextMinSize = 20;
+            rowLabel.resizeTextMaxSize = 30;
 
             toggle.optionALabel = UIFactory.CreateButton(row, optionA,
                 new Vector2(0.44f, 0.06f), new Vector2(0.70f, 0.94f), NoOp, 26);

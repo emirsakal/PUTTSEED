@@ -333,6 +333,14 @@ namespace PuttSeed.Unity
             var text = CreateText(rect, "Label", Vector2.zero, Vector2.one, fontSize, TextAnchor.MiddleCenter);
             text.text = label;
             text.color = primary ? UIStyle.AccentInk : UIStyle.Cream;
+
+            // Turkish runs longer than English on the SAME buttons, and a
+            // label that clips is a button nobody can read. Best-fit here is
+            // bounded — down to 16 at worst, the asked size at best — so it
+            // only ever acts when the translation would otherwise overflow.
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 16;
+            text.resizeTextMaxSize = fontSize;
             return text;
         }
 

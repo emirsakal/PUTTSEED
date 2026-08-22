@@ -212,6 +212,7 @@ namespace PuttSeed.Unity
             ["Bubbles"] = "Baloncuk",
             ["Racer"] = "Yarışçı",
             ["Domino"] = "Domino",
+            ["Par {0} · {1}"] = "Par {0} · {1}",
             ["Reminder"] = "Hatırlatıcı",
             ["Daily hole"] = "Günlük delik",
             ["One nudge when a new hole is ready."] = "Yeni delik hazır olduğunda tek bir dürtme.",

@@ -34,6 +34,16 @@ namespace PuttSeed.Unity
         public Button? tutorialButton;
         public Text? tutorialLabel;
         public Text? footerText;
+
+        /// <summary>"Par 3 · Hard" on the daily card (see UI-1).</summary>
+        public Text? todayInfoText;
+
+        /// <summary>Course pictures behind finished journey cells (see UI-2).</summary>
+        public Image[] journeyCellThumbs = new Image[0];
+
+        /// <summary>Rendered journey thumbnails, kept for the session.</summary>
+        private readonly System.Collections.Generic.Dictionary<int, Sprite> _journeyThumbs =
+            new System.Collections.Generic.Dictionary<int, Sprite>();
         public SegmentedToggle? soundToggle;
         public SegmentedToggle? hapticsToggle;
         public SegmentedToggle? aimToggle;
@@ -122,6 +132,9 @@ namespace PuttSeed.Unity
         // Calendar day cells: a finished day sits lit, a day still to come
         // is nearly invisible. Today takes the accent and needs no constant.
         private static readonly Color PlayedDayCell = new Color(0.10f, 0.22f, 0.13f, 0.95f);
+
+        /// <summary>A day whose FIRST finish made par — the calendar's green.</summary>
+        private static readonly Color ParredDayCell = new Color(0.15f, 0.38f, 0.21f, 0.95f);
         private static readonly Color FutureDayCell = new Color(0.03f, 0.06f, 0.04f, 0.55f);
 
         // Collection cell backgrounds carry the state: a locked cell sinks
@@ -197,6 +210,12 @@ namespace PuttSeed.Unity
             GameSession.PreparedSeed = seed;
             GameSession.PreparedVersion = version;
             GameSession.PreparedCourse = task.Result;
+
+            if (todayInfoText != null)
+            {
+                todayInfoText.text = string.Format(Loc.Tr("Par {0} · {1}"),
+                    task.Result.Course.Par, Loc.Tr(task.Result.Difficulty.ToString()));
+            }
 
             var texture = CourseThumbnail.Render(task.Result.Course);
             todayThumb.sprite = Sprite.Create(texture,
@@ -979,6 +998,32 @@ namespace PuttSeed.Unity
             }
         }
 
+        /// <summary>
+        /// The little picture of a finished level's course, rendered once per
+        /// session and kept. Ninety-six pixels is plenty behind a number, and
+        /// the courses read instantly from the shipped pack — this whole
+        /// feature is only affordable because nothing here has to be SOLVED.
+        /// </summary>
+        private Sprite? JourneyThumb(int level)
+        {
+            if (_journeyThumbs.TryGetValue(level, out var cached))
+            {
+                return cached;
+            }
+
+            if (!BakedCourses.TryGet(BakedCourses.Pack.Journey,
+                JourneyConfig.Seeds[level], ModeController.JourneyVersion, out var baked))
+            {
+                return null; // no pack, no picture — the number still works
+            }
+
+            var texture = CourseThumbnail.Render(baked.Course, 96);
+            var sprite = Sprite.Create(texture,
+                new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            _journeyThumbs[level] = sprite;
+            return sprite;
+        }
+
         private void RefreshJourney()
         {
             var stars = _stats.Data.journeyStars;
@@ -995,6 +1040,16 @@ namespace PuttSeed.Unity
 
                 bool isUnlocked = level < unlocked;
                 int earned = level < stars.Count ? stars[level] : 0;
+                if (i < journeyCellThumbs.Length && journeyCellThumbs[i] != null)
+                {
+                    var thumb = earned > 0 ? JourneyThumb(level) : null;
+                    journeyCellThumbs[i].enabled = thumb != null;
+                    if (thumb != null)
+                    {
+                        journeyCellThumbs[i].sprite = thumb;
+                    }
+                }
+
                 if (journeyCellLabels[i] != null)
                 {
                     journeyCellLabels[i].text = (level + 1).ToString();
@@ -1152,9 +1207,12 @@ namespace PuttSeed.Unity
                 {
                     archiveCellButtons[i].interactable = playable;
 
-                    // Today shouts, a finished day sits lit, an unplayed one
-                    // waits at the normal tone, and the future is nearly gone.
+                    // Today shouts, a PARRED day sits green, a finished-but-
+                    // over-par day sits lit, an unplayed one waits at the
+                    // normal tone, and the future is nearly gone — the month
+                    // becomes a performance map at a glance.
                     archiveCellButtons[i].image.color = isToday ? UIStyle.Accent
+                        : played && record!.firstStars >= 3 ? ParredDayCell
                         : played ? PlayedDayCell
                         : playable ? UIStyle.PanelDark
                         : FutureDayCell;
