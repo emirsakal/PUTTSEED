@@ -388,6 +388,14 @@ namespace PuttSeed.Unity.Editor
         /// </summary>
         public static void BuildWebGL()
         {
+            // Switching the active target to WebGL makes the editor rewrite
+            // AndroidMinSdkVersion — to 25, where an Android build rewrites it
+            // to 23 (see the commit that let the file hold Unity's number).
+            // Neither value can stay clean while both builds exist, so this
+            // build puts back whatever it found: one setting, one writer, and
+            // a working tree that a WebGL build no longer dirties.
+            var androidMinSdk = PlayerSettings.Android.minSdkVersion;
+
             EnsureFeelConfig();
             EnsureAppIcon();
             ConfigureSplash();
@@ -434,6 +442,10 @@ namespace PuttSeed.Unity.Editor
             var report = BuildPipeline.BuildPlayer(options);
             Debug.Log($"PuttSeed: WebGL build {report.summary.result}, " +
                 $"{report.summary.totalSize} bytes, {report.summary.totalErrors} errors -> {output}");
+
+            PlayerSettings.Android.minSdkVersion = androidMinSdk;
+            AssetDatabase.SaveAssets();
+
             EditorApplication.Exit(report.summary.result == BuildResult.Succeeded ? 0 : 1);
         }
 
