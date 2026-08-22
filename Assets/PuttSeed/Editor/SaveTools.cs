@@ -94,6 +94,59 @@ namespace PuttSeed.Unity.Editor
         }
 
         /// <summary>
+        /// Fills the campaign with random finishes — every journey level done
+        /// at one to three stars — so grid features (the etched thumbnails,
+        /// the star rows) can be SEEN without playing a hundred holes. Writes
+        /// a timestamped backup first, exactly like Reset: the file being
+        /// overwritten may hold a real campaign.
+        /// </summary>
+        [MenuItem("PuttSeed/Test Journey (random stars)", priority = 202)]
+        public static void FillJourneyWithRandomStars()
+        {
+            if (RefuseWhilePlaying())
+            {
+                return;
+            }
+
+            string path = MenuBootstrap.StatsPath();
+            string dir = Path.GetDirectoryName(path)!;
+            Directory.CreateDirectory(dir);
+
+            SaveData data;
+            if (File.Exists(path))
+            {
+                string backup = Path.Combine(dir,
+                    BackupPrefix + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json");
+                File.Copy(path, backup, overwrite: true);
+                data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path)) ?? new SaveData();
+                Debug.Log($"PuttSeed: backed up the save to {backup}");
+            }
+            else
+            {
+                data = new SaveData();
+            }
+
+            // A fresh save would otherwise walk straight into the setup screen
+            // and Tutorial 1 — this tool wants the MENU, with a full grid.
+            data.setupSeen = true;
+            data.tutorialSeen = true;
+
+            var rng = new System.Random();
+            data.journeyStars.Clear();
+            int total = 0;
+            for (int i = 0; i < JourneyConfig.Seeds.Length; i++)
+            {
+                int stars = 1 + rng.Next(3);
+                data.journeyStars.Add(stars);
+                total += stars;
+            }
+
+            File.WriteAllText(path, JsonUtility.ToJson(data));
+            Debug.Log($"PuttSeed: journey filled — {JourneyConfig.Seeds.Length} levels, "
+                + $"{total} stars. Enter Play and open Journey. Restore Last Save Backup undoes this.");
+        }
+
+        /// <summary>
         /// A running game rewrites the save when it stops, so anything done to
         /// the file during Play mode is undone the moment the player quits.
         /// </summary>

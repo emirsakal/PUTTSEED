@@ -1017,7 +1017,7 @@ namespace PuttSeed.Unity
                 return null; // no pack, no picture — the number still works
             }
 
-            var texture = CourseThumbnail.Render(baked.Course, 96);
+            var texture = CourseThumbnail.RenderEtch(baked.Course, 96);
             var sprite = Sprite.Create(texture,
                 new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             _journeyThumbs[level] = sprite;
@@ -1047,6 +1047,9 @@ namespace PuttSeed.Unity
                     if (thumb != null)
                     {
                         journeyCellThumbs[i].sprite = thumb;
+                        // Watermark weight, set here rather than baked, so the
+                        // tuning never waits on a scene rebuild.
+                        journeyCellThumbs[i].color = new Color(1f, 1f, 1f, 0.34f);
                     }
                 }
 

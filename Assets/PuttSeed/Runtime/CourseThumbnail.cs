@@ -141,6 +141,102 @@ namespace PuttSeed.Unity
             return texture;
         }
 
+        /// <summary>
+        /// The course as an ETCHING: transparent ground, cream walls, a dot
+        /// for the cup — a watermark, not a picture.
+        ///
+        /// The journey grid tried the full-colour render first and it looked
+        /// exactly as wrong as it sounds: bright felt-green cards scattered
+        /// among dark cells, each thumbnail shouting its own palette inside a
+        /// panel that whispers. A cell's picture has to speak the CELL's
+        /// language — one ink, no ground — so the level number and stars stay
+        /// the loudest things in it.
+        /// </summary>
+        public static Texture2D RenderEtch(CourseData course, int longSide = 96)
+        {
+            longSide = Mathf.Clamp(longSide, 32, 512);
+
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            foreach (var wall in course.Walls)
+            {
+                var a = FixView.ToVector2(wall.A);
+                var b = FixView.ToVector2(wall.B);
+                min = Vector2.Min(min, Vector2.Min(a, b));
+                max = Vector2.Max(max, Vector2.Max(a, b));
+            }
+
+            if (course.Walls.Length == 0)
+            {
+                min = Vector2.zero;
+                max = Vector2.one;
+            }
+
+            var pad = new Vector2(0.45f, 0.45f);
+            min -= pad;
+            max += pad;
+            var span = Vector2.Max(max - min, new Vector2(0.01f, 0.01f));
+
+            int width, height;
+            if (span.x >= span.y)
+            {
+                width = longSide;
+                height = Mathf.Clamp(Mathf.RoundToInt(longSide * span.y / span.x), 16, longSide);
+            }
+            else
+            {
+                height = longSide;
+                width = Mathf.Clamp(Mathf.RoundToInt(longSide * span.x / span.y), 16, longSide);
+            }
+
+            float unitsPerPixel = span.x / width;
+            float wallHalf = Mathf.Max(unitsPerPixel * 1.2f, 0.08f);
+            var hole = FixView.ToVector2(course.HolePosition);
+            float holeRadius = Mathf.Max(0.24f, unitsPerPixel * 2.5f);
+
+            var ink = new Color32(247, 245, 230, 255);
+            var faint = new Color32(247, 245, 230, 110);
+            var clear = new Color32(0, 0, 0, 0);
+
+            var pixels = new Color32[width * height];
+            for (int y = 0; y < height; y++)
+            {
+                float wy = min.y + (y + 0.5f) * span.y / height;
+                for (int x = 0; x < width; x++)
+                {
+                    var p = new Vector2(min.x + (x + 0.5f) * span.x / width, wy);
+                    Color32 c;
+                    if (WithinWall(p, course.Walls, wallHalf))
+                    {
+                        c = ink;
+                    }
+                    else if ((p - hole).sqrMagnitude <= holeRadius * holeRadius)
+                    {
+                        c = ink;
+                    }
+                    else if (WithinDisc(p, course.Bumpers) || WithinPortal(p, course.Portals))
+                    {
+                        c = faint; // hazards are texture in an etching, not colour
+                    }
+                    else
+                    {
+                        c = clear;
+                    }
+
+                    pixels[y * width + x] = c;
+                }
+            }
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return texture;
+        }
+
         private static bool WithinWall(Vector2 p, WallSegment[] walls, float halfWidth)
         {
             float halfSq = halfWidth * halfWidth;

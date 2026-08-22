@@ -293,7 +293,7 @@ namespace PuttSeed.Unity
                     var thumbImage = thumbRect.gameObject.AddComponent<Image>();
                     thumbImage.preserveAspect = true;
                     thumbImage.raycastTarget = false;
-                    thumbImage.color = new Color(1f, 1f, 1f, 0.55f);
+                    thumbImage.color = new Color(1f, 1f, 1f, 0.34f); // a watermark, behind the number
                     thumbImage.enabled = false;
                     menu.journeyCellThumbs[cell] = thumbImage;
 
