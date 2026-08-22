@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>PuttSeed — one mini-golf hole per day</title>
+<meta name="description" content="A daily-seed, bit-deterministic 2D mini-golf game. One hole a day, grown from the date, identical on every device.">
+<style>
+  /* The game is a portrait phone game and this page does not pretend
+     otherwise: the canvas keeps the handset's 1170x2532 aspect and the page
+     is the shelf it sits on. A mouse drag reaches the quantizer as the same
+     two integers a finger does, so the demo is the game, not a port. */
+  :root {
+    --ink: #0a0d12;
+    --panel: #10161d;
+    --grass: #2f6b3a;
+    --cream: #f7f5e6;
+    --accent: #f2c14e;
+    --chrome: 46px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--ink);
+    color: var(--cream);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* A faint pair of circles, the same trick the game's rough uses, so the
+     page around the canvas is not a flat void. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(38vmax 38vmax at 12% 8%, rgba(47, 107, 58, .22), transparent 70%),
+      radial-gradient(30vmax 30vmax at 88% 92%, rgba(47, 107, 58, .16), transparent 70%);
+    pointer-events: none;
+  }
+
+  #shell {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 12px 12px calc(var(--chrome) + 4px);
+  }
+
+  /* Width is driven by the height left over after the footer, so the frame
+     is always whole: never cropped, never letterboxed by the browser. */
+  #frame {
+    position: relative;
+    width: min(100%, calc((100dvh - var(--chrome) - 28px) * 1170 / 2532));
+    aspect-ratio: 1170 / 2532;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .65), 0 0 0 1px rgba(247, 245, 230, .08);
+  }
+
+  #unity-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    /* Without this a drag scrolls the page instead of aiming a putt. */
+    touch-action: none;
+  }
+
+  #loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--ink);
+    transition: opacity .4s ease;
+  }
+
+  #loading.done { opacity: 0; pointer-events: none; }
+
+  #loading .mark {
+    font-size: clamp(16px, 4.5vmin, 26px);
+    font-weight: 600;
+    letter-spacing: .28em;
+    text-indent: .28em;
+    color: var(--cream);
+  }
+
+  #bar {
+    width: min(62%, 220px);
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(247, 245, 230, .14);
+    overflow: hidden;
+  }
+
+  #bar > i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width .2s ease;
+  }
+
+  #loading .note {
+    font-size: 12px;
+    color: rgba(247, 245, 230, .45);
+  }
+
+  footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--chrome);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 18px;
+    flex-wrap: wrap;
+    padding: 0 14px;
+    font-size: 12.5px;
+    color: rgba(247, 245, 230, .5);
+    background: linear-gradient(transparent, rgba(10, 13, 18, .9) 40%);
+  }
+
+  footer a { color: rgba(247, 245, 230, .78); text-decoration: none; border-bottom: 1px solid rgba(247, 245, 230, .22); }
+  footer a:hover { color: var(--cream); border-bottom-color: var(--accent); }
+  footer .sep { opacity: .35; }
+
+  /* Unity's own warning banner, restyled so a WebGL complaint does not
+     arrive looking like a different website. */
+  #warnings {
+    position: fixed;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    max-width: min(92vw, 560px);
+    z-index: 10;
+  }
+
+  #warnings > div {
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    background: rgba(16, 22, 29, .96);
+    border: 1px solid rgba(247, 245, 230, .16);
+    color: var(--cream);
+  }
+</style>
+</head>
+<body>
+  <div id="shell">
+    <div id="frame">
+      <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
+      <div id="loading">
+        <div class="mark">PUTTSEED</div>
+        <div id="bar"><i></i></div>
+        <div class="note">growing today's hole</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="warnings"></div>
+
+  <footer>
+    <span>Drag to aim, release to putt.</span>
+    <span class="sep">·</span>
+    <span>Progress is saved in this browser only.</span>
+    <span class="sep">·</span>
+    <a href="https://github.com/emirsakal/PUTTSEED" target="_blank" rel="noopener">Source on GitHub</a>
+  </footer>
+
+  <script>
+    var canvas = document.querySelector("#unity-canvas");
+    var loading = document.querySelector("#loading");
+    var barFill = document.querySelector("#bar > i");
+
+    function unityShowBanner(msg, type) {
+      var host = document.querySelector("#warnings");
+      var line = document.createElement("div");
+      line.textContent = msg;
+      if (type === "error") { line.style.borderColor = "rgba(226, 92, 76, .7)"; }
+      host.appendChild(line);
+      if (type !== "error") {
+        setTimeout(function () { line.remove(); }, 6000);
+      }
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/webgl.loader.js";
+    var config = {
+      arguments: [],
+      dataUrl: buildUrl + "/webgl.data.unityweb",
+      frameworkUrl: buildUrl + "/webgl.framework.js.unityweb",
+      codeUrl: buildUrl + "/webgl.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "PuttSeed",
+      productName: "PuttSeed",
+      productVersion: "1.0",
+      showBanner: unityShowBanner,
+    };
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (progress) {
+        barFill.style.width = (progress * 100) + "%";
+      }).then(function () {
+        loading.classList.add("done");
+        // The canvas has to hold focus or keyboard-driven browsers park the
+        // caret in the page and the game never sees a key.
+        canvas.focus();
+      }).catch(function (message) {
+        unityShowBanner(message, "error");
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
