@@ -137,6 +137,22 @@
   footer a:hover { color: var(--cream); border-bottom-color: var(--accent); }
   footer .sep { opacity: .35; }
 
+  /* The window's height decides the frame's width, so on a laptop the game
+     sits in about 400 CSS pixels however wide the monitor is. Fullscreen is
+     the only control the page can offer that actually makes it bigger. */
+  #fullscreen {
+    font: inherit;
+    color: rgba(247, 245, 230, .78);
+    background: transparent;
+    border: 1px solid rgba(247, 245, 230, .22);
+    border-radius: 999px;
+    padding: 2px 10px;
+    cursor: pointer;
+  }
+
+  #fullscreen:hover { color: var(--cream); border-color: var(--accent); }
+  #fullscreen[hidden] { display: none; }
+
   /* Unity's own warning banner, restyled so a WebGL complaint does not
      arrive looking like a different website. */
   #warnings {
@@ -176,6 +192,8 @@
   <footer>
     <span>Drag to aim, release to putt.</span>
     <span class="sep">·</span>
+    <button id="fullscreen" type="button" hidden>Fullscreen</button>
+    <span class="sep" id="fullscreen-sep" hidden>·</span>
     <span>Progress is saved in this browser only.</span>
     <span class="sep">·</span>
     <a href="https://github.com/emirsakal/PUTTSEED" target="_blank" rel="noopener">Source on GitHub</a>
@@ -236,11 +254,25 @@
     script.onload = function () {
       createUnityInstance(canvas, config, function (progress) {
         barFill.style.width = (progress * 100) + "%";
-      }).then(function () {
+      }).then(function (instance) {
         loading.classList.add("done");
         // The canvas has to hold focus or keyboard-driven browsers park the
         // caret in the page and the game never sees a key.
         canvas.focus();
+
+        // Offered only once the game exists to be made fullscreen, and only
+        // where the browser will allow it — a button that answers with an
+        // error is worse than no button.
+        var full = document.querySelector("#fullscreen");
+        if (document.fullscreenEnabled && instance.SetFullscreen) {
+          full.hidden = false;
+          document.querySelector("#fullscreen-sep").hidden = false;
+          full.addEventListener("click", function () {
+            instance.SetFullscreen(1);
+            // Focus follows the game, or the first drag goes to the button.
+            canvas.focus();
+          });
+        }
       }).catch(function (message) {
         unityShowBanner(message, "error");
       });
