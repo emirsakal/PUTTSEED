@@ -3,6 +3,19 @@ using UnityEngine;
 
 namespace PuttSeed.Unity
 {
+    /// <summary>A pattern worn over the base colour (sphere shading covers both).</summary>
+    public enum BallPattern
+    {
+        /// <summary>Plain colour.</summary>
+        None,
+
+        /// <summary>One band across the equator.</summary>
+        Stripe,
+
+        /// <summary>A quincunx of dots.</summary>
+        Dots,
+    }
+
     /// <summary>One cosmetic ball color, gated by a local achievement.</summary>
     public sealed class BallSkinDef
     {
@@ -24,8 +37,15 @@ namespace PuttSeed.Unity
         /// <summary>Total journey stars required (0 = none).</summary>
         public readonly int RequiredJourneyStars;
 
+        /// <summary>The pattern worn over the base colour.</summary>
+        public readonly BallPattern Pattern;
+
+        /// <summary>The pattern's own colour (unused for None).</summary>
+        public readonly Color PatternColor;
+
         public BallSkinDef(string id, string name, Color color, string? requiredAchievement,
-            int requiredJourneyLevel = 0, int requiredJourneyStars = 0)
+            int requiredJourneyLevel = 0, int requiredJourneyStars = 0,
+            BallPattern pattern = BallPattern.None, Color patternColor = default)
         {
             Id = id;
             Name = name;
@@ -33,6 +53,8 @@ namespace PuttSeed.Unity
             RequiredAchievement = requiredAchievement;
             RequiredJourneyLevel = requiredJourneyLevel;
             RequiredJourneyStars = requiredJourneyStars;
+            Pattern = pattern;
+            PatternColor = patternColor;
         }
     }
 
@@ -60,6 +82,14 @@ namespace PuttSeed.Unity
             // gate moved to half the campaign to stay a real milestone.
             new BallSkinDef("ember", "Ember", new Color(0.94f, 0.42f, 0.22f), null, requiredJourneyStars: 150),
             new BallSkinDef("gold", "Gold", new Color(1f, 0.85f, 0.22f), null, requiredJourneyLevel: 50),
+
+            // The 2026-08 pair opened a second axis: PATTERN. Their gates
+            // reuse achievements that until now rewarded only a jingle —
+            // Perfectionist earns the racing stripe, Millwright the dots.
+            new BallSkinDef("racer", "Racer", new Color(0.97f, 0.97f, 0.95f), "three_star_10",
+                pattern: BallPattern.Stripe, patternColor: new Color(0.86f, 0.24f, 0.19f)),
+            new BallSkinDef("domino", "Domino", new Color(0.97f, 0.97f, 0.95f), "millwright",
+                pattern: BallPattern.Dots, patternColor: new Color(0.16f, 0.15f, 0.18f)),
         };
 
         /// <summary>The skin for an id (unknown ids fall back to the default).</summary>

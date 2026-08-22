@@ -55,6 +55,14 @@ namespace PuttSeed.Unity
         private static readonly Color LowPower = new Color(0.55f, 0.9f, 0.55f);
         private static readonly Color HighPower = new Color(0.95f, 0.35f, 0.3f);
 
+        /// <summary>
+        /// The aim inside the cancel zone. Releasing a drag shorter than
+        /// minDragLength fires nothing, and nothing used to SAY so — the line
+        /// stayed green and eager right up to the release that ignored it.
+        /// Grey is the universal color of "this will not happen".
+        /// </summary>
+        private static readonly Color CancelTint = new Color(0.72f, 0.74f, 0.72f, 0.42f);
+
         /// <summary>Wires dependencies (called by the bootstrap).</summary>
         public void Initialize(SimRunner runner, Camera cam)
         {
@@ -261,7 +269,10 @@ namespace PuttSeed.Unity
             var ball = _runner.BallRenderPosition;
             var dir = _aim.sqrMagnitude > 0.0001f ? _aim.normalized : Vector2.right;
             float length = 0.4f + power * 1.8f;
-            var color = Color.Lerp(LowPower, HighPower, power);
+            float minDrag = feel != null ? feel.minDragLength : 0.15f;
+            var color = _aim.magnitude < minDrag
+                ? CancelTint
+                : Color.Lerp(LowPower, HighPower, power);
             var tip = ball + dir * length;
 
             // Dashed shaft: evenly spaced dots from the ball to just short of

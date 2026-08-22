@@ -69,8 +69,8 @@ namespace PuttSeed.Unity
             var ballGo = new GameObject("Ball");
             var ballView = ballGo.AddComponent<BallView>();
             ballView.Initialize(runner,
-                BallSkins.Resolve(stats.Data.ballSkin).Color,
-                BallTrails.Resolve(stats.Data.ballTrail).Color);
+                BallSkins.Resolve(stats.Data.ballSkin),
+                BallTrails.Resolve(stats.Data.ballTrail));
 
             // One scorecard per session: the feedback watcher writes it as it
             // turns events into sound, the share text reads it.

@@ -85,5 +85,21 @@ namespace PuttSeed.Unity.Tests
             data.journeyStars.Add(3); // 150 stars total
             Assert.That(BallSkins.IsUnlocked(ember, data), Is.True);
         }
+
+        [Test]
+        public void ThePatternedSkins_CarryTheirPatterns()
+        {
+            var racer = BallSkins.Resolve("racer");
+            Assert.That(racer.Pattern, Is.EqualTo(BallPattern.Stripe));
+            Assert.That(racer.PatternColor.a, Is.GreaterThan(0f), "an invisible stripe sells nothing");
+
+            var domino = BallSkins.Resolve("domino");
+            Assert.That(domino.Pattern, Is.EqualTo(BallPattern.Dots));
+
+            // Both are gated on achievements that used to reward only a
+            // jingle; a typo here would make them unreachable forever.
+            Assert.That(Achievements.Find(racer.RequiredAchievement!), Is.Not.Null);
+            Assert.That(Achievements.Find(domino.RequiredAchievement!), Is.Not.Null);
+        }
     }
 }

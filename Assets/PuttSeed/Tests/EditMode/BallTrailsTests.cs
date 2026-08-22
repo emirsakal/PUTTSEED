@@ -64,6 +64,16 @@ namespace PuttSeed.Unity.Tests
         }
 
         [Test]
+        public void TheShapedTrails_CarryTheirStyles()
+        {
+            // Colour was the only axis until 2026-08; a styled trail that
+            // resolved to Ribbon would be a name selling nothing.
+            Assert.That(BallTrails.Resolve("plain").Style, Is.EqualTo(TrailStyle.Ribbon));
+            Assert.That(BallTrails.Resolve("comet").Style, Is.EqualTo(TrailStyle.Comet));
+            Assert.That(BallTrails.Resolve("bubbles").Style, Is.EqualTo(TrailStyle.Bubbles));
+        }
+
+        [Test]
         public void StarGates_StayWithinTheCampaignTotal()
         {
             // 100 levels x 3 stars: a gate above 300 could never be reached.

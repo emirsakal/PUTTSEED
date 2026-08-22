@@ -333,6 +333,16 @@ namespace PuttSeed.Unity
             }
 
             _swingRoutine = StartCoroutine(PutterSwing());
+
+            // The heel mark: a quick ring where the stroke BEGAN. The ball
+            // leaves immediately; this pins the origin for one readable beat,
+            // which is what makes a bank shot's geometry legible afterwards.
+            if (_runner.Sim != null)
+            {
+                StartCoroutine(CelebrationRing(FixView.ToVector2(_runner.Sim.Ball.Position),
+                    start: 0.11f, growth: 0.26f, duration: 0.3f, width: 0.03f,
+                    tint: new Color(0.97f, 0.96f, 0.90f)));
+            }
         }
 
         /// <summary>The putter face slides into the contact point, then fades.</summary>

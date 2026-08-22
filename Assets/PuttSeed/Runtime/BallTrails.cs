@@ -3,6 +3,19 @@ using UnityEngine;
 
 namespace PuttSeed.Unity
 {
+    /// <summary>How a trail is drawn — colour was the only axis until 2026-08.</summary>
+    public enum TrailStyle
+    {
+        /// <summary>The classic ribbon (a TrailRenderer).</summary>
+        Ribbon,
+
+        /// <summary>Short, wide and bright at the head: a shooting star.</summary>
+        Comet,
+
+        /// <summary>No ribbon at all — small circles shed along the path.</summary>
+        Bubbles,
+    }
+
     /// <summary>One cosmetic ball trail, gated like the skins (no IAP — GDD).</summary>
     public sealed class BallTrailDef
     {
@@ -21,14 +34,18 @@ namespace PuttSeed.Unity
         /// <summary>Total journey stars required (0 = none).</summary>
         public readonly int RequiredJourneyStars;
 
+        /// <summary>How the trail is drawn (colour is the other axis).</summary>
+        public readonly TrailStyle Style;
+
         public BallTrailDef(string id, string name, Color color, string? requiredAchievement,
-            int requiredJourneyStars = 0)
+            int requiredJourneyStars = 0, TrailStyle style = TrailStyle.Ribbon)
         {
             Id = id;
             Name = name;
             Color = color;
             RequiredAchievement = requiredAchievement;
             RequiredJourneyStars = requiredJourneyStars;
+            Style = style;
         }
     }
 
@@ -52,6 +69,15 @@ namespace PuttSeed.Unity
                 requiredJourneyStars: 200),
             new BallTrailDef("prism", "Prism", new Color(0.82f, 0.68f, 1f, 0.7f), null,
                 requiredJourneyStars: 300),
+
+            // The 2026-08 pair opened a second axis: SHAPE. Colour variants
+            // ask "which tint"; these ask "which kind of thing follows the
+            // ball" — and their gates reuse achievements that until now
+            // rewarded nothing but a jingle.
+            new BallTrailDef("comet", "Comet", new Color(1f, 0.93f, 0.75f, 0.75f), "last_stroke",
+                style: TrailStyle.Comet),
+            new BallTrailDef("bubbles", "Bubbles", new Color(0.85f, 0.95f, 1f, 0.6f), "archive1",
+                style: TrailStyle.Bubbles),
         };
 
         /// <summary>The trail for an id (unknown ids fall back to the default).</summary>
