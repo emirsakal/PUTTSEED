@@ -61,6 +61,9 @@ namespace PuttSeed.Unity
             // One store instance serves gameplay stats and the settings toggles.
             var stats = new StatsStore(MenuBootstrap.StatsPath());
             UiSounds.Enabled = stats.Data.soundEnabled;
+            // The renderer builds wind streaks per course, so it asks live
+            // rather than copying a value that Settings may change later.
+            courseRenderer.reducedMotion = () => stats.Data.reducedMotion;
             PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
 
             var ballGo = new GameObject("Ball");

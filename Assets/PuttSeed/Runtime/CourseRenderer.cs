@@ -19,6 +19,9 @@ namespace PuttSeed.Unity
         [Tooltip("Windmill views mirror this sim's blade phase.")]
         public SimRunner? runner;
 
+        /// <summary>Whether the player asked for reduced motion (wired by the bootstrap).</summary>
+        public System.Func<bool>? reducedMotion;
+
         private Coroutine? _intro;
 
         /// <summary>
@@ -192,8 +195,40 @@ namespace PuttSeed.Unity
 
             BuildElementWave(course);
             BuildWindVane(course, min, max);
+            BuildWindStreaks(min, max, seed);
 
             _intro = StartCoroutine(IntroReveal());
+        }
+
+        /// <summary>
+        /// Dresses a windy day in drifting streaks — the wind made visible
+        /// where the player is actually looking, not only in the vane's
+        /// corner. Skipped under reduced motion: continuous ambient drift is
+        /// the exact thing that setting removes, and the vane keeps the
+        /// information.
+        /// </summary>
+        private void BuildWindStreaks(Vector2 min, Vector2 max, ulong seed)
+        {
+            if (runner == null)
+            {
+                return;
+            }
+
+            var wind = FixView.ToVector2(runner.PlayConfig.Wind);
+            if (wind.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            bool reduced = reducedMotion != null && reducedMotion();
+            if (!MotionSettings.Allows(MotionEffect.WindStreaks, reduced))
+            {
+                return;
+            }
+
+            var go = new GameObject("WindStreaks");
+            go.transform.SetParent(transform, false);
+            go.AddComponent<WindStreaks>().Build(wind, min, max, seed);
         }
 
         /// <summary>

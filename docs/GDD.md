@@ -89,7 +89,9 @@ pushes, one barb per step of strength — and the top bar gives the same
 wind as a number in the player's own unit ("Windy day 21 km/s", 13 mph
 in English). A day blows at one of three strengths, far enough apart to
 tell at a glance; a continuum would be a precision the game does not
-have.
+have. A few faint streaks also drift across the grass with it — the wind
+made visible where the player is actually aiming — unless reduced motion
+is on, in which case the vane carries the fact alone.
 
 The wind bends a roll but never drives one. Rolling friction here is
 proportional to speed, so it produces no force at all on a ball at rest

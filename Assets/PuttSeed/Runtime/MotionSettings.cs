@@ -33,6 +33,9 @@ namespace PuttSeed.Unity
 
         /// <summary>The near-miss camera tighten.</summary>
         CameraPush = 128,
+
+        /// <summary>Wind streaks drifting across the grass on a windy day.</summary>
+        WindStreaks = 256,
     }
 
     /// <summary>
@@ -42,7 +45,9 @@ namespace PuttSeed.Unity
     /// reduced motion, while shake, slow-motion, letterbox and confetti only
     /// ever said "well done" and can say it without moving the screen. The
     /// near miss says it with a sound and a ring under reduced motion, and
-    /// keeps its camera tighten to itself.
+    /// keeps its camera tighten to itself. Wind streaks go too — continuous
+    /// ambient drift is exactly what the setting removes — and lose nothing:
+    /// the vane and the top bar keep carrying the wind.
     ///
     /// It lives here rather than as four ifs in the feedback controller so the
     /// promise can be tested: exactly these four, and nothing else.
@@ -52,7 +57,7 @@ namespace PuttSeed.Unity
         /// <summary>The effects a reduced-motion player does not get.</summary>
         public const MotionEffect Calming =
             MotionEffect.Shake | MotionEffect.SlowMo | MotionEffect.Letterbox
-            | MotionEffect.Confetti | MotionEffect.CameraPush;
+            | MotionEffect.Confetti | MotionEffect.CameraPush | MotionEffect.WindStreaks;
 
         /// <summary>Whether an effect may play under the current setting.</summary>
         public static bool Allows(MotionEffect effect, bool reducedMotion)
