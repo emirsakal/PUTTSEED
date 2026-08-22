@@ -197,6 +197,26 @@
       }
     }
 
+    // The canvas is a phone-shaped box, and on a laptop the window's HEIGHT
+    // decides how wide that box can be — about 400 CSS pixels at 1080p. The
+    // interface was drawn for a 1170 px handset, so one game pixel per CSS
+    // pixel throws away two thirds of the detail the art already has, and
+    // type is the first casualty. Unity sizes its drawing buffer as the
+    // canvas box times devicePixelRatio, so that is the number to answer
+    // with: enough to reach the handset's pixel count, never below what the
+    // display actually has, and capped so a tall monitor cannot ask for a
+    // buffer nobody benefits from.
+    var NATIVE_WIDTH = 1170;
+    var MAX_SCALE = 3;
+    var displayRatio = window.devicePixelRatio || 1;
+    Object.defineProperty(window, "devicePixelRatio", {
+      configurable: true,
+      get: function () {
+        var css = canvas.clientWidth || NATIVE_WIDTH;
+        return Math.min(MAX_SCALE, Math.max(displayRatio, NATIVE_WIDTH / css));
+      },
+    });
+
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
     var config = {

@@ -1,27 +1,22 @@
 """Serves the WebGL build with a capture harness, for README screenshots.
 
-    python tools/webshot.py [--port 8123] [--dpr 3.2]
+    python tools/webshot.py [--port 8123]
 
 Then drive the game in a browser and, from the console, run:
 
     puttseedShot('menu')      ->  docs/media/shot-menu.png
 
 Why this exists: the README's screenshots have to be sharp, and the game is
-a 1170x2532 portrait phone game. A browser window that small is not a window
+a 1170x2532 portrait phone game. A browser window that shape is not a window
 anyone has, and a browser screenshot is only ever as big as the surface it
 paints. So the picture does not come from the window at all — it comes from
-the canvas.
+the canvas, which the shipped template already renders at the handset's full
+pixel count however small its CSS box gets.
 
-Two things make that possible, and BOTH live here rather than in the
-shipped page. The product should not carry a debug mode it never uses:
-
-  * devicePixelRatio is overridden before Unity boots, so Unity sizes its
-    drawing buffer to the handset's real pixel count while the canvas keeps
-    its small CSS box. The game lays out in CSS pixels either way, so this
-    changes the resolution and nothing else.
-  * preserveDrawingBuffer is forced on, without which reading the canvas
-    after a frame returns transparent black. It costs performance, which is
-    exactly why it is not on in the build people play.
+That leaves exactly one thing for this tool to add, and it is the one thing
+the build people play should NOT carry: preserveDrawingBuffer. Without it,
+reading the canvas after a frame returns transparent black; with it, every
+frame costs more. A debug mode nobody uses does not belong in the product.
 
 The server rewrites index.html on the way out and leaves the build on disk
 untouched, so what it serves is the shipping page plus a capture hook.
@@ -40,16 +35,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.path.join(ROOT, "artifacts", "webgl")
 SHOTS = os.path.join(ROOT, "docs", "media")
 
-# The capture hook. It runs in <head>, before the page's own script appends
-# the Unity loader, which is the only moment devicePixelRatio can still be
-# changed and be believed.
+# The capture hook. Resolution is NOT its business: the shipped template
+# already sizes the drawing buffer to the handset's 1170 px, so a capture is
+# native without this tool asking for anything. It used to override
+# devicePixelRatio itself, which after that change would have been a setting
+# the template silently overwrote.
 HEAD_HOOK = """
 <script>
 // --- injected by tools/webshot.py; not part of the build ---
 (function () {
-  var DPR = %(dpr)s;
-  Object.defineProperty(window, "devicePixelRatio", { get: function () { return DPR; } });
-
   window.puttseedShot = function (name) {
     var canvas = document.querySelector("#unity-canvas");
     var data = canvas.toDataURL("image/png");
@@ -125,9 +119,9 @@ HEAD_HOOK = """
 """
 
 
-def rewrite_index(html, dpr):
+def rewrite_index(html):
     """The shipping page plus a capture hook: head script, and one config key."""
-    html = html.replace("</head>", (HEAD_HOOK % {"dpr": dpr}) + "</head>", 1)
+    html = html.replace("</head>", HEAD_HOOK + "</head>", 1)
 
     # preserveDrawingBuffer has to reach createUnityInstance, and the config
     # object is built inline in the page. One anchored insertion, so a
@@ -146,8 +140,6 @@ def rewrite_index(html, dpr):
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    dpr = 3.2
-
     def do_POST(self):
         match = re.match(r"^/__shot/(.+)$", self.path)
         if not match:
@@ -183,7 +175,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         route = self.path.split("?", 1)[0]
         if route in ("/", "/index.html"):
             with open(os.path.join(BUILD, "index.html"), encoding="utf-8") as handle:
-                html = rewrite_index(handle.read(), self.dpr)
+                html = rewrite_index(handle.read())
             body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -203,21 +195,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8123)
-    parser.add_argument("--dpr", type=float, default=3.2,
-                        help="canvas pixels per CSS pixel; 3.2 puts a ~370 px "
-                             "frame at roughly the handset's 1170 px width")
     args = parser.parse_args()
 
     if not os.path.isfile(os.path.join(BUILD, "index.html")):
         raise SystemExit("webshot: no build at artifacts/webgl - "
                          "run scripts\\build-webgl.bat first.")
 
-    Handler.dpr = args.dpr
     handler = functools.partial(Handler, directory=BUILD)
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", args.port), handler) as server:
-        print("webshot serving %s at http://127.0.0.1:%d/ (dpr %s)"
-              % (BUILD, args.port, args.dpr), flush=True)
+        print("webshot serving %s at http://127.0.0.1:%d/"
+              % (BUILD, args.port), flush=True)
         print("in the page console: puttseedShot('menu')", flush=True)
         try:
             server.serve_forever()
