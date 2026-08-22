@@ -1,8 +1,16 @@
 # PUTTSEED
 
 [![CI](https://github.com/emirsakal/PUTTSEED/actions/workflows/ci.yml/badge.svg)](https://github.com/emirsakal/PUTTSEED/actions/workflows/ci.yml)
+[![Play in your browser](https://img.shields.io/badge/play-in%20your%20browser-2f6b3a?style=flat)](https://emirsakal.github.io/PUTTSEED/)
 
 **One mini-golf hole per day. Everyone on Earth plays the same course.**
+
+### ▶ [Play today's hole in your browser](https://emirsakal.github.io/PUTTSEED/)
+
+No install, no account. The WebGL build is not a demo version — it runs the
+same simulation the phone does, because a mouse drag and a finger drag reach
+the quantizer as the same two integers, and the core has no floats to
+disagree about. Progress lives in that browser only.
 
 PUTTSEED is a daily-seed, bit-deterministic 2D mini-golf game for Android
 (Unity 6 + a pure C# core). Each UTC day derives a seed; the seed generates a
