@@ -36,8 +36,36 @@ namespace PuttSeed.Unity
         /// <summary>Hidden — nothing to advance to.</summary>
         public static readonly State Hidden = new State(false, "");
 
-        /// <summary>Decides the button from the run.</summary>
-        public static State For(GameMode mode, bool holed, bool failed,
+        /// <summary>Where the button goes when it is pressed.</summary>
+        public enum Destination
+        {
+            /// <summary>Nowhere — the button is not offered.</summary>
+            None,
+
+            /// <summary>The next journey level.</summary>
+            NextJourneyLevel,
+
+            /// <summary>The next hole of the gauntlet week.</summary>
+            NextGauntletHole,
+
+            /// <summary>Another practice course.</summary>
+            NewPracticeCourse,
+
+            /// <summary>The next tutorial lesson.</summary>
+            NextTutorialLesson,
+
+            /// <summary>Out of the tutorial altogether — the only one that changes scene.</summary>
+            FinishTutorial,
+        }
+
+        /// <summary>
+        /// Where the run can go from here. This is the decision; the label is
+        /// derived from it and so is the action, which is the point: the two
+        /// used to be written out separately — the rules here, the calls in a
+        /// click handler — and nothing stopped a mode from being offered a
+        /// button that did nothing when pressed.
+        /// </summary>
+        public static Destination DestinationFor(GameMode mode, bool holed, bool failed,
             bool hasNextTutorialStage, bool hasNextJourneyLevel, bool hasNextGauntletHole)
         {
             bool settled = holed || failed;
@@ -47,27 +75,56 @@ namespace PuttSeed.Unity
                     // Always offered: a lesson is not a challenge to pass, and
                     // a player who wants the next one should not have to hole
                     // this one first.
-                    return new State(true, hasNextTutorialStage ? "Next lesson" : "Finish tutorial");
+                    return hasNextTutorialStage
+                        ? Destination.NextTutorialLesson
+                        : Destination.FinishTutorial;
 
                 case GameMode.Journey:
                     return holed && hasNextJourneyLevel
-                        ? new State(true, "Next level")
-                        : Hidden;
+                        ? Destination.NextJourneyLevel
+                        : Destination.None;
 
                 case GameMode.Gauntlet:
                     // A failed hole still spends its strokes and the week
                     // carries on, so the gauntlet advances on settled, not on
                     // holed.
                     return settled && hasNextGauntletHole
-                        ? new State(true, "Next hole")
-                        : Hidden;
+                        ? Destination.NextGauntletHole
+                        : Destination.None;
 
                 case GameMode.Practice:
                     // The mode's whole promise is another one, now. It used to
                     // take a trip through the menu — finish, Menu, Practice —
                     // to get a course the game had already grown in the
                     // background.
-                    return settled ? new State(true, "New course") : Hidden;
+                    return settled ? Destination.NewPracticeCourse : Destination.None;
+
+                default:
+                    return Destination.None;
+            }
+        }
+
+        /// <summary>Decides the button from the run.</summary>
+        public static State For(GameMode mode, bool holed, bool failed,
+            bool hasNextTutorialStage, bool hasNextJourneyLevel, bool hasNextGauntletHole)
+        {
+            switch (DestinationFor(mode, holed, failed,
+                hasNextTutorialStage, hasNextJourneyLevel, hasNextGauntletHole))
+            {
+                case Destination.NextTutorialLesson:
+                    return new State(true, "Next lesson");
+
+                case Destination.FinishTutorial:
+                    return new State(true, "Finish tutorial");
+
+                case Destination.NextJourneyLevel:
+                    return new State(true, "Next level");
+
+                case Destination.NextGauntletHole:
+                    return new State(true, "Next hole");
+
+                case Destination.NewPracticeCourse:
+                    return new State(true, "New course");
 
                 default:
                     return Hidden;

@@ -65,5 +65,66 @@ namespace PuttSeed.Unity.Tests
             // The day is done when it is done; the closing card carries it.
             Assert.That(For(GameMode.Daily, holed: true).Visible, Is.False);
         }
+
+        [Test]
+        public void EveryOfferedButtonHasSomewhereToGo()
+        {
+            // The bug this forecloses: the label and the action were written
+            // out separately — the rules here, the calls in a click handler —
+            // so a mode could be offered a button that did nothing when
+            // pressed, or be sent somewhere with no button to send it. The
+            // two now come from one decision, and this walks every state the
+            // decision can be in to prove they cannot drift apart.
+            foreach (GameMode mode in System.Enum.GetValues(typeof(GameMode)))
+            {
+                for (int bits = 0; bits < 32; bits++)
+                {
+                    bool holed = (bits & 1) != 0;
+                    bool failed = (bits & 2) != 0;
+                    bool tutorial = (bits & 4) != 0;
+                    bool journey = (bits & 8) != 0;
+                    bool gauntlet = (bits & 16) != 0;
+
+                    var state = AdvanceButton.For(mode, holed, failed, tutorial, journey, gauntlet);
+                    var to = AdvanceButton.DestinationFor(
+                        mode, holed, failed, tutorial, journey, gauntlet);
+
+                    Assert.That(state.Visible,
+                        Is.EqualTo(to != AdvanceButton.Destination.None),
+                        $"{mode} holed:{holed} failed:{failed} tutorial:{tutorial} " +
+                        $"journey:{journey} gauntlet:{gauntlet} — button says " +
+                        $"visible:{state.Visible} but the destination is {to}");
+
+                    Assert.That(state.Label.Length > 0,
+                        Is.EqualTo(to != AdvanceButton.Destination.None),
+                        $"{mode}: a destination needs a label and a label needs a destination");
+                }
+            }
+        }
+
+        [Test]
+        public void FinishingTheTutorialIsTheOnlyDestinationThatLeavesTheScene()
+        {
+            // GameUI routes FinishTutorial through the scene change and every
+            // other destination through the in-scene sweep. If a second
+            // destination ever means "leave the scene", that branch has to
+            // learn about it — this is the tripwire.
+            Assert.That(
+                AdvanceButton.DestinationFor(GameMode.Tutorial, false, false, false, true, true),
+                Is.EqualTo(AdvanceButton.Destination.FinishTutorial));
+
+            foreach (GameMode mode in System.Enum.GetValues(typeof(GameMode)))
+            {
+                if (mode == GameMode.Tutorial)
+                {
+                    continue;
+                }
+
+                Assert.That(
+                    AdvanceButton.DestinationFor(mode, true, true, true, true, true),
+                    Is.Not.EqualTo(AdvanceButton.Destination.FinishTutorial),
+                    $"{mode} must not end the tutorial");
+            }
+        }
     }
 }

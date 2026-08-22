@@ -97,34 +97,7 @@ namespace PuttSeed.Unity
                 _modes.StartPractice();
             });
             _modes.LoadFailed += OnLoadFailed;
-            nextLessonButton?.onClick.AddListener(() =>
-            {
-                if (_modes.Mode == GameMode.Journey)
-                {
-                    _modes.NextJourneyLevel();
-                }
-                else if (_modes.Mode == GameMode.Gauntlet)
-                {
-                    _modes.NextGauntletHole();
-                }
-                else if (_modes.Mode == GameMode.Practice)
-                {
-                    // The next one is usually already grown (PrewarmPractice),
-                    // so this is the whole wait.
-                    _modes.StartPractice();
-                }
-                else if (_modes.HasNextTutorialStage)
-                {
-                    _modes.NextTutorial();
-                }
-                else
-                {
-                    // The last lesson ends the tutorial rather than looping
-                    // back to the first: a course a player has already been
-                    // taught is not the reward for finishing being taught.
-                    OnMenu();
-                }
-            });
+            nextLessonButton?.onClick.AddListener(OnAdvance);
             watchButton?.onClick.AddListener(OnImport);
             retryButton?.onClick.AddListener(() => _runner.Retry());
             failRetryButton?.onClick.AddListener(() => _runner.Retry());
@@ -622,6 +595,76 @@ namespace PuttSeed.Unity
         private static void OnMenu()
         {
             SceneFader.LoadScene("Menu");
+        }
+
+        /// <summary>
+        /// The bar's one advance button, behind the game's one transition.
+        ///
+        /// The five destinations differ; the moment does not. A level, a
+        /// lesson, a gauntlet hole and another practice course all replace the
+        /// course under the player without leaving the scene, and all four
+        /// used to arrive as a hard cut — so the most repeated move in the
+        /// game was the only one that did not look like a move. It borrows
+        /// the sweep the scene change already uses, shorter, because there is
+        /// less to hide.
+        ///
+        /// Finishing the tutorial is the exception that proves it: that one
+        /// really does change scene, so it goes through OnMenu and gets the
+        /// scene-length sweep instead of two stacked on each other.
+        /// </summary>
+        private void OnAdvance()
+        {
+            var sim = _runner.Sim;
+            var to = AdvanceButton.DestinationFor(_modes.Mode,
+                sim != null && sim.IsHoled,
+                sim != null && sim.IsFailed,
+                _modes.HasNextTutorialStage,
+                _modes.HasNextJourneyLevel,
+                _modes.HasNextGauntletHole);
+
+            if (to == AdvanceButton.Destination.FinishTutorial)
+            {
+                // The last lesson ends the tutorial rather than looping back to
+                // the first: a course a player has already been taught is not
+                // the reward for finishing being taught. It changes scene, so
+                // it takes the scene-length sweep and not two stacked ones.
+                OnMenu();
+                return;
+            }
+
+            // A second tap mid-sweep would queue a level the player never saw.
+            // The cover eats the touch already; this is the reason in code.
+            if (to == AdvanceButton.Destination.None || SceneFader.IsBusy)
+            {
+                return;
+            }
+
+            SceneFader.Swap(() => AdvanceTo(to), () => _modes.IsLoading);
+        }
+
+        /// <summary>The advance itself, performed while the screen is covered.</summary>
+        private void AdvanceTo(AdvanceButton.Destination to)
+        {
+            switch (to)
+            {
+                case AdvanceButton.Destination.NextJourneyLevel:
+                    _modes.NextJourneyLevel();
+                    break;
+
+                case AdvanceButton.Destination.NextGauntletHole:
+                    _modes.NextGauntletHole();
+                    break;
+
+                case AdvanceButton.Destination.NewPracticeCourse:
+                    // The next one is usually already grown (PrewarmPractice),
+                    // so this is the whole wait.
+                    _modes.StartPractice();
+                    break;
+
+                case AdvanceButton.Destination.NextTutorialLesson:
+                    _modes.NextTutorial();
+                    break;
+            }
         }
 
         /// <summary>

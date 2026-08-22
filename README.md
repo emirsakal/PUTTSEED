@@ -158,7 +158,7 @@ mechanically, not by care:
 | What | How |
 |---|---|
 | Core test suite (293 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (176 tests) | `scripts\unity-tests.bat` |
+| Unity EditMode tests (178 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
 | Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
