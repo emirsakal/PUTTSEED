@@ -381,6 +381,63 @@ namespace PuttSeed.Unity.Editor
         }
 
         /// <summary>
+        /// Batch-mode WebGL build for the playable demo, into
+        /// <c>artifacts/webgl</c>. The demo is not a port: a mouse drag and a
+        /// finger drag both reach <c>InputQuantizer</c> as the same two
+        /// integers, so the browser runs the shipping sim, bit for bit.
+        /// </summary>
+        public static void BuildWebGL()
+        {
+            EnsureFeelConfig();
+            EnsureAppIcon();
+            ConfigureSplash();
+            if (!File.Exists(MenuScenePath) || !File.Exists(GameScenePath))
+            {
+                CreateScenes();
+            }
+
+            PlayerSettings.companyName = "PuttSeed";
+            PlayerSettings.productName = "PuttSeed";
+
+            // A static host cannot add a Content-Encoding header, and GitHub
+            // Pages is exactly that: a compressed build would arrive as bytes
+            // the browser never inflates. Gzip plus Unity's own JS
+            // decompressor keeps the download small and the host dumb.
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.dataCaching = true;
+            PlayerSettings.WebGL.template = "PROJECT:PuttSeed";
+
+            // The demo is the first thing a reviewer touches, so a thrown
+            // exception should still say what it was. Full stack traces cost
+            // size and speed; explicitly thrown ones cost neither much.
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
+            // Release, not Master: Master's extra inlining buys a few percent
+            // of runtime on a game whose whole sim is already a rounding error
+            // next to the browser's frame budget, and costs a great deal of
+            // build time on a target that is rebuilt by hand.
+            PlayerSettings.SetIl2CppCompilerConfiguration(
+                NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Release);
+
+            AddAlwaysIncludedShader("Sprites/Default");
+
+            const string output = "artifacts/webgl";
+            Directory.CreateDirectory("artifacts");
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { MenuScenePath, GameScenePath },
+                target = BuildTarget.WebGL,
+                locationPathName = output,
+            };
+
+            var report = BuildPipeline.BuildPlayer(options);
+            Debug.Log($"PuttSeed: WebGL build {report.summary.result}, " +
+                $"{report.summary.totalSize} bytes, {report.summary.totalErrors} errors -> {output}");
+            EditorApplication.Exit(report.summary.result == BuildResult.Succeeded ? 0 : 1);
+        }
+
+        /// <summary>
         /// Reads Android signing from keystore.properties beside the project
         /// (gitignored — secrets never enter the repo). Expected keys:
         /// storeFile, storePassword, keyAlias, keyPassword.

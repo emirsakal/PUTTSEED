@@ -155,6 +155,7 @@ mechanically, not by care:
 | Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
 | Release .aab (signed) | `scripts\build-release.bat` |
+| WebGL demo | `scripts\build-webgl.bat`, then `scripts\deploy-webgl.bat push` |
 
 Requirements: .NET SDK 8, Unity 6000.3.x with the Android module (open the
 repo root in Unity Hub).

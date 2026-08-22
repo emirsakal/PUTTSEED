@@ -25,6 +25,11 @@ unity-create.log
 # junction are tracked via the core/src path.
 /Assets/PuttSeedCore/src/
 
+# Scaffolding for scripts\deploy-webgl.bat: the gh-pages worktree it checks
+# out to copy the demo into. The script removes it on the way out; this is
+# for the run that gets interrupted.
+/.ghpages/
+
 # Signing secrets — NEVER commit these
 keystore.properties
 *.keystore
