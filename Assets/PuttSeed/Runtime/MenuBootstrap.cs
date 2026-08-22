@@ -47,6 +47,11 @@ namespace PuttSeed.Unity
         public SegmentedToggle? setupColorblindToggle;
         public SegmentedToggle? setupMotionToggle;
         public Button? setupStartButton;
+
+        /// <summary>The studio mark on the way in — see BuildStudioSplash.</summary>
+        public GameObject? splashCover;
+        public Image? splashCoverImage;
+        public Image? splashLogo;
         public SegmentedToggle? languageToggle;
         public Text? countdownText;
         public Button? archiveButton;
@@ -89,6 +94,9 @@ namespace PuttSeed.Unity
         public Image[] journeyCellStars = new Image[0];
 
         private int _journeyPage;
+
+        /// <summary>The studio mark greets an app run, not every trip to the menu.</summary>
+        private static bool _splashPlayed;
         public Button? settingsButton;
         public GameObject? settingsPanel;
         public Button? settingsCloseButton;
@@ -258,22 +266,18 @@ namespace PuttSeed.Unity
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
 
-            // Before anything else on a brand new save: three questions the
-            // player can answer without having played (see FirstRun). The
-            // tutorial waits behind it — being dropped into a lesson in the
-            // wrong language is a poor first thirty seconds.
-            if (FirstRun.NeedsSetup(stats.Data))
+            // The studio mark plays once per app run, and whatever the first
+            // launch was going to do waits behind it — a splash cut in half by
+            // a scene load is worse than no splash. The menu keeps building
+            // underneath either way, so it is ready the moment the cover
+            // lifts.
+            if (!_splashPlayed && splashCover != null && splashLogo?.sprite != null)
             {
-                ShowSetup();
-                return;
+                _splashPlayed = true;
+                StartCoroutine(PlayStudioSplash(() => OpenFirstScreen(stats, firstLaunch)));
             }
-
-            // FTUE (GDD): the very first launch drops straight into Tutorial 1.
-            // One-shot — quitting the tutorial returns to a normal menu.
-            if (firstLaunch && !stats.Data.tutorialSeen)
+            else if (OpenFirstScreen(stats, firstLaunch))
             {
-                stats.MarkTutorialSeen();
-                Launch(GameMode.Tutorial);
                 return;
             }
 
@@ -1235,6 +1239,93 @@ namespace PuttSeed.Unity
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
             SceneFader.LoadScene("Game");
+        }
+
+        /// <summary>
+        /// Whatever this launch owes the player before the menu: the opening
+        /// questions on a brand new save, or the first lesson on a first
+        /// launch. True when one of them took over the screen.
+        /// </summary>
+        private bool OpenFirstScreen(StatsStore stats, bool firstLaunch)
+        {
+            // Three questions the player can answer without having played
+            // (see FirstRun). The tutorial waits behind it — being dropped
+            // into a lesson in the wrong language is a poor first thirty
+            // seconds.
+            if (FirstRun.NeedsSetup(stats.Data))
+            {
+                ShowSetup();
+                return true;
+            }
+
+            // FTUE (GDD): the very first launch drops straight into Tutorial 1.
+            // One-shot — quitting the tutorial returns to a normal menu.
+            if (firstLaunch && !stats.Data.tutorialSeen)
+            {
+                stats.MarkTutorialSeen();
+                Launch(GameMode.Tutorial);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Fades the mark in, holds it, then lifts the cover. A tap anywhere
+        /// cuts to the lift — the mark is a signature, not a toll.
+        /// </summary>
+        private System.Collections.IEnumerator PlayStudioSplash(System.Action then)
+        {
+            const float fadeIn = 0.7f;
+            const float hold = 0.5f;
+            const float lift = 0.45f;
+
+            var cover = splashCoverImage;
+            var logo = splashLogo;
+            if (cover == null || logo == null)
+            {
+                then();
+                yield break;
+            }
+
+            splashCover!.SetActive(true);
+            SetAlpha(logo, 0f);
+            bool skipped = false;
+
+            for (float t = 0f; t < fadeIn && !skipped; t += Time.unscaledDeltaTime)
+            {
+                SetAlpha(logo, Mathf.SmoothStep(0f, 1f, t / fadeIn));
+                skipped = Tapped();
+                yield return null;
+            }
+
+            SetAlpha(logo, 1f);
+            for (float t = 0f; t < hold && !skipped; t += Time.unscaledDeltaTime)
+            {
+                skipped = Tapped();
+                yield return null;
+            }
+
+            for (float t = 0f; t < lift; t += Time.unscaledDeltaTime)
+            {
+                float k = Mathf.SmoothStep(1f, 0f, t / lift);
+                SetAlpha(cover, k);
+                SetAlpha(logo, k);
+                yield return null;
+            }
+
+            splashCover.SetActive(false);
+            then();
+        }
+
+        private static bool Tapped()
+            => Input.GetMouseButtonDown(0) || (Input.touchCount > 0
+                && Input.GetTouch(0).phase == TouchPhase.Began);
+
+        private static void SetAlpha(Image image, float alpha)
+        {
+            var colour = image.color;
+            image.color = new Color(colour.r, colour.g, colour.b, alpha);
         }
 
         /// <summary>

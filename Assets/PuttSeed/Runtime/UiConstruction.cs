@@ -90,6 +90,22 @@ namespace PuttSeed.Unity
             ballImage.raycastTarget = false;
             menu.emblemBall = ballRect; // idle animation target (rolls into the cup)
 
+            // The studio mark, small and quiet in the corner where a maker's
+            // name belongs. It costs nobody a second — which is the argument
+            // against putting it in front of the game as well, and the reason
+            // the splash below is over before a player could tire of it.
+            var studioLogo = UIFactory.StudioLogo();
+            if (studioLogo != null)
+            {
+                var mark = UIFactory.CreateRect(canvas.transform, "StudioMark",
+                    new Vector2(0.045f, 0.945f), new Vector2(0.29f, 0.99f));
+                var markImage = mark.gameObject.AddComponent<Image>();
+                markImage.sprite = studioLogo;
+                markImage.preserveAspect = true;
+                markImage.raycastTarget = false;
+                markImage.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+
             var title = UIFactory.CreateText(canvas.transform, "Title",
                 new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.85f), 124, TextAnchor.MiddleCenter, shadow: true);
             title.text = "PUTTSEED";
@@ -209,6 +225,7 @@ namespace PuttSeed.Unity
             BuildStatsPanel(canvasRoot, menu);
             BuildSettingsPanel(canvasRoot, menu);
             BuildSetupPanel(canvasRoot, menu);
+            BuildStudioSplash(canvasRoot, menu);
             BuildCollectionPanel(canvasRoot, menu);
             BuildJourneyPanel(canvasRoot, menu);
         }
@@ -286,6 +303,37 @@ namespace PuttSeed.Unity
             menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
 
             menu.journeyPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// The studio mark on the way in: a cover in the game's own green, the
+        /// logo rising into it, then the whole thing lifting to reveal the
+        /// menu underneath.
+        ///
+        /// It is deliberately built on the FELT colour rather than black. The
+        /// Unity splash was switched off to stop a daily game spending two
+        /// seconds of a two-minute session on somebody's logo, and the same
+        /// argument applies to ours: this one plays once per app run, is over
+        /// in well under two seconds, and a tap anywhere skips it.
+        /// </summary>
+        private static void BuildStudioSplash(Transform canvas, MenuBootstrap menu)
+        {
+            var cover = UIFactory.CreateRect(canvas, "StudioSplash", Vector2.zero, Vector2.one);
+            var coverImage = cover.gameObject.AddComponent<Image>();
+            coverImage.color = PaletteMaterials.Felt;
+            coverImage.raycastTarget = true; // swallows the tap that skips it
+            menu.splashCover = cover.gameObject;
+            menu.splashCoverImage = coverImage;
+
+            var logo = UIFactory.CreateRect(cover, "Logo",
+                new Vector2(0.15f, 0.40f), new Vector2(0.85f, 0.60f));
+            var logoImage = logo.gameObject.AddComponent<Image>();
+            logoImage.sprite = UIFactory.StudioLogo();
+            logoImage.preserveAspect = true;
+            logoImage.raycastTarget = false;
+            menu.splashLogo = logoImage;
+
+            menu.splashCover.SetActive(false);
         }
 
         /// <summary>

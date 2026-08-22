@@ -93,6 +93,23 @@ namespace PuttSeed.Unity.Editor
             EnsureSprite(pennantPath, UIFactory.PennantSpritePng);
             EnsureSprite(spherePath, UIFactory.SphereSpritePng);
 
+            // The studio mark is drawn art, not generated — it is only ever
+            // imported and handed over.
+            const string logoPath = dir + "/efs-logo.png";
+            if (File.Exists(logoPath))
+            {
+                // Written from outside the editor, so the database has never
+                // heard of it: import first, or GetAtPath hands back null and
+                // the whole thing silently does nothing.
+                AssetDatabase.ImportAsset(logoPath);
+                ApplySpriteImport(logoPath);
+                var logo = AssetDatabase.LoadAssetAtPath<Sprite>(logoPath);
+                if (logo != null)
+                {
+                    UIFactory.UseStudioLogo(logo);
+                }
+            }
+
             var font = ActiveUiFont(dir + "/Fonts");
             if (font != null)
             {
@@ -131,6 +148,15 @@ namespace PuttSeed.Unity.Editor
                 AssetDatabase.ImportAsset(path);
             }
 
+            ApplySpriteImport(path, border);
+        }
+
+        /// <summary>
+        /// Forces the import settings a UI sprite needs, whether the file was
+        /// generated here or drawn somewhere else.
+        /// </summary>
+        private static void ApplySpriteImport(string path, Vector4 border = default)
+        {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null)
             {
@@ -141,6 +167,18 @@ namespace PuttSeed.Unity.Editor
             if (importer.textureType != TextureImporterType.Sprite)
             {
                 importer.textureType = TextureImporterType.Sprite;
+                changed = true;
+            }
+
+            // Explicit, because the default is not what it looks like. A file
+            // first imported as a plain texture and later switched to Sprite
+            // keeps its old sprite mode, and in Multiple with no sheet defined
+            // there is no Sprite sub-asset at all — LoadAssetAtPath returns
+            // null and every caller quietly falls back, which is exactly what
+            // happened to the studio logo.
+            if (importer.spriteImportMode != SpriteImportMode.Single)
+            {
+                importer.spriteImportMode = SpriteImportMode.Single;
                 changed = true;
             }
 

@@ -49,6 +49,7 @@ namespace PuttSeed.Unity
         private static Sprite? _starSprite;
         private static Sprite? _pennantSprite;
         private static Sprite? _sphereSprite;
+        private static Sprite? _studioLogo;
         private static Font? _fontAsset;
 
         /// <summary>
@@ -64,6 +65,16 @@ namespace PuttSeed.Unity
             _pennantSprite = pennant;
             _sphereSprite = sphere;
         }
+
+        /// <summary>
+        /// Points the UI at the studio mark. Unlike every other sprite here it
+        /// is drawn art rather than generated, so the editor hands it over at
+        /// bake time and the scene keeps a real asset reference.
+        /// </summary>
+        public static void UseStudioLogo(Sprite logo) => _studioLogo = logo;
+
+        /// <summary>The studio mark, or null in a project that has none.</summary>
+        public static Sprite? StudioLogo() => _studioLogo;
 
         /// <summary>
         /// Uses a project font for every label in the game. The editor scene
@@ -370,6 +381,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
             return tex;
         }
@@ -406,6 +418,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
             return tex;
         }
@@ -440,6 +453,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
             return tex;
         }
@@ -474,6 +488,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
             return tex;
         }
@@ -519,6 +534,7 @@ namespace PuttSeed.Unity
                 }
             }
 
+            tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
             return tex;
         }
