@@ -209,8 +209,12 @@ Online leaderboards, accounts, cloud save, IAP/skins, iOS release,
 additional element types, level editor, multiplayer of any kind,
 notifications. If a task drifts toward these, stop.
 
-Two entries have since graduated deliberately, without breaking the
+Three entries have since graduated deliberately, without breaking the
 spirit of the list: ice became a fifth element post-MVP (2026-08-16),
-and skins shipped as local progression-gated cosmetics — the **IAP**
-half of "IAP/skins" remains permanently out. Everything else above is
-still out; new ideas go to LATER.md.
+skins shipped as local progression-gated cosmetics — the **IAP** half of
+"IAP/skins" remains permanently out — and notifications returned
+(2026-08-22) as one strictly LOCAL, opt-in daily reminder: no server, no
+network permission, never on by default, and offered only after a player
+has finished a couple of dailies. What stays out is everything the word
+usually means — push infrastructure, campaigns, re-engagement nags.
+Everything else above is still out; new ideas go to LATER.md.

@@ -57,6 +57,8 @@ namespace PuttSeed.Unity
         public bool colorblindMode;
         public bool batterySaver;
         public bool reducedMotion;
+        public bool reminderEnabled;
+        public bool reminderAsked;
         public string language = ""; // "" = follow the device, else "en"/"tr"
 
         // Practice personal bests per difficulty bucket (0 = none yet).
@@ -273,6 +275,20 @@ namespace PuttSeed.Unity
         public void SetBatterySaver(bool enabled)
         {
             Data.batterySaver = enabled;
+            Save();
+        }
+
+        /// <summary>Persists the daily-reminder switch (see DailyReminder).</summary>
+        public void SetReminderEnabled(bool enabled)
+        {
+            Data.reminderEnabled = enabled;
+            Save();
+        }
+
+        /// <summary>Remembers the reminder offer was made — it is made once.</summary>
+        public void MarkReminderAsked()
+        {
+            Data.reminderAsked = true;
             Save();
         }
 

@@ -40,6 +40,7 @@ namespace PuttSeed.Unity
         public SegmentedToggle? colorblindToggle;
         public SegmentedToggle? batteryToggle;
         public SegmentedToggle? motionToggle;
+        public SegmentedToggle? reminderToggle;
 
         /// <summary>The opening questions, shown once on a new save.</summary>
         public GameObject? setupPanel;
@@ -47,6 +48,11 @@ namespace PuttSeed.Unity
         public SegmentedToggle? setupColorblindToggle;
         public SegmentedToggle? setupMotionToggle;
         public Button? setupStartButton;
+
+        /// <summary>The one-time reminder offer — see BuildReminderAsk.</summary>
+        public GameObject? reminderAskPanel;
+        public Button? reminderYesButton;
+        public Button? reminderNoButton;
 
         /// <summary>The studio mark on the way in — see BuildStudioSplash.</summary>
         public GameObject? splashCover;
@@ -262,6 +268,12 @@ namespace PuttSeed.Unity
             PaletteMaterials.ColorblindMode = stats.Data.colorblindMode;
             Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
             UiPolish.EnsureButtonFeedback();
+
+            // Yesterday's scheduled reminders may be lying by now — the hole
+            // they pointed at got answered, or the timezone moved. Cheaper to
+            // rebuild the next few from today's truth than to reason about it.
+            DailyReminder.Sync(stats);
+            OfferReminder(stats);
             bool firstLaunch = stats.Data.lastCompletedDay == 0
                 && stats.Data.practicePlayed == 0
                 && stats.Data.days.Count == 0;
@@ -386,6 +398,17 @@ namespace PuttSeed.Unity
                 Application.targetFrameRate = stats.Data.batterySaver ? 60 : 120;
             });
             WireToggle(motionToggle, selected => stats.SetReducedMotion(!selected)); // A = Full
+            WireToggle(reminderToggle, selected =>
+            {
+                if (selected)
+                {
+                    DailyReminder.Enable(stats); // A = On; asks the OS on 13+
+                }
+                else
+                {
+                    DailyReminder.Disable(stats);
+                }
+            });
             WireToggle(languageToggle, selected =>
             {
                 stats.SetLanguage(selected ? "en" : "tr"); // A = EN
@@ -485,6 +508,7 @@ namespace PuttSeed.Unity
             colorblindToggle?.SetSelected(data.colorblindMode); // A = On
             batteryToggle?.SetSelected(!data.batterySaver); // A = 120 fps
             motionToggle?.SetSelected(!data.reducedMotion); // A = Full
+            reminderToggle?.SetSelected(data.reminderEnabled); // A = On
             languageToggle?.SetSelected(Loc.Current == Loc.Language.English); // A = EN
         }
 
@@ -1239,6 +1263,40 @@ namespace PuttSeed.Unity
             GameSession.ArchiveDayNumber = day;
             GameSession.UseFixedSeed = false;
             SceneFader.LoadScene("Game");
+        }
+
+        /// <summary>
+        /// Shows the one-time reminder offer, to the right player at the
+        /// right moment: never before two finished dailies, never twice, and
+        /// never over the opening questions. The splash cover is built above
+        /// this panel, so on a cold start the offer is simply there when the
+        /// cover lifts.
+        /// </summary>
+        private void OfferReminder(StatsStore stats)
+        {
+            if (reminderAskPanel == null
+                || stats.Data.reminderAsked
+                || stats.Data.reminderEnabled
+                || Achievements.CompletedDailyCount(stats.Data) < 2
+                || FirstRun.NeedsSetup(stats.Data))
+            {
+                return;
+            }
+
+            reminderAskPanel.SetActive(true);
+            reminderYesButton?.onClick.AddListener(() =>
+            {
+                UiSounds.Click();
+                stats.MarkReminderAsked();
+                DailyReminder.Enable(stats);
+                reminderAskPanel.SetActive(false);
+            });
+            reminderNoButton?.onClick.AddListener(() =>
+            {
+                UiSounds.ClickDown();
+                stats.MarkReminderAsked();
+                reminderAskPanel.SetActive(false);
+            });
         }
 
         /// <summary>

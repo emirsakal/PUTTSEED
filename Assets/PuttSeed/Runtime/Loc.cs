@@ -208,6 +208,14 @@ namespace PuttSeed.Unity
             ["Three quick things. All of them can be changed later in Settings."] =
                 "Üç kısa soru. Hepsi sonradan Ayarlar'dan değiştirilebilir.",
             ["Start"] = "Başla",
+            ["Reminder"] = "Hatırlatıcı",
+            ["Daily hole"] = "Günlük delik",
+            ["One nudge when a new hole is ready."] = "Yeni delik hazır olduğunda tek bir dürtme.",
+            ["Today's hole is ready ⛳"] = "Bugünün deliği hazır ⛳",
+            ["Want a nudge when tomorrow's hole is ready?"] =
+                "Yarının deliği hazır olduğunda haber vereyim mi?",
+            ["Yes please"] = "Olur",
+            ["No thanks"] = "Gerek yok",
             ["Motion"] = "Hareket",
             ["Full"] = "Tam",
             ["Reduced"] = "Azalt",

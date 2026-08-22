@@ -225,6 +225,7 @@ namespace PuttSeed.Unity
             BuildStatsPanel(canvasRoot, menu);
             BuildSettingsPanel(canvasRoot, menu);
             BuildSetupPanel(canvasRoot, menu);
+            BuildReminderAsk(canvasRoot, menu);
             BuildStudioSplash(canvasRoot, menu);
             BuildCollectionPanel(canvasRoot, menu);
             BuildJourneyPanel(canvasRoot, menu);
@@ -303,6 +304,36 @@ namespace PuttSeed.Unity
             menu.journeyCloseButton.GetComponent<UiClickSound>().downTone = true;
 
             menu.journeyPanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// The reminder offer: one question, asked once, and only of a player
+        /// who has already finished a couple of dailies. Somebody three
+        /// mornings in is being offered a convenience; somebody who installed
+        /// four minutes ago would be being nagged.
+        /// </summary>
+        private static void BuildReminderAsk(Transform canvas, MenuBootstrap menu)
+        {
+            var dim = UIFactory.CreateRect(canvas, "ReminderAsk", Vector2.zero, Vector2.one);
+            var dimImage = dim.gameObject.AddComponent<Image>();
+            dimImage.color = new Color(0.03f, 0.07f, 0.05f, 0.93f);
+            dimImage.raycastTarget = true;
+            menu.reminderAskPanel = dim.gameObject;
+
+            UIFactory.CreateFramedCard(dim, "Card",
+                new Vector2(0.10f, 0.37f), new Vector2(0.90f, 0.62f));
+            var question = UIFactory.CreateText(dim, "Question",
+                new Vector2(0.15f, 0.475f), new Vector2(0.85f, 0.585f), 32, TextAnchor.MiddleCenter);
+            question.text = "Want a nudge when tomorrow's hole is ready?";
+
+            var yes = UIFactory.CreateButton(dim, "Yes please",
+                new Vector2(0.15f, 0.395f), new Vector2(0.485f, 0.458f), NoOp, 28, primary: true);
+            menu.reminderYesButton = yes.GetComponentInParent<Button>();
+            var no = UIFactory.CreateButton(dim, "No thanks",
+                new Vector2(0.515f, 0.395f), new Vector2(0.85f, 0.458f), NoOp, 28);
+            menu.reminderNoButton = no.GetComponentInParent<Button>();
+
+            menu.reminderAskPanel.SetActive(false);
         }
 
         /// <summary>
@@ -409,20 +440,24 @@ namespace PuttSeed.Unity
                 new Vector2(0.1f, 0.745f), new Vector2(0.9f, 0.805f), 52, TextAnchor.MiddleCenter, shadow: true);
             title.text = "Settings";
 
-            // Seven rows now, so they are stepped rather than hand-placed —
-            // the seventh landed on the Close button at the old spacing.
-            float y = 0.712f;
-            const float step = 0.0685f;
+            // Eight rows now, stepped rather than hand-placed, and re-measured
+            // so the last row clears the Close button: rows end at 0.234, the
+            // button starts at 0.225 moved down — 0.009 of air, verified by
+            // arithmetic because the overlap rule has been broken by exactly
+            // this kind of growth before.
+            float y = 0.716f;
+            const float step = 0.061f;
             menu.soundToggle = CreateSettingRow(dim, y, "Sound", "On", "Off");
             menu.hapticsToggle = CreateSettingRow(dim, y -= step, "Haptics", "On", "Off");
             menu.aimToggle = CreateSettingRow(dim, y -= step, "Aim", "Sling", "Direct");
             menu.colorblindToggle = CreateSettingRow(dim, y -= step, "Colorblind mode", "On", "Off");
             menu.batteryToggle = CreateSettingRow(dim, y -= step, "FPS", "120", "60");
             menu.motionToggle = CreateSettingRow(dim, y -= step, "Motion", "Full", "Reduced");
+            menu.reminderToggle = CreateSettingRow(dim, y -= step, "Reminder", "On", "Off");
             menu.languageToggle = CreateSettingRow(dim, y -= step, "Language", "EN", "TR");
 
             var close = UIFactory.CreateButton(dim, "Close",
-                new Vector2(0.3f, 0.18f), new Vector2(0.7f, 0.24f), NoOp, 30, primary: true);
+                new Vector2(0.3f, 0.165f), new Vector2(0.7f, 0.225f), NoOp, 30, primary: true);
             menu.settingsCloseButton = close.GetComponentInParent<Button>();
             menu.settingsCloseButton.GetComponent<UiClickSound>().downTone = true;
 

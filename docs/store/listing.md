@@ -53,10 +53,11 @@ round fits in a short code. Send it to a friend and they watch your ball take
 your line, shot for shot, on their own phone.
 
 NO ADS. NO TRACKING. NO INTERNET.
-PUTTSEED has no internet permission — it cannot send anything anywhere. The
-only permission it asks for is vibration, for the tap you feel when the ball
-hits. No account, no analytics, nothing to buy. Your progress lives on your
-phone and nowhere else.
+PUTTSEED has no internet permission — it cannot send anything anywhere. It
+asks for vibration, for the tap you feel when the ball hits, and — only if
+you switch on the optional daily reminder — notifications. No account, no
+analytics, nothing to buy. Your progress lives on your phone and nowhere
+else.
 
 Turkish and English. Colourblind palette, reduced motion, and a 60 fps
 battery mode.
@@ -114,9 +115,10 @@ vuruş vuruş takip edişini kendi telefonunda izlesin.
 
 REKLAM YOK. TAKİP YOK. İNTERNET YOK.
 PUTTSEED'in internet izni yoktur — hiçbir şeyi hiçbir yere gönderemez.
-İstediği tek izin titreşim, topun bir şeye çarptığında hissettiğin dokunuş
-için. Hesap yok, analitik yok, satın alınacak bir şey yok. İlerlemen
-telefonunda durur, başka hiçbir yerde.
+İstedikleri: titreşim (topun çarptığında hissettiğin dokunuş) ve — yalnızca
+isteğe bağlı günlük hatırlatıcıyı açarsan — bildirim. Hesap yok, analitik
+yok, satın alınacak bir şey yok. İlerlemen telefonunda durur, başka hiçbir
+yerde.
 
 Türkçe ve İngilizce. Renk körlüğü paleti, hareket azaltma ve 60 fps pil
 modu.
@@ -132,8 +134,10 @@ published.
 **Data safety:** no data collected, no data shared, no data types at all.
 Nothing is transmitted off the device — the app has no internet permission,
 which is the strongest possible form of that answer. (Verified from the built
-APK: the only declared permissions are VIBRATE and an internal AndroidX
-receiver permission that never reaches a user-facing screen.) Data is not encrypted in
+APK before the reminder feature: VIBRATE plus an internal AndroidX receiver
+permission. The daily-reminder feature adds POST_NOTIFICATIONS, requested at
+runtime only when the player opts in — RE-VERIFY with aapt2 on the next APK
+before filling the form.) Data is not encrypted in
 transit because there is no transit; there is no deletion request mechanism
 because there is nothing held to delete.
 

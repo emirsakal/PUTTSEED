@@ -10,7 +10,10 @@ internet permission**, so it cannot send anything anywhere, to anyone, ever.
 
 The only permission you will see on your device is vibration — for the small
 tap you feel when the ball hits something. It can be silenced in the game's
-settings, and it grants access to nothing.
+settings, and it grants access to nothing. If you choose to turn on the
+optional daily reminder, the app will also ask for notification permission at
+that moment — see below; it is off by default and never requested before you
+ask for it.
 
 ## What is stored, and where
 
@@ -37,6 +40,16 @@ share sheet and copies it to your clipboard. That text contains your score
 and a replay code — a compact description of the shots you played. Nothing
 personal is included, and the app does not send it anywhere: where it goes,
 if anywhere, is entirely your choice.
+
+## The daily reminder (optional)
+
+If you turn it on, PUTTSEED schedules a short local notification — "Today's
+hole is ready" — for the next few mornings, using your device's own clock.
+Nothing about this touches a network: there is no server and still no
+internet permission; the schedule lives on your phone. On Android 13 and
+newer the system asks for notification permission when you enable it. It is
+off by default, offered once, and switching it off in Settings cancels
+everything scheduled.
 
 ## Reading the clipboard
 
@@ -78,7 +91,9 @@ yani hiçbir şeyi hiçbir yere, hiç kimseye gönderemez.
 
 Cihazında göreceğin tek izin titreşimdir — top bir şeye çarptığında elinde
 hissettiğin küçük dokunuş için. Oyunun ayarlarından kapatılabilir ve hiçbir
-şeye erişim vermez.
+şeye erişim vermez. İsteğe bağlı günlük hatırlatıcıyı açarsan, uygulama o
+anda bildirim izni de ister — aşağıya bak; varsayılan olarak kapalıdır ve
+sen istemeden asla sorulmaz.
 
 ## Ne saklanıyor, nerede
 
@@ -106,6 +121,15 @@ ekranına verir ve panoya kopyalar. Bu metin skorunu ve bir tekrar kodunu —
 oynadığın vuruşların kısa bir tarifini — içerir. İçinde kişisel hiçbir şey
 yoktur ve uygulama bunu kendiliğinden hiçbir yere göndermez: nereye
 gideceğine, gidecekse, tamamen sen karar verirsin.
+
+## Günlük hatırlatıcı (isteğe bağlı)
+
+Açarsan PUTTSEED, önümüzdeki birkaç sabah için "Bugünün deliği hazır" diyen
+kısa bir yerel bildirim zamanlar — cihazının kendi saatiyle. Bunun hiçbir
+adımı ağa dokunmaz: sunucu yok, internet izni hâlâ yok; zamanlama telefonunda
+yaşar. Android 13 ve üzeri, açtığın anda bildirim izni sorar. Varsayılan
+olarak kapalıdır, yalnızca bir kez teklif edilir ve Ayarlar'dan kapatmak
+zamanlanmış her şeyi iptal eder.
 
 ## Panonun okunması
 

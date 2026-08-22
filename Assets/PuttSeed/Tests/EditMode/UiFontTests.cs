@@ -53,10 +53,12 @@ namespace PuttSeed.Unity.Tests
         /// the culture supplies them (and supplies letters the table misses,
         /// like the g in Ağustos and the C in Çarşamba).
         ///
-        /// Emoji are absent by construction: the shot log's glyphs are in no
-        /// translation, and no text font carries them. They come from the OS
-        /// fallback, which is also where they came from before this project
-        /// had a font of its own.
+        /// Emoji are excluded by rule rather than by accident: the shot log's
+        /// glyphs come from the OS fallback, and the daily reminder's ⛳ lives
+        /// in the translation table but is printed by Android's notification
+        /// shade, never by the game's font. Everything below the symbol
+        /// blocks — including the arrows and guillemets the chrome prints
+        /// itself — is still demanded.
         /// </summary>
         private static IEnumerable<char> Required()
         {
@@ -82,7 +84,7 @@ namespace PuttSeed.Unity.Tests
             var required = new List<char>();
             foreach (char c in text.ToString())
             {
-                if (c > 127 && !char.IsSurrogate(c) && seen.Add(c))
+                if (c > 127 && c < 0x2600 && !char.IsSurrogate(c) && seen.Add(c))
                 {
                     required.Add(c);
                 }

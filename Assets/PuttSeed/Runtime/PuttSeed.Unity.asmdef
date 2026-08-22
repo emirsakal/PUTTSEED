@@ -2,7 +2,8 @@
     "name": "PuttSeed.Unity",
     "rootNamespace": "PuttSeed.Unity",
     "references": [
-        "PuttSeed.Core"
+        "PuttSeed.Core",
+        "Unity.Notifications.Android"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
