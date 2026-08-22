@@ -1647,7 +1647,9 @@ namespace PuttSeed.Unity
                     : "<color=#F7F5E666>" + name + "</color>";
             }
 
-            return string.Join(" · ", parts);
+            // Stacked, not strung: three words across a narrow chip were
+            // fitted edge to edge; three lines read as the picker they are.
+            return string.Join("\n", parts);
         }
 
         private static string BuildStatsLine(StatsStore stats, DayRecord today)

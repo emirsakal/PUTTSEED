@@ -369,6 +369,13 @@ namespace PuttSeed.Unity
             text.text = label;
             text.color = primary ? UIStyle.AccentInk : UIStyle.Cream;
 
+            // Breathing room. The label used to span the whole button, so a
+            // long one — "Kolay · Normal · Zor" in the difficulty chip — was
+            // fitted edge to edge and read as crammed. Twelve pixels a side
+            // changes nothing for a short label and everything for that one.
+            text.rectTransform.offsetMin = new Vector2(12f, 0f);
+            text.rectTransform.offsetMax = new Vector2(-12f, 0f);
+
             // Turkish runs longer than English on the SAME buttons, and a
             // label that clips is a button nobody can read. Best-fit here is
             // bounded — down to 16 at worst, the asked size at best — so it
