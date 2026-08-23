@@ -5,6 +5,10 @@
 
 **One mini-golf hole per day. Everyone on Earth plays the same course.**
 
+<p align="center">
+  <a href="https://emirsakal.github.io/PUTTSEED/"><img src="docs/media/hero.gif" width="300" alt="A putt being played: the aim line is drawn back across sand, a ramp, a bumper and water; the ball is released, rolls into the cup, and the hole closes on 'Par — well played!' with three stars"></a>
+</p>
+
 ### ▶ [Play today's hole in your browser](https://emirsakal.github.io/PUTTSEED/)
 
 No install, no account. The WebGL build is not a demo version — it runs the
@@ -172,7 +176,8 @@ mechanically, not by care:
 | Core test suite (293 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
 | Unity EditMode tests (178 tests) | `scripts\unity-tests.bat` |
 | ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
-| Screenshot for the README | enter Play mode, then **PuttSeed → Capture Screenshot** (writes `docs/media/`) |
+| Screenshot for the README | Play mode, then **F9** (`PuttSeed → Capture Screenshot`) — works mid-drag, which the menu does not |
+| Hero animation | Play mode, then **F10** to record a take, then `python tools/make-gif.py --list` and `--take take-NN` |
 | Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
 | Release .aab (signed) | `scripts\build-release.bat` |
 | WebGL demo | `scripts\build-webgl.bat`, then `scripts\deploy-webgl.bat push` |
