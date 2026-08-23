@@ -55,19 +55,24 @@ namespace PuttSeed.Unity
 
         private void Begin()
         {
-            _dir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "artifacts", "hero"));
+            // Every take gets its own folder, and nothing is ever deleted.
+            //
+            // This used to clear one shared folder on start, which sounded
+            // tidy and was not: a good putt is maybe one attempt in four, so
+            // the takes worth keeping were being overwritten by the ones that
+            // followed them. Frames are cheap and a take you have to go back
+            // into Play mode to recreate is not.
+            var root = Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", "artifacts", "hero"));
+            Directory.CreateDirectory(root);
 
-            // A recording that lands on top of an older one produces a
-            // sequence half from each, which only shows up as a jump cut once
-            // the GIF is assembled.
-            if (Directory.Exists(_dir))
+            int take = 1;
+            while (Directory.Exists(Path.Combine(root, $"take-{take:00}")))
             {
-                foreach (var stale in Directory.GetFiles(_dir, "frame-*.png"))
-                {
-                    File.Delete(stale);
-                }
+                take++;
             }
 
+            _dir = Path.Combine(root, $"take-{take:00}");
             Directory.CreateDirectory(_dir);
             _frame = 0;
             Recording = true;
