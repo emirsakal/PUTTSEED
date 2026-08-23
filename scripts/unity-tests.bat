@@ -22,5 +22,17 @@ if %RESULT% NEQ 0 (
     exit /b %RESULT%
 )
 
-echo EditMode tests passed.
+rem A green test run is not a green build. The test assembly does not
+rem reference the Editor one, so a broken editor script compiles to nothing,
+rem runs no tests, and reports success -- which is exactly what happened to a
+rem ScreenshotTool edit that did not compile while this said 178/178 passed.
+findstr /c:"error CS" "%CD%\artifacts\unity-tests.log" >nul 2>&1
+if not errorlevel 1 (
+    echo.
+    echo COMPILE ERRORS - the tests passed but something did not build:
+    findstr /c:"error CS" "%CD%\artifacts\unity-tests.log"
+    exit /b 1
+)
+
+echo EditMode tests passed, everything compiled.
 exit /b 0
