@@ -32,16 +32,24 @@ read.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/media/menu.png" width="200" alt="Main menu: today's hole, the journey campaign, practice and archive"></td>
-    <td align="center"><img src="docs/media/daily-hole.png" width="200" alt="A daily hole: sand and ice zones, bumpers, the cup tucked into sand"></td>
-    <td align="center"><img src="docs/media/journey.png" width="200" alt="Journey level select: a paged grid of 100 levels with per-level stars"></td>
-    <td align="center"><img src="docs/media/collection.png" width="200" alt="Collection: ball skins in a grid, the equipped one wearing an accent ring"></td>
+    <td align="center"><img src="docs/media/menu.png" width="210" alt="Main menu: today's hole finished in three, a countdown to the next one, and the modes — journey, gauntlet, practice, tutorial, archive — over a thumbnail of the day's course"></td>
+    <td align="center"><img src="docs/media/daily-hole.png" width="210" alt="A daily hole mid-shot: the aim line drawn back from the ball on an ice patch, with bumpers, a portal, a ramp and water between it and the cup"></td>
+    <td align="center"><img src="docs/media/daily-card.png" width="210" alt="The card that closes the day: two stars, four strokes with a personal best of three, the streak, a countdown and the share button"></td>
   </tr>
   <tr>
     <td align="center"><b>Today's hole</b><br>one course, everyone</td>
-    <td align="center"><b>The elements</b><br>sand, ice, bumpers</td>
+    <td align="center"><b>The elements</b><br>ice, bumpers, portals, water</td>
+    <td align="center"><b>The day closes</b><br>your first finish is the answer</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/media/journey.png" width="210" alt="Journey level select: a paged grid where every cell is etched with the shape of its own course, stars underneath, locked levels dimmed"></td>
+    <td align="center"><img src="docs/media/collection.png" width="210" alt="Collection: twelve ball skins in a grid, the equipped one ringed in its own colour, locked ones dark"></td>
+    <td align="center"><img src="docs/media/calendar.png" width="210" alt="The archive as a month calendar: played days lit with their stars, today picked out in amber, days that have not happened yet left dead"></td>
+  </tr>
+  <tr>
     <td align="center"><b>Journey</b><br>100 curated seeds</td>
-    <td align="center"><b>Collection</b><br>progression-gated skins</td>
+    <td align="center"><b>Collection</b><br>earned, never sold</td>
+    <td align="center"><b>The archive</b><br>every past day regenerates</td>
   </tr>
 </table>
 
