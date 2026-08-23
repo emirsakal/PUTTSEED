@@ -57,164 +57,6 @@ read.
   </tr>
 </table>
 
-## A course, as the debug viewer prints it
-
-```
-       #                    seed        3
-      ###                   par         2   difficulty Hard
-     ##  #                  walls       10
-    ##    #                 bumpers 2 · sand 2 · ice 2 · water 1
-   #       #
-  #   S    ##               S ball start
-  #         ##              H hole
-   #         ##             # wall      o bumper
-   ##         #             : sand      * ice     ~ water
-    ##        #
-     ##   *oo~#
-      #****oo~##
-      ##***oo~~#
-       #***~~~~#
-       #*****  ##
-       #**     :##
-        #     :o:##
-        #    :oo::#
-        ##   :oo:::#
-         ##   ::::::#####
-          ##   :::: *** #
-           #    ::  *** #
-            #       *** #
-             #      :H: #
-             ##     ::: #
-              ##    ::: #
-               #    ::: #
-                #########
-```
-
-`dotnet run --project tools/CourseViewer -c Release -- <seed|yyyy-mm-dd>`
-
-## Architecture
-
-```
-+--------------------------------------------------------------+
-|  Unity layer (repo root: Assets/)                            |
-|  rendering · drag input · UI · audio/haptics · interpolation |
-|                                                              |
-|  InputQuantizer   -> drag becomes a 10-bit angle + 8-bit     |
-|                      power index — THE quantization boundary |
-|  FixView          -> Fix64 becomes float — render-only,      |
-|                      one-way, never flows back               |
-|  FixedStepper     -> frame time becomes whole 120 Hz ticks   |
-+--------------------------------------------------------------+
-|  core/src/PuttSeed.Core (netstandard2.1 — ZERO UnityEngine)  |
-|                                                              |
-|  FixedMath   Fix64 (Q32.32) · Vec2Fix · xorshift128 RNG ·    |
-|              committed 1024-entry sine table                 |
-|  Sim         GolfSim: 120 Hz fixed tick, circle-segment      |
-|              walls with sub-stepping, bumpers, sand, ice,    |
-|              water, gates, ramps, portals, windmills, hole   |
-|              capture, rest, FNV-1a StateHash                 |
-|  CourseGen   corridor growth -> hazard decoration ->         |
-|              SolvabilityChecker (bounded BFS over the        |
-|              quantized shot space) -> DifficultyRater;       |
-|              versioned configs freeze published courses      |
-|  Replay      [seed + timed shots] <-> PUTT- base64url codes  |
-|  Daily       UTC date -> seed (FNV-1a + SplitMix64, salted)  |
-+--------------------------------------------------------------+
-```
-
-The Unity project sits at the repo root; core sources are linked into
-`Assets/PuttSeedCore/src` via a directory junction under an asmdef with
-`noEngineReferences: true`, so the compiler itself enforces the layering.
-(Unity writes `.meta` files into `core/src` through that junction; they are
-committed for stable asset GUIDs and are inert to `dotnet build` and the
-purity grep — the C# sources themselves stay UnityEngine-free.)
-
-## The determinism proof
-
-The whole product depends on one property: **the same seed and the same
-inputs produce the same bits on every device.** That claim is enforced
-mechanically, not by care:
-
-- **No floats exist in core.** `scripts\check-purity.bat` scans `core/src`
-  for `float`, `double`, `System.Random`, `DateTime` and `UnityEngine` and
-  fails the build if any appear in code — comments and string literals are
-  blanked first, because the check used to be a grep and a grep matched the
-  comment explaining that floats are banned. It runs its own self-test in CI:
-  a guard nobody has watched fail is not known to work. All math is `Fix64` —
-  Q32.32 fixed point on `long`, with 128-bit multiply intermediates and Newton
-  square root. Trig is a committed 1024-entry table; angles only ever exist as
-  table indices.
-- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
-  holding every element — walls, bumpers, sand, ice, water, gates,
-  ramps, portals and windmills — runs a scripted 16-shot, 10,000-tick
-  session twice in-process, and the final FNV-1a state hash must equal a
-  committed constant: `11426007175965104957`. Any accidental change to
-  sim math fails it. A companion test guards the guard: removing any one
-  element must move the hash, so nothing can sit in the fixture without
-  being met. That test found two elements the previous fixture never
-  touched, water among them.
-- **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
-  end-to-end — generate, replay the author solution — against frozen final
-  hashes and frozen `PUTT-` codes, on BOTH the generator the game ships
-  (v4) and the frozen v1 one: a version byte that was ever emitted has to
-  keep decoding forever.
-- **The 1000-seed property suite** (`PropertySuiteTests`): every seed
-  generates within bounded attempts, every accepted course's author solution
-  replays to a capture within par, and every replay code round-trips.
-- **Quantization boundary tests** (Unity EditMode): the drag-to-ShotInput
-  mapping and the frame-time-to-ticks stepper are tested where analog meets
-  discrete; floats stop existing at that line.
-- **A replay that desyncs is a bug by definition** — the codec stores only
-  `(seed, shots)`, plus the blade phase each shot was taken at once
-  windmills started turning while the ball rests; playback is
-  re-simulation, never recorded motion.
-
-## Running things
-
-| What | How |
-|---|---|
-| Core test suite (293 tests) | `dotnet test core` — or `scripts\test.bat` (purity grep + Release run) |
-| Unity EditMode tests (178 tests) | `scripts\unity-tests.bat` |
-| ASCII course viewer | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
-| Screenshot for the README | Play mode, then **F9** (`PuttSeed → Capture Screenshot`) — works mid-drag, which the menu does not |
-| Hero animation | Play mode, then **F10** to record a take, then `python tools/make-gif.py --list` and `--take take-NN` |
-| Debug Android build | `scripts\build-android.bat` (`apk` arg for an installable APK) |
-| Release .aab (signed) | `scripts\build-release.bat` |
-| WebGL demo | `scripts\build-webgl.bat`, then `scripts\deploy-webgl.bat push` |
-
-Requirements: .NET SDK 8, Unity 6000.3.x with the Android module (open the
-repo root in Unity Hub).
-
-### Typography
-
-The game is set in **Outfit SemiBold**. Six OFL candidates live in
-`Assets/PuttSeed/UI/Fonts/Library/`; `Fonts/active.txt` names the one in
-use, and changing that line plus **PuttSeed → Rebuild Scenes** re-sets the
-whole UI. Two of the six failed the audition — one has no right arrow, one
-has no Turkish ğ/İ/ş — so `UiFontTests` asserts the active face can print
-every character the UI can show, in both languages.
-
-### Signing (release builds)
-
-Create `keystore.properties` in the repo root — it is gitignored and must
-never be committed:
-
-```
-storeFile=puttseed.keystore
-storePassword=<store password>
-keyAlias=puttseed
-keyPassword=<key password>
-```
-
-Generate a keystore once with:
-
-```bash
-keytool -genkeypair -v -keystore puttseed.keystore -alias puttseed -keyalg RSA -keysize 2048 -validity 10000
-```
-
-`scripts\build-release.bat` picks it up automatically and warns loudly if it
-builds unsigned.
-
 ## Game rules in one breath
 
 Drag to aim (slingshot or direct — your pick), release to shoot; ball must
@@ -229,8 +71,7 @@ the generator's answer, proven before you see it. Stroke limit is par + 3;
 holing out scores stars — 3 at par or better, 2 one over, 1 within the
 limit. Retries are unlimited, but **the day's answer is your first
 finish** — a score reached on the thirty-fourth attempt is nobody else's
-score. Feel tuning lives in one ScriptableObject
-(`Assets/PuttSeed/Resources/FeelConfig.asset`).
+score.
 
 ## Five modes, one generator
 
@@ -277,10 +118,149 @@ the stats panel):
 - watchable replays: paste any `PUTT-` code to watch that run in-game;
 - EN/TR localization, and settings for sound, haptics, aim style, a
   colorblind palette and a 60/120 FPS battery mode;
+- the typeface is held to both languages by test: `UiFontTests` asserts the
+  active face can print every character the UI can show, and two of the six
+  candidates failed that audition — one with no right arrow, one with no
+  Turkish ğ/İ/ş;
 - every sound is synthesized: the 16 WAV clips are generated by a committed
   editor tool (`SfxSynth`) — zero recorded audio in the repo.
 
-Out-of-scope ideas live in [LATER.md](LATER.md) — deliberately.
+Feel tuning lives in one ScriptableObject
+(`Assets/PuttSeed/Resources/FeelConfig.asset`). Out-of-scope ideas live in
+[LATER.md](LATER.md) — deliberately.
+
+## Architecture
+
+```
++--------------------------------------------------------------+
+|  Unity layer (repo root: Assets/)                            |
+|  rendering · drag input · UI · audio/haptics · interpolation |
+|                                                              |
+|  InputQuantizer   -> drag becomes a 10-bit angle + 8-bit     |
+|                      power index — THE quantization boundary |
+|  FixView          -> Fix64 becomes float — render-only,      |
+|                      one-way, never flows back               |
+|  FixedStepper     -> frame time becomes whole 120 Hz ticks   |
++--------------------------------------------------------------+
+|  core/src/PuttSeed.Core (netstandard2.1 — ZERO UnityEngine)  |
+|                                                              |
+|  FixedMath   Fix64 (Q32.32) · Vec2Fix · xorshift128 RNG ·    |
+|              committed 1024-entry sine table                 |
+|  Sim         GolfSim: 120 Hz fixed tick, circle-segment      |
+|              walls with sub-stepping, bumpers, sand, ice,    |
+|              water, gates, ramps, portals, windmills, hole   |
+|              capture, rest, FNV-1a StateHash                 |
+|  CourseGen   corridor growth -> hazard decoration ->         |
+|              SolvabilityChecker (bounded BFS over the        |
+|              quantized shot space) -> DifficultyRater;       |
+|              versioned configs freeze published courses      |
+|  Replay      [seed + timed shots] <-> PUTT- base64url codes  |
+|  Daily       UTC date -> seed (FNV-1a + SplitMix64, salted)  |
++--------------------------------------------------------------+
+```
+
+The Unity project sits at the repo root; core sources are linked into
+`Assets/PuttSeedCore/src` via a directory junction under an asmdef with
+`noEngineReferences: true`, so the compiler itself enforces the layering.
+(Unity writes `.meta` files into `core/src` through that junction; they are
+committed for stable asset GUIDs and are inert to `dotnet build` and the
+purity check — the C# sources themselves stay UnityEngine-free.)
+
+## The determinism proof
+
+The whole product depends on one property: **the same seed and the same
+inputs produce the same bits on every device.** That claim is enforced
+mechanically, not by care:
+
+- **No floats exist in core.** `tools/check-purity.py` scans `core/src`
+  for `float`, `double`, `System.Random`, `DateTime` and `UnityEngine` and
+  fails the build if any appear in code — comments and string literals are
+  blanked first, because the check used to be a grep and a grep matched the
+  comment explaining that floats are banned. It runs its own self-test in CI:
+  a guard nobody has watched fail is not known to work. All math is `Fix64` —
+  Q32.32 fixed point on `long`, with 128-bit multiply intermediates and Newton
+  square root. Trig is a committed 1024-entry table; angles only ever exist as
+  table indices.
+- **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
+  holding every element — walls, bumpers, sand, ice, water, gates,
+  ramps, portals and windmills — runs a scripted 16-shot, 10,000-tick
+  session twice in-process, and the final FNV-1a state hash must equal a
+  committed constant: `11426007175965104957`. Any accidental change to
+  sim math fails it. A companion test guards the guard: removing any one
+  element must move the hash, so nothing can sit in the fixture without
+  being met. That test found two elements the previous fixture never
+  touched, water among them.
+- **Golden replay fixtures** (`GoldenReplayTests`): three seeds run
+  end-to-end — generate, replay the author solution — against frozen final
+  hashes and frozen `PUTT-` codes, on BOTH the generator the game ships
+  (v4) and the frozen v1 one: a version byte that was ever emitted has to
+  keep decoding forever.
+- **The 1000-seed property suite** (`PropertySuiteTests`): every seed
+  generates within bounded attempts, every accepted course's author solution
+  replays to a capture within par, and every replay code round-trips.
+- **Quantization boundary tests** (Unity EditMode): the drag-to-ShotInput
+  mapping and the frame-time-to-ticks stepper are tested where analog meets
+  discrete; floats stop existing at that line.
+- **A replay that desyncs is a bug by definition** — the codec stores only
+  `(seed, shots)`, plus the blade phase each shot was taken at once
+  windmills started turning while the ball rests; playback is
+  re-simulation, never recorded motion.
+
+## A course, as the generator prints it
+
+```
+       #                    seed        3
+      ###                   par         2   difficulty Hard
+     ##  #                  walls       10
+    ##    #                 bumpers 2 · sand 2 · ice 2 · water 1
+   #       #
+  #   S    ##               S ball start
+  #         ##              H hole
+   #         ##             # wall      o bumper
+   ##         #             : sand      * ice     ~ water
+    ##        #
+     ##   *oo~#
+      #****oo~##
+      ##***oo~~#
+       #***~~~~#
+       #*****  ##
+       #**     :##
+        #     :o:##
+        #    :oo::#
+        ##   :oo:::#
+         ##   ::::::#####
+          ##   :::: *** #
+           #    ::  *** #
+            #       *** #
+             #      :H: #
+             ##     ::: #
+              ##    ::: #
+               #    ::: #
+                #########
+```
+
+No engine involved: that is the core library growing a course and a console
+app printing it. The same call the game makes.
+
+## Verify it yourself
+
+None of the above has to be taken on trust — the suites that enforce it run
+from a clone:
+
+| What | How |
+|---|---|
+| Core test suite (293 tests) | `dotnet test core` |
+| Purity check + core tests, as CI runs them | `scripts\test.bat` |
+| Unity EditMode tests (178 tests) | `scripts\unity-tests.bat` |
+| Print any course as ASCII | `dotnet run --project tools/CourseViewer -c Release -- 3 --stats` |
+
+The core suite is the interesting one and it needs **.NET SDK 8 and nothing
+else** — no Unity, no device, no network. That is the layering being real
+rather than claimed. The EditMode tests want Unity 6000.3.x; open the repo
+root in Unity Hub, there is no `unity/` subfolder.
+
+Building the game, signing a release, refreshing the screenshots and
+deploying the demo are in [docs/DEVELOPING.md](docs/DEVELOPING.md).
 
 ## The paper trail
 
@@ -294,6 +274,7 @@ argue with it:
 | [docs/AUDIT.md](docs/AUDIT.md) | a studio-style audit of this game: scorecard, competitor teardown, costed proposals, and a cut list |
 | [docs/STATUS.md](docs/STATUS.md) | measured numbers — including the rows still honestly marked NOT YET MEASURED |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | the phase plan the work followed |
+| [docs/DEVELOPING.md](docs/DEVELOPING.md) | building, signing, capturing and deploying |
 | [docs/store/](docs/store/) | Play listing copy in EN and TR, and the privacy policy |
 | [LATER.md](LATER.md) | the idea parking lot: nothing here is planned, which is the point |
 
@@ -302,7 +283,7 @@ argue with it:
 This repo was built with an AI-assisted workflow (Claude Code); the phase
 prompts that drove each week's work are committed verbatim in
 [prompts/PROMPTS.md](prompts/PROMPTS.md). The guardrails those prompts
-enforce — TDD for the core, the purity grep, committed golden hashes — are
+enforce — TDD for the core, the purity check, committed golden hashes — are
 exactly what makes an AI-assisted codebase auditable: correctness is proven
 by machine-checked tests, not by trust in the author, human or otherwise.
 
