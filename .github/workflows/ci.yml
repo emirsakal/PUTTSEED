@@ -19,21 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Mirror of scripts\check-purity.bat: CLAUDE.md hard rules 1 and 2,
-      # enforced mechanically on every push.
+      # CLAUDE.md hard rules 1 and 2, enforced mechanically on every push.
+      #
+      # This step used to hold its own copy of the rule as a grep, calling
+      # itself a mirror of scripts\check-purity.bat. A grep cannot tell code
+      # from prose, so it matched the word "float" inside the comment that
+      # explains floats are banned, and this job failed for days over a core
+      # that was clean. The rule now lives in one script both callers run.
+      - name: Purity check self-test (the guard's own guard)
+        run: python tools/check-purity.py --self-test
+
       - name: Purity check (core/src is float/Random/DateTime/UnityEngine-free)
-        run: |
-          fail=0
-          for token in 'float' 'double' 'System\.Random' 'DateTime' 'UnityEngine'; do
-            if grep -rn --include='*.cs' -E "\b${token}\b" core/src; then
-              echo "PURITY VIOLATION: forbidden token '${token}' found in core/src"
-              fail=1
-            fi
-          done
-          if [ "$fail" -eq 0 ]; then
-            echo "Purity check passed."
-          fi
-          exit $fail
+        run: python tools/check-purity.py
 
       - uses: actions/setup-dotnet@v4
         with:

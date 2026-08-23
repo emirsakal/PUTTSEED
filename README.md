@@ -131,11 +131,15 @@ The whole product depends on one property: **the same seed and the same
 inputs produce the same bits on every device.** That claim is enforced
 mechanically, not by care:
 
-- **No floats exist in core.** `scripts\check-purity.bat` greps `core/src`
+- **No floats exist in core.** `scripts\check-purity.bat` scans `core/src`
   for `float`, `double`, `System.Random`, `DateTime` and `UnityEngine` and
-  fails the build if any appear. All math is `Fix64` — Q32.32 fixed point on
-  `long`, with 128-bit multiply intermediates and Newton square root. Trig is
-  a committed 1024-entry table; angles only ever exist as table indices.
+  fails the build if any appear in code — comments and string literals are
+  blanked first, because the check used to be a grep and a grep matched the
+  comment explaining that floats are banned. It runs its own self-test in CI:
+  a guard nobody has watched fail is not known to work. All math is `Fix64` —
+  Q32.32 fixed point on `long`, with 128-bit multiply intermediates and Newton
+  square root. Trig is a committed 1024-entry table; angles only ever exist as
+  table indices.
 - **The 10k-tick golden hash** (`DeterminismTests`): a fixture course
   holding every element — walls, bumpers, sand, ice, water, gates,
   ramps, portals and windmills — runs a scripted 16-shot, 10,000-tick

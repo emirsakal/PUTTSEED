@@ -1,19 +1,14 @@
 @echo off
 rem Purity check: core/src must contain no float/double/System.Random/DateTime/UnityEngine.
 rem Enforces CLAUDE.md hard rules 1 and 2 mechanically. Run from anywhere.
+rem
+rem The rule lives in tools\check-purity.py and NOT here. It used to be written
+rem out twice -- once in this file, once in .github\workflows\ci.yml, which
+rem called itself a mirror. Both were raw greps, so both matched the word
+rem "float" inside a comment EXPLAINING that floats are banned, and CI stayed
+rem red for days over a core that was clean. One rule, one implementation.
 setlocal
 cd /d "%~dp0.."
 
-set FAIL=0
-for %%W in (float double System.Random DateTime UnityEngine) do (
-    findstr /s /n /r "\<%%W\>" core\src\*.cs >nul 2>&1
-    if not errorlevel 1 (
-        echo PURITY VIOLATION: forbidden token '%%W' found in core\src:
-        findstr /s /n /r "\<%%W\>" core\src\*.cs
-        set FAIL=1
-    )
-)
-
-if "%FAIL%"=="1" exit /b 1
-echo Purity check passed: core\src is free of float/double/System.Random/DateTime/UnityEngine.
-exit /b 0
+python tools\check-purity.py
+exit /b %ERRORLEVEL%
